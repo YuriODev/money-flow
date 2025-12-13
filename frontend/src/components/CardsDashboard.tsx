@@ -21,7 +21,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { cardsApi, subscriptionApi, calendarApi, PaymentCard, CardBalanceSummary, PaymentCardCreate, Subscription } from "@/lib/api";
-import { useCurrency, CURRENCIES } from "@/lib/currency-context";
+import { useCurrency } from "@/lib/currency-context";
 import { cn } from "@/lib/utils";
 import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
 import { findService, getIconUrl } from "@/lib/service-icons";

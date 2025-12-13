@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { agentApi, ChatMessage } from "@/lib/api";
@@ -105,7 +105,6 @@ function processInlineFormatting(text: string, keyPrefix: string = ''): React.Re
 function parseMarkdown(text: string): React.ReactNode[] {
   const lines = text.split('\n');
   const result: React.ReactNode[] = [];
-  let inList = false;
   let listItems: string[] = [];
 
   const flushList = () => {
@@ -122,7 +121,6 @@ function parseMarkdown(text: string): React.ReactNode[] {
       );
       listItems = [];
     }
-    inList = false;
   };
 
   lines.forEach((line, lineIndex) => {
@@ -153,7 +151,6 @@ function parseMarkdown(text: string): React.ReactNode[] {
     }
     // List items (handle bullet points - but not ** which is bold)
     else if (trimmed.startsWith('• ') || trimmed.startsWith('- ') || (trimmed.startsWith('* ') && !trimmed.startsWith('**'))) {
-      inList = true;
       listItems.push(trimmed.slice(2));
     }
     // Regular text

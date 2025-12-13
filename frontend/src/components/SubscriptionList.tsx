@@ -7,7 +7,6 @@ import {
   type Subscription,
   type PaymentType,
   PAYMENT_TYPE_LABELS,
-  PAYMENT_TYPE_ICONS,
 } from "@/lib/api";
 import { formatDate, getFrequencyLabel, cn } from "@/lib/utils";
 import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";

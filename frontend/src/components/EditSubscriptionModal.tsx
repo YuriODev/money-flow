@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { subscriptionApi, cardsApi, type Subscription, type PaymentCard, type PaymentType, PAYMENT_TYPE_LABELS } from "@/lib/api";
+import { subscriptionApi, cardsApi, type Subscription, type PaymentType, PAYMENT_TYPE_LABELS } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { X, Save, Loader2, Calendar, CreditCard, Wallet, ChevronDown, Tag } from "lucide-react";
 
