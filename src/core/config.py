@@ -37,6 +37,10 @@ class Settings(BaseSettings):
         rag_min_score: Minimum similarity score threshold for results.
         rag_context_window: Number of recent conversation turns to include.
         rag_cache_ttl: TTL for embedding cache in seconds.
+        jwt_secret_key: Secret key for signing JWT tokens.
+        jwt_algorithm: Algorithm for JWT encoding (default: HS256).
+        jwt_access_token_expire_minutes: Access token expiration time in minutes.
+        jwt_refresh_token_expire_days: Refresh token expiration time in days.
         gcp_project_id: Google Cloud Platform project ID.
         gcp_region: GCP region for deployment.
 
@@ -88,6 +92,12 @@ class Settings(BaseSettings):
     rag_min_score: float = 0.5
     rag_context_window: int = 5
     rag_cache_ttl: int = 3600  # 1 hour cache for embeddings
+
+    # JWT Authentication
+    jwt_secret_key: str = "CHANGE-THIS-SECRET-KEY-IN-PRODUCTION"  # Override in .env
+    jwt_algorithm: str = "HS256"
+    jwt_access_token_expire_minutes: int = 30  # 30 minutes
+    jwt_refresh_token_expire_days: int = 7  # 7 days
 
     # GCP
     gcp_project_id: str = ""

@@ -21,7 +21,7 @@
 |------|--------|-------------|
 | 1.1.1 | ✅ DONE | Database Schema for Users |
 | 1.1.2 | ✅ DONE | Password Security (bcrypt) |
-| 1.1.3 | ⬜ TODO | JWT Token System |
+| 1.1.3 | ✅ DONE | JWT Token System |
 | 1.1.4 | ⬜ TODO | Auth API Endpoints |
 | 1.1.5 | ⬜ TODO | Auth Middleware |
 
