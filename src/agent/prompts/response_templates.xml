@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<response_templates>
+  <template type="success_create">
+    <format>✅ Added '{name}' - {currency_symbol}{amount} {frequency}</format>
+  </template>
+  <template type="success_update">
+    <format>✅ Updated '{name}' to {currency_symbol}{amount}</format>
+  </template>
+  <template type="success_delete">
+    <format>🗑️ Cancelled '{name}'</format>
+  </template>
+  <template type="error_not_found">
+    <format>❌ No subscription found matching '{name}'</format>
+  </template>
+  <template type="error_ambiguous">
+    <format>🤔 Multiple matches found: {matches}. Please be more specific.</format>
+  </template>
+</response_templates>

@@ -1,0 +1,214 @@
+"""Comprehensive tests for ORM models.
+
+Tests cover:
+- Model instantiation
+- Default values
+- String representation
+- Enum values
+"""
+
+from datetime import date
+from decimal import Decimal
+
+from src.models.subscription import Frequency, Subscription
+
+
+class TestFrequencyEnum:
+    """Tests for Frequency enum."""
+
+    def test_all_frequency_values(self):
+        """Test all frequency enum values exist."""
+        assert Frequency.DAILY.value == "daily"
+        assert Frequency.WEEKLY.value == "weekly"
+        assert Frequency.BIWEEKLY.value == "biweekly"
+        assert Frequency.MONTHLY.value == "monthly"
+        assert Frequency.QUARTERLY.value == "quarterly"
+        assert Frequency.YEARLY.value == "yearly"
+        assert Frequency.CUSTOM.value == "custom"
+
+    def test_frequency_from_string(self):
+        """Test creating frequency from string."""
+        assert Frequency("monthly") == Frequency.MONTHLY
+        assert Frequency("yearly") == Frequency.YEARLY
+
+    def test_frequency_is_str_subclass(self):
+        """Test frequency is a string subclass."""
+        assert isinstance(Frequency.MONTHLY, str)
+        assert Frequency.MONTHLY == "monthly"
+
+
+class TestSubscriptionModel:
+    """Tests for Subscription model."""
+
+    def test_create_subscription(self):
+        """Test creating a subscription instance."""
+        subscription = Subscription(
+            name="Netflix",
+            amount=Decimal("15.99"),
+            currency="GBP",
+            frequency=Frequency.MONTHLY,
+            start_date=date.today(),
+            next_payment_date=date.today(),
+        )
+
+        assert subscription.name == "Netflix"
+        assert subscription.amount == Decimal("15.99")
+        assert subscription.currency == "GBP"
+        assert subscription.frequency == Frequency.MONTHLY
+
+    def test_model_has_currency_column(self):
+        """Test model has currency column with default."""
+        # SQLAlchemy defaults are applied at DB level, not at instantiation
+        # Test that the column accepts a value
+        subscription = Subscription(
+            name="Test",
+            amount=Decimal("10.00"),
+            currency="GBP",
+            frequency=Frequency.MONTHLY,
+            start_date=date.today(),
+            next_payment_date=date.today(),
+        )
+
+        assert subscription.currency == "GBP"
+
+    def test_model_has_frequency_column(self):
+        """Test model has frequency column."""
+        subscription = Subscription(
+            name="Test",
+            amount=Decimal("10.00"),
+            frequency=Frequency.WEEKLY,
+            start_date=date.today(),
+            next_payment_date=date.today(),
+        )
+
+        assert subscription.frequency == Frequency.WEEKLY
+
+    def test_model_has_frequency_interval_column(self):
+        """Test model has frequency_interval column."""
+        subscription = Subscription(
+            name="Test",
+            amount=Decimal("10.00"),
+            frequency=Frequency.MONTHLY,
+            frequency_interval=2,
+            start_date=date.today(),
+            next_payment_date=date.today(),
+        )
+
+        assert subscription.frequency_interval == 2
+
+    def test_model_has_is_active_column(self):
+        """Test model has is_active column."""
+        subscription = Subscription(
+            name="Test",
+            amount=Decimal("10.00"),
+            frequency=Frequency.MONTHLY,
+            is_active=False,
+            start_date=date.today(),
+            next_payment_date=date.today(),
+        )
+
+        assert subscription.is_active is False
+
+    def test_optional_fields_none(self):
+        """Test optional fields default to None."""
+        subscription = Subscription(
+            name="Test",
+            amount=Decimal("10.00"),
+            frequency=Frequency.MONTHLY,
+            start_date=date.today(),
+            next_payment_date=date.today(),
+        )
+
+        assert subscription.category is None
+        assert subscription.notes is None
+
+    def test_repr(self):
+        """Test string representation."""
+        subscription = Subscription(
+            name="Netflix",
+            amount=Decimal("15.99"),
+            frequency=Frequency.MONTHLY,
+            start_date=date.today(),
+            next_payment_date=date.today(),
+        )
+
+        repr_str = repr(subscription)
+
+        assert "Netflix" in repr_str
+        assert "15.99" in repr_str
+        assert "monthly" in repr_str
+
+    def test_tablename(self):
+        """Test correct table name."""
+        assert Subscription.__tablename__ == "subscriptions"
+
+    def test_id_is_generated(self):
+        """Test ID is auto-generated as UUID."""
+        subscription = Subscription(
+            name="Test",
+            amount=Decimal("10.00"),
+            frequency=Frequency.MONTHLY,
+            start_date=date.today(),
+            next_payment_date=date.today(),
+        )
+
+        # ID should be generated by default lambda
+        assert subscription.id is not None or callable(Subscription.id.default.arg)
+
+    def test_with_category(self):
+        """Test subscription with category."""
+        subscription = Subscription(
+            name="Netflix",
+            amount=Decimal("15.99"),
+            category="entertainment",
+            start_date=date.today(),
+            next_payment_date=date.today(),
+        )
+
+        assert subscription.category == "entertainment"
+
+    def test_with_notes(self):
+        """Test subscription with notes."""
+        subscription = Subscription(
+            name="Insurance",
+            amount=Decimal("100.00"),
+            notes="Annual home insurance policy",
+            start_date=date.today(),
+            next_payment_date=date.today(),
+        )
+
+        assert subscription.notes == "Annual home insurance policy"
+
+    def test_all_frequencies(self):
+        """Test subscription with all frequency types."""
+        for freq in Frequency:
+            subscription = Subscription(
+                name=f"Test {freq.value}",
+                amount=Decimal("10.00"),
+                frequency=freq,
+                start_date=date.today(),
+                next_payment_date=date.today(),
+            )
+            assert subscription.frequency == freq
+
+    def test_large_amount(self):
+        """Test subscription with large amount."""
+        subscription = Subscription(
+            name="Premium Service",
+            amount=Decimal("99999999.99"),
+            start_date=date.today(),
+            next_payment_date=date.today(),
+        )
+
+        assert subscription.amount == Decimal("99999999.99")
+
+    def test_small_amount(self):
+        """Test subscription with small amount."""
+        subscription = Subscription(
+            name="Micro Service",
+            amount=Decimal("0.01"),
+            start_date=date.today(),
+            next_payment_date=date.today(),
+        )
+
+        assert subscription.amount == Decimal("0.01")

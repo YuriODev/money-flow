@@ -1,0 +1,117 @@
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: subscription-db
+    environment:
+      POSTGRES_USER: subscriptions
+      POSTGRES_PASSWORD: localdev
+      POSTGRES_DB: subscriptions
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - subscription-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U subscriptions"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API (FastAPI)
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: subscription-backend
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://subscriptions:localdev@db:5432/subscriptions
+      - DEBUG=true
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - CORS_ORIGINS=["http://localhost:3001","http://localhost:3002","http://localhost:8001","http://frontend:3000"]
+      - REDIS_URL=redis://redis:6379/0
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./src:/app/src
+      - ./alembic.ini:/app/alembic.ini
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - subscription-network
+    restart: unless-stopped
+
+  # Frontend (React/Next.js)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: subscription-frontend
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8001
+      - BACKEND_URL=http://backend:8000
+    ports:
+      - "3002:3000"
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+    depends_on:
+      - backend
+    networks:
+      - subscription-network
+    restart: unless-stopped
+
+  # Redis (for caching)
+  redis:
+    image: redis:7-alpine
+    container_name: subscription-redis
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - subscription-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Qdrant Vector Database (for RAG)
+  qdrant:
+    image: qdrant/qdrant:v1.7.4
+    container_name: subscription-qdrant
+    restart: unless-stopped
+    ports:
+      - "6333:6333"  # HTTP API
+      - "6334:6334"  # gRPC API
+    volumes:
+      - qdrant_data:/qdrant/storage
+    environment:
+      - QDRANT__SERVICE__HTTP_PORT=6333
+      - QDRANT__SERVICE__GRPC_PORT=6334
+    networks:
+      - subscription-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  subscription-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  qdrant_data:

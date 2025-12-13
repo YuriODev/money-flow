@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<command_patterns>
+  <!-- Payment type detection hints -->
+  <payment_type_hints>
+    <hint type="subscription">netflix, spotify, disney, hulu, youtube, amazon prime, streaming, subscription, sub</hint>
+    <hint type="housing">rent, mortgage, landlord, property</hint>
+    <hint type="utility">electric, electricity, gas, water, internet, broadband, council tax, utility, edf, thames water</hint>
+    <hint type="professional_service">therapist, therapy, coach, trainer, tutor, gym, cleaner</hint>
+    <hint type="insurance">insurance, bupa, applecare, health insurance, car insurance</hint>
+    <hint type="debt">debt, owe, credit card, loan, repayment, paying back, borrowed</hint>
+    <hint type="savings">savings, saving, save, goal, target, emergency fund, holiday fund</hint>
+    <hint type="transfer">transfer, send money, family support, partner, girlfriend, boyfriend</hint>
+  </payment_type_hints>
+
+  <pattern type="create">
+    <examples>
+      <!-- Subscriptions -->
+      <example>Add Netflix subscription for £15.99 monthly</example>
+      <example>Subscribe to Spotify Premium for £9.99 per month</example>
+      <example>New subscription: Gym membership £45 monthly</example>
+      <example>Add therapy sessions £150 biweekly category health</example>
+      <!-- Housing -->
+      <example>Add rent payment £1137.50 monthly</example>
+      <example>Add my mortgage £850 per month</example>
+      <!-- Utilities -->
+      <example>Add EDF electricity £70 monthly</example>
+      <example>Add council tax £150 per month</example>
+      <example>Add internet £45 monthly utility</example>
+      <!-- Debt payments -->
+      <example>Add credit card debt £5000 total, paying £200 monthly</example>
+      <example>Add debt to John £500, paying £50 monthly</example>
+      <example>I owe my friend £300, paying back £100 per month</example>
+      <!-- Savings -->
+      <example>Add savings goal £10000 for holiday, saving £500 monthly</example>
+      <example>Add emergency fund target £5000, currently saved £1000, adding £200 monthly</example>
+      <example>Save £300 monthly to daughter's account</example>
+      <!-- Transfers -->
+      <example>Add monthly transfer £200 to girlfriend</example>
+      <example>Send £100 monthly to family</example>
+    </examples>
+    <extraction>
+      <field name="name" required="true">Payment name</field>
+      <field name="amount" required="true">Payment amount (numeric)</field>
+      <field name="currency" required="false" default="GBP">Currency code (detect from context)</field>
+      <field name="frequency" required="false" default="monthly">Payment frequency</field>
+      <field name="payment_type" required="false" default="subscription">Type: subscription, housing, utility, professional_service, insurance, debt, savings, transfer</field>
+      <field name="category" required="false">Subcategory</field>
+      <!-- Debt-specific -->
+      <field name="total_owed" required="false">Total debt amount (for debt type)</field>
+      <field name="remaining_balance" required="false">Remaining balance (for debt type)</field>
+      <field name="creditor" required="false">Who you owe (for debt type)</field>
+      <!-- Savings-specific -->
+      <field name="target_amount" required="false">Savings goal (for savings type)</field>
+      <field name="current_saved" required="false">Current saved amount (for savings type)</field>
+      <field name="recipient" required="false">Who receives (for savings/transfer type)</field>
+    </extraction>
+  </pattern>
+
+  <pattern type="read">
+    <examples>
+      <example>Show all my subscriptions</example>
+      <example>List active subscriptions</example>
+      <example>What subscriptions do I have?</example>
+      <example>Show me my entertainment subscriptions</example>
+      <!-- Money Flow patterns -->
+      <example>Show all my payments</example>
+      <example>List my debts</example>
+      <example>Show my savings goals</example>
+      <example>What utilities do I pay?</example>
+      <example>Show housing payments</example>
+    </examples>
+    <extraction>
+      <field name="filter_active" required="false">Filter by active status</field>
+      <field name="category" required="false">Filter by subcategory</field>
+      <field name="payment_type" required="false">Filter by payment type</field>
+    </extraction>
+  </pattern>
+
+  <pattern type="summary">
+    <examples>
+      <example>How much am I spending per month?</example>
+      <example>Show my spending summary</example>
+      <example>What's my total monthly cost?</example>
+      <example>Total expenses breakdown</example>
+      <!-- Money Flow patterns -->
+      <example>How much debt do I have?</example>
+      <example>What's my total debt?</example>
+      <example>Show my savings progress</example>
+      <example>How much have I saved?</example>
+      <example>Breakdown by payment type</example>
+    </examples>
+    <extraction>
+      <field name="payment_type" required="false">Filter summary by payment type</field>
+    </extraction>
+  </pattern>
+
+  <pattern type="upcoming">
+    <examples>
+      <example>What's due this week?</example>
+      <example>Show upcoming payments</example>
+      <example>What payments are coming up?</example>
+      <example>Next 7 days payments</example>
+      <example>When is my rent due?</example>
+      <example>Upcoming debt payments</example>
+    </examples>
+    <extraction>
+      <field name="payment_type" required="false">Filter by payment type</field>
+    </extraction>
+  </pattern>
+
+  <pattern type="update">
+    <examples>
+      <example>Update Netflix to £17.99</example>
+      <example>Change therapy sessions to £160</example>
+      <example>Modify Spotify to £10.99 monthly</example>
+      <!-- Money Flow patterns -->
+      <example>Update my credit card remaining balance to £3000</example>
+      <example>I paid £500 off my debt to John</example>
+      <example>Update savings goal to £15000</example>
+      <example>Add £200 to my holiday savings</example>
+    </examples>
+    <extraction>
+      <field name="name" required="true">Payment name to update</field>
+      <field name="amount" required="false">New payment amount</field>
+      <field name="frequency" required="false">New frequency</field>
+      <field name="remaining_balance" required="false">New remaining balance (for debt)</field>
+      <field name="current_saved" required="false">New saved amount (for savings)</field>
+      <field name="target_amount" required="false">New target amount (for savings)</field>
+    </extraction>
+  </pattern>
+
+  <pattern type="delete">
+    <examples>
+      <example>Cancel my gym membership</example>
+      <example>Delete Netflix subscription</example>
+      <example>Remove Spotify</example>
+      <example>Unsubscribe from Disney+</example>
+      <!-- Money Flow patterns -->
+      <example>Mark credit card debt as paid off</example>
+      <example>Remove savings goal for holiday</example>
+      <example>Delete utility payment for gas</example>
+    </examples>
+    <extraction>
+      <field name="name" required="true">Payment name to delete</field>
+    </extraction>
+  </pattern>
+
+  <pattern type="convert">
+    <examples>
+      <example>Convert $20 to pounds</example>
+      <example>How much is €50 in GBP?</example>
+      <example>What's 100 USD in pounds?</example>
+      <example>Convert 5000 UAH to GBP</example>
+    </examples>
+    <extraction>
+      <field name="amount" required="true">Amount to convert</field>
+      <field name="from_currency" required="true">Source currency</field>
+      <field name="to_currency" required="true">Target currency</field>
+    </extraction>
+  </pattern>
+</command_patterns>

@@ -1,0 +1,683 @@
+"""Subscription CRUD API endpoints.
+
+This module provides RESTful API endpoints for subscription management,
+including listing, creating, updating, deleting, and import/export of subscriptions.
+
+All endpoints use async/await for non-blocking I/O operations.
+"""
+
+import csv
+import io
+import json
+import logging
+from datetime import date, datetime
+from decimal import Decimal, InvalidOperation
+
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
+from fastapi.responses import Response
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.core.config import settings
+from src.core.dependencies import get_db
+from src.models.subscription import Frequency, PaymentType
+from src.schemas.subscription import (
+    ExportData,
+    ImportResult,
+    SubscriptionCreate,
+    SubscriptionExport,
+    SubscriptionResponse,
+    SubscriptionSummary,
+    SubscriptionUpdate,
+)
+from src.services.currency_service import CurrencyService
+from src.services.subscription_service import SubscriptionService
+
+logger = logging.getLogger(__name__)
+
+router = APIRouter()
+
+
+@router.get("", response_model=list[SubscriptionResponse])
+async def list_subscriptions(
+    is_active: bool | None = None,
+    category: str | None = None,
+    payment_type: PaymentType | None = Query(
+        default=None, description="Filter by payment type (subscription, debt, savings, etc.)"
+    ),
+    db: AsyncSession = Depends(get_db),
+) -> list[SubscriptionResponse]:
+    """List all subscriptions/payments with optional filters.
+
+    Retrieves all payments from the database with optional filtering
+    by active status, category, and payment type. Results are ordered
+    by next payment date.
+
+    Args:
+        is_active: Filter by active status. If not provided, returns all.
+        category: Filter by subcategory name. If not provided, returns all categories.
+        payment_type: Filter by payment type (subscription, debt, savings, etc.).
+        db: Database session (injected by dependency).
+
+    Returns:
+        List of SubscriptionResponse objects matching the filters.
+
+    Example:
+        GET /api/subscriptions
+        GET /api/subscriptions?is_active=true
+        GET /api/subscriptions?payment_type=debt
+        GET /api/subscriptions?category=entertainment
+    """
+    service = SubscriptionService(db)
+    subscriptions = await service.get_all(
+        is_active=is_active, category=category, payment_type=payment_type
+    )
+    return [SubscriptionResponse.model_validate(s) for s in subscriptions]
+
+
+@router.get("/summary", response_model=SubscriptionSummary)
+async def get_summary(
+    payment_type: PaymentType | None = Query(
+        default=None, description="Filter summary by payment type"
+    ),
+    db: AsyncSession = Depends(get_db),
+) -> SubscriptionSummary:
+    """Get spending summary for all active subscriptions/payments.
+
+    Calculates and returns comprehensive spending analytics including
+    total monthly and yearly costs, breakdown by category and payment type,
+    and upcoming payments. All amounts are converted to the default currency (GBP).
+
+    Includes Money Flow totals:
+    - total_debt: Sum of all remaining debt balances
+    - total_savings_target: Sum of all savings goals
+    - total_current_saved: Sum of all current savings
+
+    Args:
+        payment_type: Optional filter for specific payment type.
+        db: Database session (injected by dependency).
+
+    Returns:
+        SubscriptionSummary with total costs, breakdowns, and upcoming payments.
+
+    Example:
+        GET /api/subscriptions/summary
+        GET /api/subscriptions/summary?payment_type=debt
+    """
+    service = SubscriptionService(db)
+    currency_service = CurrencyService(api_key=settings.exchange_rate_api_key or None)
+    return await service.get_summary(currency_service=currency_service, payment_type=payment_type)
+
+
+@router.get("/{subscription_id}", response_model=SubscriptionResponse)
+async def get_subscription(
+    subscription_id: str,
+    db: AsyncSession = Depends(get_db),
+) -> SubscriptionResponse:
+    """Get a single subscription by ID.
+
+    Retrieves detailed information about a specific subscription.
+
+    Args:
+        subscription_id: UUID of the subscription to retrieve.
+        db: Database session (injected by dependency).
+
+    Returns:
+        SubscriptionResponse with full subscription details.
+
+    Raises:
+        HTTPException 404: If subscription not found.
+
+    Example:
+        GET /api/subscriptions/123e4567-e89b-12d3-a456-426614174000
+    """
+    service = SubscriptionService(db)
+    subscription = await service.get_by_id(subscription_id)
+
+    if not subscription:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Subscription {subscription_id} not found",
+        )
+
+    return SubscriptionResponse.model_validate(subscription)
+
+
+@router.post("", response_model=SubscriptionResponse, status_code=status.HTTP_201_CREATED)
+async def create_subscription(
+    data: SubscriptionCreate,
+    db: AsyncSession = Depends(get_db),
+) -> SubscriptionResponse:
+    """Create a new subscription.
+
+    Creates a new subscription record with automatically calculated
+    next payment date based on start date and frequency.
+
+    Args:
+        data: Subscription creation data including name, amount, currency,
+            frequency, and start date.
+        db: Database session (injected by dependency).
+
+    Returns:
+        SubscriptionResponse with the created subscription details.
+
+    Raises:
+        HTTPException 422: If validation fails.
+
+    Example:
+        POST /api/subscriptions
+        {
+            "name": "Netflix",
+            "amount": "15.99",
+            "currency": "GBP",
+            "frequency": "MONTHLY",
+            "start_date": "2025-01-01"
+        }
+    """
+    service = SubscriptionService(db)
+    subscription = await service.create(data)
+    return SubscriptionResponse.model_validate(subscription)
+
+
+@router.put("/{subscription_id}", response_model=SubscriptionResponse)
+async def update_subscription(
+    subscription_id: str,
+    data: SubscriptionUpdate,
+    db: AsyncSession = Depends(get_db),
+) -> SubscriptionResponse:
+    """Update an existing subscription.
+
+    Updates a subscription with the provided data. Only fields that are
+    explicitly set will be updated (partial update supported).
+
+    Args:
+        subscription_id: UUID of the subscription to update.
+        data: Update data. Only include fields you want to change.
+        db: Database session (injected by dependency).
+
+    Returns:
+        SubscriptionResponse with the updated subscription details.
+
+    Raises:
+        HTTPException 404: If subscription not found.
+        HTTPException 422: If validation fails.
+
+    Example:
+        PUT /api/subscriptions/123e4567-e89b-12d3-a456-426614174000
+        {
+            "amount": "19.99"
+        }
+    """
+    service = SubscriptionService(db)
+    subscription = await service.update(subscription_id, data)
+
+    if not subscription:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Subscription {subscription_id} not found",
+        )
+
+    return SubscriptionResponse.model_validate(subscription)
+
+
+@router.delete("/{subscription_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_subscription(
+    subscription_id: str,
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    """Delete a subscription.
+
+    Permanently removes a subscription from the database.
+
+    Args:
+        subscription_id: UUID of the subscription to delete.
+        db: Database session (injected by dependency).
+
+    Raises:
+        HTTPException 404: If subscription not found.
+
+    Example:
+        DELETE /api/subscriptions/123e4567-e89b-12d3-a456-426614174000
+    """
+    service = SubscriptionService(db)
+    deleted = await service.delete(subscription_id)
+
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Subscription {subscription_id} not found",
+        )
+
+
+# ============================================================================
+# Import/Export Endpoints
+# ============================================================================
+
+
+@router.get("/export/json", response_model=ExportData)
+async def export_subscriptions_json(
+    include_inactive: bool = Query(default=True, description="Include inactive payments"),
+    payment_type: PaymentType | None = Query(default=None, description="Filter by payment type"),
+    db: AsyncSession = Depends(get_db),
+) -> ExportData:
+    """Export all subscriptions/payments as JSON.
+
+    Exports payment data in a format suitable for backup or transfer.
+    The export includes metadata (version 2.0, timestamp) and all payment fields
+    including Money Flow fields (payment_type, debt, savings).
+
+    Args:
+        include_inactive: Whether to include inactive payments.
+        payment_type: Optional filter for specific payment type.
+        db: Database session (injected by dependency).
+
+    Returns:
+        ExportData with all payments.
+
+    Example:
+        GET /api/subscriptions/export/json
+        GET /api/subscriptions/export/json?include_inactive=false
+        GET /api/subscriptions/export/json?payment_type=debt
+    """
+    service = SubscriptionService(db)
+    is_active = None if include_inactive else True
+    subscriptions = await service.get_all(is_active=is_active, payment_type=payment_type)
+
+    export_subs = []
+    for sub in subscriptions:
+        export_subs.append(
+            SubscriptionExport(
+                name=sub.name,
+                amount=str(sub.amount),
+                currency=sub.currency,
+                frequency=sub.frequency.value,
+                frequency_interval=sub.frequency_interval,
+                start_date=sub.start_date.isoformat(),
+                next_payment_date=sub.next_payment_date.isoformat(),
+                payment_type=sub.payment_type.value,
+                category=sub.category,
+                notes=sub.notes,
+                is_active=sub.is_active,
+                payment_method=sub.payment_method,
+                reminder_days=sub.reminder_days,
+                icon_url=sub.icon_url,
+                color=sub.color,
+                auto_renew=sub.auto_renew,
+                is_installment=sub.is_installment,
+                total_installments=sub.total_installments,
+                completed_installments=sub.completed_installments,
+                # Debt-specific fields
+                total_owed=str(sub.total_owed) if sub.total_owed else None,
+                remaining_balance=str(sub.remaining_balance) if sub.remaining_balance else None,
+                creditor=sub.creditor,
+                # Savings-specific fields
+                target_amount=str(sub.target_amount) if sub.target_amount else None,
+                current_saved=str(sub.current_saved) if sub.current_saved else None,
+                recipient=sub.recipient,
+            )
+        )
+
+    return ExportData(
+        version="2.0",
+        exported_at=datetime.utcnow(),
+        subscription_count=len(export_subs),
+        subscriptions=export_subs,
+    )
+
+
+@router.get("/export/csv")
+async def export_subscriptions_csv(
+    include_inactive: bool = Query(default=True, description="Include inactive payments"),
+    payment_type: PaymentType | None = Query(default=None, description="Filter by payment type"),
+    db: AsyncSession = Depends(get_db),
+) -> Response:
+    """Export all subscriptions/payments as CSV.
+
+    Exports payment data in CSV format for spreadsheet applications.
+    Headers are included in the first row. Includes Money Flow fields.
+
+    Args:
+        include_inactive: Whether to include inactive payments.
+        payment_type: Optional filter for specific payment type.
+        db: Database session (injected by dependency).
+
+    Returns:
+        CSV file download response.
+
+    Example:
+        GET /api/subscriptions/export/csv
+        GET /api/subscriptions/export/csv?payment_type=debt
+    """
+    service = SubscriptionService(db)
+    is_active = None if include_inactive else True
+    subscriptions = await service.get_all(is_active=is_active, payment_type=payment_type)
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    # Write header (Money Flow v2.0 format)
+    writer.writerow(
+        [
+            "name",
+            "amount",
+            "currency",
+            "frequency",
+            "frequency_interval",
+            "start_date",
+            "next_payment_date",
+            "payment_type",
+            "category",
+            "notes",
+            "is_active",
+            "payment_method",
+            "reminder_days",
+            "icon_url",
+            "color",
+            "auto_renew",
+            "is_installment",
+            "total_installments",
+            "completed_installments",
+            # Debt-specific fields
+            "total_owed",
+            "remaining_balance",
+            "creditor",
+            # Savings-specific fields
+            "target_amount",
+            "current_saved",
+            "recipient",
+        ]
+    )
+
+    # Write data rows
+    for sub in subscriptions:
+        writer.writerow(
+            [
+                sub.name,
+                str(sub.amount),
+                sub.currency,
+                sub.frequency.value,
+                sub.frequency_interval,
+                sub.start_date.isoformat(),
+                sub.next_payment_date.isoformat(),
+                sub.payment_type.value,
+                sub.category or "",
+                sub.notes or "",
+                str(sub.is_active).lower(),
+                sub.payment_method or "",
+                sub.reminder_days,
+                sub.icon_url or "",
+                sub.color,
+                str(sub.auto_renew).lower(),
+                str(sub.is_installment).lower(),
+                sub.total_installments or "",
+                sub.completed_installments,
+                # Debt-specific fields
+                str(sub.total_owed) if sub.total_owed else "",
+                str(sub.remaining_balance) if sub.remaining_balance else "",
+                sub.creditor or "",
+                # Savings-specific fields
+                str(sub.target_amount) if sub.target_amount else "",
+                str(sub.current_saved) if sub.current_saved else "",
+                sub.recipient or "",
+            ]
+        )
+
+    csv_content = output.getvalue()
+    filename = f"payments_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.csv"
+
+    return Response(
+        content=csv_content,
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.post("/import/json", response_model=ImportResult)
+async def import_subscriptions_json(
+    file: UploadFile = File(..., description="JSON file to import"),
+    skip_duplicates: bool = Query(default=True, description="Skip subscriptions with same name"),
+    db: AsyncSession = Depends(get_db),
+) -> ImportResult:
+    """Import subscriptions from JSON file.
+
+    Imports subscriptions from an export JSON file. Can skip duplicates
+    or fail on duplicate names.
+
+    Args:
+        file: Uploaded JSON file.
+        skip_duplicates: Skip if subscription with same name exists.
+        db: Database session (injected by dependency).
+
+    Returns:
+        ImportResult with counts and any errors.
+
+    Raises:
+        HTTPException 400: If file is invalid or parsing fails.
+
+    Example:
+        POST /api/subscriptions/import/json
+        Content-Type: multipart/form-data
+    """
+    if not file.filename or not file.filename.endswith(".json"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File must be a JSON file",
+        )
+
+    try:
+        content = await file.read()
+        data = json.loads(content.decode("utf-8"))
+    except json.JSONDecodeError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid JSON: {e}",
+        )
+    except UnicodeDecodeError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File must be UTF-8 encoded",
+        )
+
+    # Validate structure
+    if "subscriptions" not in data:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid export format: missing 'subscriptions' key",
+        )
+
+    return await _import_subscriptions(data["subscriptions"], skip_duplicates, db)
+
+
+@router.post("/import/csv", response_model=ImportResult)
+async def import_subscriptions_csv(
+    file: UploadFile = File(..., description="CSV file to import"),
+    skip_duplicates: bool = Query(default=True, description="Skip subscriptions with same name"),
+    db: AsyncSession = Depends(get_db),
+) -> ImportResult:
+    """Import subscriptions from CSV file.
+
+    Imports subscriptions from a CSV file. First row must be headers.
+    Can skip duplicates or fail on duplicate names.
+
+    Args:
+        file: Uploaded CSV file.
+        skip_duplicates: Skip if subscription with same name exists.
+        db: Database session (injected by dependency).
+
+    Returns:
+        ImportResult with counts and any errors.
+
+    Raises:
+        HTTPException 400: If file is invalid or parsing fails.
+
+    Example:
+        POST /api/subscriptions/import/csv
+        Content-Type: multipart/form-data
+    """
+    if not file.filename or not file.filename.endswith(".csv"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File must be a CSV file",
+        )
+
+    try:
+        content = await file.read()
+        text = content.decode("utf-8")
+    except UnicodeDecodeError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File must be UTF-8 encoded",
+        )
+
+    reader = csv.DictReader(io.StringIO(text))
+    subscriptions = list(reader)
+
+    if not subscriptions:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="CSV file is empty or has no data rows",
+        )
+
+    return await _import_subscriptions(subscriptions, skip_duplicates, db)
+
+
+async def _import_subscriptions(
+    subscriptions: list[dict],
+    skip_duplicates: bool,
+    db: AsyncSession,
+) -> ImportResult:
+    """Import subscriptions/payments from parsed data.
+
+    Supports both v1.0 (subscriptions only) and v2.0 (Money Flow) formats.
+
+    Args:
+        subscriptions: List of payment dictionaries.
+        skip_duplicates: Whether to skip duplicates.
+        db: Database session.
+
+    Returns:
+        ImportResult with counts and errors.
+    """
+    service = SubscriptionService(db)
+    existing = await service.get_all()
+    existing_names = {s.name.lower() for s in existing}
+
+    result = ImportResult(
+        total=len(subscriptions),
+        imported=0,
+        skipped=0,
+        failed=0,
+        errors=[],
+    )
+
+    for i, sub_data in enumerate(subscriptions):
+        try:
+            name = sub_data.get("name", "").strip()
+            if not name:
+                result.failed += 1
+                result.errors.append(f"Row {i + 1}: Missing name")
+                continue
+
+            # Check for duplicates
+            if name.lower() in existing_names:
+                if skip_duplicates:
+                    result.skipped += 1
+                    continue
+                else:
+                    result.failed += 1
+                    result.errors.append(f"Row {i + 1}: Duplicate name '{name}'")
+                    continue
+
+            # Parse amount
+            try:
+                amount = Decimal(sub_data.get("amount", "0"))
+                if amount <= 0:
+                    raise ValueError("Amount must be positive")
+            except (InvalidOperation, ValueError) as e:
+                result.failed += 1
+                result.errors.append(f"Row {i + 1}: Invalid amount - {e}")
+                continue
+
+            # Parse frequency (accept both upper and lower case)
+            freq_str = sub_data.get("frequency", "monthly").lower()
+            try:
+                frequency = Frequency(freq_str)
+            except ValueError:
+                result.failed += 1
+                result.errors.append(f"Row {i + 1}: Invalid frequency '{freq_str}'")
+                continue
+
+            # Parse start_date
+            start_date_str = sub_data.get("start_date", "")
+            try:
+                if start_date_str:
+                    start_date_val = date.fromisoformat(start_date_str)
+                else:
+                    start_date_val = date.today()
+            except ValueError:
+                result.failed += 1
+                result.errors.append(f"Row {i + 1}: Invalid start_date '{start_date_str}'")
+                continue
+
+            # Parse boolean fields
+            def parse_bool(value: str | bool) -> bool:
+                if isinstance(value, bool):
+                    return value
+                return str(value).lower() in ("true", "1", "yes")
+
+            # Parse optional Decimal fields
+            def parse_decimal(value: str | None) -> Decimal | None:
+                if not value or str(value).strip() == "":
+                    return None
+                try:
+                    return Decimal(str(value))
+                except InvalidOperation:
+                    return None
+
+            # Parse payment_type (Money Flow v2.0 field)
+            payment_type_str = sub_data.get("payment_type", "subscription").lower()
+            try:
+                payment_type_val = PaymentType(payment_type_str)
+            except ValueError:
+                # Default to subscription for unknown types
+                payment_type_val = PaymentType.SUBSCRIPTION
+
+            # Create subscription/payment
+            create_data = SubscriptionCreate(
+                name=name,
+                amount=amount,
+                currency=sub_data.get("currency", "GBP"),
+                frequency=frequency,
+                frequency_interval=int(sub_data.get("frequency_interval", 1)),
+                start_date=start_date_val,
+                payment_type=payment_type_val,
+                category=sub_data.get("category") or None,
+                notes=sub_data.get("notes") or None,
+                payment_method=sub_data.get("payment_method") or None,
+                reminder_days=int(sub_data.get("reminder_days", 3)),
+                icon_url=sub_data.get("icon_url") or None,
+                color=sub_data.get("color", "#3B82F6"),
+                auto_renew=parse_bool(sub_data.get("auto_renew", True)),
+                is_installment=parse_bool(sub_data.get("is_installment", False)),
+                total_installments=int(sub_data["total_installments"])
+                if sub_data.get("total_installments")
+                else None,
+                # Debt-specific fields (Money Flow v2.0)
+                total_owed=parse_decimal(sub_data.get("total_owed")),
+                remaining_balance=parse_decimal(sub_data.get("remaining_balance")),
+                creditor=sub_data.get("creditor") or None,
+                # Savings-specific fields (Money Flow v2.0)
+                target_amount=parse_decimal(sub_data.get("target_amount")),
+                current_saved=parse_decimal(sub_data.get("current_saved")),
+                recipient=sub_data.get("recipient") or None,
+            )
+
+            await service.create(create_data)
+            existing_names.add(name.lower())
+            result.imported += 1
+
+        except Exception as e:
+            result.failed += 1
+            result.errors.append(f"Row {i + 1}: {e}")
+            logger.exception(f"Failed to import payment row {i + 1}")
+
+    return result

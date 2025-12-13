@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<command_prompt_template>
+  <header>Parse this user command and extract intent and entities.</header>
+
+  <user_command_format>User command: {user_command}</user_command_format>
+
+  <patterns_header>Available command patterns:</patterns_header>
+
+  <pattern_format>
+    <type_header>{pattern_type}:</type_header>
+    <examples_header>Examples:</examples_header>
+    <example_format>  - {example}</example_format>
+    <extraction_header>Extract:</extraction_header>
+    <field_format>  - {field_name} [{required}]{default}: {description}</field_format>
+  </pattern_format>
+
+  <response_format>
+Respond with JSON only in this format:
+{
+  "intent": "CREATE|READ|UPDATE|DELETE|SUMMARY|UPCOMING|CONVERT",
+  "entities": { ... extracted fields ... },
+  "confidence": 0.0-1.0
+}
+  </response_format>
+</command_prompt_template>

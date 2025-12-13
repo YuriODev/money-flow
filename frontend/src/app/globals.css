@@ -1,0 +1,673 @@
+@import "tailwindcss";
+
+/* ============================================
+   Tailwind CSS v4 Theme Configuration
+   Using CSS-first approach with @theme
+   ============================================ */
+
+@theme {
+  /* Colors - Primary palette */
+  --color-primary: oklch(0.6 0.2 250);
+  --color-primary-foreground: oklch(0.98 0.01 250);
+  --color-primary-light: oklch(0.7 0.15 250);
+  --color-primary-dark: oklch(0.5 0.22 250);
+
+  /* Colors - Secondary palette */
+  --color-secondary: oklch(0.92 0.02 250);
+  --color-secondary-foreground: oklch(0.25 0.05 250);
+
+  /* Colors - Accent palette */
+  --color-accent: oklch(0.7 0.18 300);
+  --color-accent-foreground: oklch(0.98 0.01 300);
+
+  /* Colors - Muted tones */
+  --color-muted: oklch(0.95 0.01 250);
+  --color-muted-foreground: oklch(0.5 0.02 250);
+
+  /* Colors - Background and foreground */
+  --color-background: oklch(0.99 0.005 250);
+  --color-foreground: oklch(0.15 0.03 250);
+
+  /* Colors - Card */
+  --color-card: oklch(1 0 0);
+  --color-card-foreground: oklch(0.15 0.03 250);
+
+  /* Colors - Border and input */
+  --color-border: oklch(0.9 0.01 250);
+  --color-input: oklch(0.9 0.01 250);
+  --color-ring: oklch(0.6 0.2 250);
+
+  /* Colors - Status */
+  --color-success: oklch(0.65 0.2 145);
+  --color-success-foreground: oklch(0.98 0.01 145);
+  --color-warning: oklch(0.75 0.18 85);
+  --color-warning-foreground: oklch(0.25 0.05 85);
+  --color-danger: oklch(0.6 0.22 25);
+  --color-danger-foreground: oklch(0.98 0.01 25);
+
+  /* Glassmorphism colors */
+  --color-glass: oklch(1 0 0 / 0.7);
+  --color-glass-border: oklch(1 0 0 / 0.2);
+  --color-glass-highlight: oklch(1 0 0 / 0.4);
+
+  /* Border radius */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-full: 9999px;
+
+  /* Shadows - Modern soft shadows */
+  --shadow-sm: 0 1px 2px 0 oklch(0 0 0 / 0.03);
+  --shadow-md: 0 4px 6px -1px oklch(0 0 0 / 0.05), 0 2px 4px -2px oklch(0 0 0 / 0.05);
+  --shadow-lg: 0 10px 15px -3px oklch(0 0 0 / 0.08), 0 4px 6px -4px oklch(0 0 0 / 0.05);
+  --shadow-xl: 0 20px 25px -5px oklch(0 0 0 / 0.08), 0 8px 10px -6px oklch(0 0 0 / 0.05);
+  --shadow-glow: 0 0 20px -5px oklch(0.6 0.2 250 / 0.3);
+  --shadow-glass: 0 8px 32px 0 oklch(0 0 0 / 0.08);
+
+  /* Blur values for glassmorphism */
+  --blur-sm: 4px;
+  --blur-md: 8px;
+  --blur-lg: 16px;
+  --blur-xl: 24px;
+
+  /* Animations */
+  --animate-fade-in: fade-in 0.3s ease-out;
+  --animate-slide-up: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-slide-down: slide-down 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-scale-in: scale-in 0.2s ease-out;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-shimmer: shimmer 2s linear infinite;
+  --animate-pulse-soft: pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+
+  /* Fonts - Using Geist */
+  --font-sans: var(--font-geist-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, monospace;
+}
+
+/* ============================================
+   Keyframe Animations
+   ============================================ */
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ============================================
+   Base Styles
+   ============================================ */
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    border-color: var(--color-border);
+  }
+
+  html {
+    box-sizing: border-box;
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  /* Modern focus styles */
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  /* Selection styles */
+  ::selection {
+    background-color: oklch(0.6 0.2 250 / 0.2);
+  }
+}
+
+/* ============================================
+   Modern Component Utilities
+   ============================================ */
+
+@layer components {
+  /* Glassmorphism card */
+  .glass-card {
+    background: var(--color-glass);
+    backdrop-filter: blur(var(--blur-lg)) saturate(180%);
+    -webkit-backdrop-filter: blur(var(--blur-lg)) saturate(180%);
+    border: 1px solid var(--color-glass-border);
+    box-shadow: var(--shadow-glass);
+  }
+
+  .glass-card-subtle {
+    background: oklch(1 0 0 / 0.5);
+    backdrop-filter: blur(var(--blur-md)) saturate(150%);
+    -webkit-backdrop-filter: blur(var(--blur-md)) saturate(150%);
+    border: 1px solid oklch(1 0 0 / 0.15);
+  }
+
+  /* Gradient backgrounds */
+  .gradient-primary {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+  }
+
+  .gradient-mesh {
+    background:
+      radial-gradient(at 40% 20%, oklch(0.8 0.15 250 / 0.3) 0px, transparent 50%),
+      radial-gradient(at 80% 0%, oklch(0.7 0.18 300 / 0.2) 0px, transparent 50%),
+      radial-gradient(at 0% 50%, oklch(0.75 0.12 200 / 0.2) 0px, transparent 50%),
+      radial-gradient(at 80% 50%, oklch(0.8 0.1 280 / 0.15) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, oklch(0.85 0.15 220 / 0.2) 0px, transparent 50%),
+      radial-gradient(at 80% 100%, oklch(0.9 0.1 260 / 0.15) 0px, transparent 50%);
+  }
+
+  .gradient-animated {
+    background: linear-gradient(-45deg,
+      oklch(0.7 0.15 250),
+      oklch(0.75 0.18 280),
+      oklch(0.7 0.15 300),
+      oklch(0.75 0.12 220)
+    );
+    background-size: 400% 400%;
+    animation: gradient-shift 15s ease infinite;
+  }
+
+  /* Shimmer loading effect */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      oklch(0.95 0.01 250) 0%,
+      oklch(0.98 0.005 250) 50%,
+      oklch(0.95 0.01 250) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  /* Modern button styles */
+  .btn-primary {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    color: var(--color-primary-foreground);
+    padding: 0.625rem 1.25rem;
+    border-radius: var(--radius-lg);
+    font-weight: 500;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: var(--shadow-md), 0 0 0 0 oklch(0.6 0.2 250 / 0);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-lg), 0 0 20px -5px oklch(0.6 0.2 250 / 0.4);
+  }
+
+  .btn-primary:active {
+    transform: translateY(0);
+  }
+
+  .btn-glass {
+    background: var(--color-glass);
+    backdrop-filter: blur(var(--blur-sm));
+    -webkit-backdrop-filter: blur(var(--blur-sm));
+    border: 1px solid var(--color-glass-border);
+    padding: 0.625rem 1.25rem;
+    border-radius: var(--radius-lg);
+    font-weight: 500;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .btn-glass:hover {
+    background: oklch(1 0 0 / 0.85);
+    border-color: oklch(1 0 0 / 0.3);
+    transform: translateY(-1px);
+  }
+
+  /* Modern card with hover effect */
+  .card-hover {
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+  }
+
+  /* Glow effect */
+  .glow {
+    box-shadow: var(--shadow-glow);
+  }
+
+  .glow-on-hover {
+    transition: box-shadow 0.3s ease;
+  }
+
+  .glow-on-hover:hover {
+    box-shadow: var(--shadow-glow);
+  }
+
+  /* Status indicators */
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: var(--radius-full);
+    animation: pulse-soft 2s infinite;
+  }
+
+  .status-dot-success {
+    background-color: var(--color-success);
+    box-shadow: 0 0 8px var(--color-success);
+  }
+
+  .status-dot-warning {
+    background-color: var(--color-warning);
+    box-shadow: 0 0 8px var(--color-warning);
+  }
+
+  .status-dot-danger {
+    background-color: var(--color-danger);
+    box-shadow: 0 0 8px var(--color-danger);
+  }
+
+  /* Progress bar */
+  .progress-bar {
+    height: 6px;
+    background: var(--color-muted);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-accent) 100%);
+    border-radius: var(--radius-full);
+    transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Badge styles */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.625rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border-radius: var(--radius-full);
+    transition: all 0.2s ease;
+  }
+
+  .badge-primary {
+    background: oklch(0.6 0.2 250 / 0.1);
+    color: var(--color-primary);
+    border: 1px solid oklch(0.6 0.2 250 / 0.2);
+  }
+
+  .badge-success {
+    background: oklch(0.65 0.2 145 / 0.1);
+    color: var(--color-success);
+    border: 1px solid oklch(0.65 0.2 145 / 0.2);
+  }
+
+  .badge-warning {
+    background: oklch(0.75 0.18 85 / 0.1);
+    color: oklch(0.55 0.15 85);
+    border: 1px solid oklch(0.75 0.18 85 / 0.2);
+  }
+
+  .badge-danger {
+    background: oklch(0.6 0.22 25 / 0.1);
+    color: var(--color-danger);
+    border: 1px solid oklch(0.6 0.22 25 / 0.2);
+  }
+
+  /* Input styles */
+  .input-modern {
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 0.75rem 1rem;
+    transition: all 0.2s ease;
+  }
+
+  .input-modern:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px oklch(0.6 0.2 250 / 0.1);
+  }
+
+  .input-glass {
+    background: var(--color-glass);
+    backdrop-filter: blur(var(--blur-sm));
+    -webkit-backdrop-filter: blur(var(--blur-sm));
+    border: 1px solid var(--color-glass-border);
+    border-radius: var(--radius-lg);
+    padding: 0.75rem 1rem;
+    transition: all 0.2s ease;
+  }
+
+  .input-glass:focus {
+    background: oklch(1 0 0 / 0.85);
+    border-color: var(--color-primary);
+  }
+}
+
+/* ============================================
+   Utility Classes
+   ============================================ */
+
+@layer utilities {
+  /* Text gradient */
+  .text-gradient {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Container queries support */
+  .container-query {
+    container-type: inline-size;
+  }
+
+  /* Smooth transitions */
+  .transition-smooth {
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Hide scrollbar but allow scrolling */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Modern scrollbar */
+  .scrollbar-modern {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border) transparent;
+  }
+
+  .scrollbar-modern::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .scrollbar-modern::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-modern::-webkit-scrollbar-thumb {
+    background-color: var(--color-border);
+    border-radius: var(--radius-full);
+  }
+
+  .scrollbar-modern::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-muted-foreground);
+  }
+}
+
+/* ============================================
+   View Transitions API
+   ============================================ */
+
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-old(root) {
+  animation: 0.3s ease-out both fade-out;
+}
+
+::view-transition-new(root) {
+  animation: 0.3s ease-out both fade-in;
+}
+
+@keyframes fade-out {
+  to { opacity: 0; }
+}
+
+/* ============================================
+   Scroll-Driven Animations (2025 Feature)
+   ============================================ */
+
+@supports (animation-timeline: scroll()) {
+  .scroll-fade-in {
+    animation: scroll-fade-in linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 40%;
+  }
+
+  @keyframes scroll-fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(20px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  .scroll-scale {
+    animation: scroll-scale linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 50%;
+  }
+
+  @keyframes scroll-scale {
+    from {
+      transform: scale(0.8);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  /* Parallax effect on scroll */
+  .scroll-parallax {
+    animation: scroll-parallax linear both;
+    animation-timeline: scroll();
+  }
+
+  @keyframes scroll-parallax {
+    from { transform: translateY(0); }
+    to { transform: translateY(-50px); }
+  }
+}
+
+/* ============================================
+   @starting-style for Entry Animations
+   (Used for popovers, dialogs, tooltips)
+   ============================================ */
+
+@supports (selector(:popover-open)) {
+  [popover] {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    transition:
+      opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+      overlay 0.3s cubic-bezier(0.16, 1, 0.3, 1) allow-discrete,
+      display 0.3s cubic-bezier(0.16, 1, 0.3, 1) allow-discrete;
+  }
+
+  @starting-style {
+    [popover]:popover-open {
+      opacity: 0;
+      transform: scale(0.95) translateY(10px);
+    }
+  }
+
+  [popover]:not(:popover-open) {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+}
+
+/* ============================================
+   CSS Anchor Positioning (2025 Feature)
+   Fallback with traditional positioning
+   ============================================ */
+
+@supports (anchor-name: --anchor) {
+  .anchor-trigger {
+    anchor-name: --tooltip-anchor;
+  }
+
+  .anchor-tooltip {
+    position: fixed;
+    position-anchor: --tooltip-anchor;
+    inset-area: top;
+    margin-bottom: 8px;
+  }
+}
+
+/* ============================================
+   Text Box Trim (2025 Feature)
+   Better text alignment
+   ============================================ */
+
+@supports (text-box-trim: trim-both) {
+  .text-trim {
+    text-box-trim: trim-both;
+    text-box-edge: cap alphabetic;
+  }
+}
+
+/* ============================================
+   Subgrid Support
+   ============================================ */
+
+@supports (grid-template-rows: subgrid) {
+  .subgrid-rows {
+    display: grid;
+    grid-template-rows: subgrid;
+  }
+
+  .subgrid-cols {
+    display: grid;
+    grid-template-columns: subgrid;
+  }
+}
+
+/* ============================================
+   :has() Parent Selector Utilities
+   ============================================ */
+
+/* Card that contains a status indicator */
+.card:has(.status-dot-danger) {
+  border-color: oklch(0.6 0.22 25 / 0.3);
+}
+
+.card:has(.status-dot-warning) {
+  border-color: oklch(0.75 0.18 85 / 0.3);
+}
+
+.card:has(.status-dot-success) {
+  border-color: oklch(0.65 0.2 145 / 0.3);
+}
+
+/* Focus-within for form groups */
+.input-group:has(:focus) {
+  box-shadow: 0 0 0 3px oklch(0.6 0.2 250 / 0.1);
+}
+
+/* ============================================
+   Container Style Queries (2025)
+   ============================================ */
+
+@container style(--card-variant: featured) {
+  .card-content {
+    padding: 2rem;
+    background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-accent) 100%);
+  }
+}
+
+/* ============================================
+   Light-Dark Color Function
+   ============================================ */
+
+@supports (color: light-dark(white, black)) {
+  :root {
+    color-scheme: light dark;
+    --adaptive-bg: light-dark(
+      oklch(0.99 0.005 250),
+      oklch(0.15 0.03 250)
+    );
+    --adaptive-text: light-dark(
+      oklch(0.15 0.03 250),
+      oklch(0.95 0.01 250)
+    );
+  }
+}
+
+/* ============================================
+   Dark Mode (Future Enhancement)
+   ============================================ */
+
+@media (prefers-color-scheme: dark) {
+  /* Dark mode variables can be added here */
+}

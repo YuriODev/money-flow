@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<currency_config>
+  <default_currency>GBP</default_currency>
+  <supported_currencies>
+    <currency code="GBP" symbol="£" name="British Pound" flag="🇬🇧"/>
+    <currency code="EUR" symbol="€" name="Euro" flag="🇪🇺"/>
+    <currency code="USD" symbol="$" name="US Dollar" flag="🇺🇸"/>
+    <currency code="UAH" symbol="₴" name="Ukrainian Hryvnia" flag="🇺🇦"/>
+  </supported_currencies>
+  <currency_detection>
+    <rule>If user says "bucks" or "dollars", currency is USD ($)</rule>
+    <rule>If user says "euros", currency is EUR (€)</rule>
+    <rule>If user says "pounds" or "quid", currency is GBP (£)</rule>
+    <rule>If user says "hryvnia" or "hryvnias" or "griven", currency is UAH (₴)</rule>
+    <rule>If user uses £ symbol, currency is GBP</rule>
+    <rule>If user uses $ symbol, currency is USD</rule>
+    <rule>If user uses € symbol, currency is EUR</rule>
+    <rule>If user uses ₴ symbol, currency is UAH</rule>
+    <rule>If no currency specified, default is GBP (£)</rule>
+  </currency_detection>
+</currency_config>
