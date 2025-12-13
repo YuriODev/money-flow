@@ -114,7 +114,7 @@ limiter = Limiter(
     default_limits=[settings.rate_limit_default] if settings.rate_limit_enabled else [],
     storage_uri=_storage_uri,
     strategy="fixed-window",  # Simple fixed window strategy
-    headers_enabled=True,  # Add X-RateLimit-* headers to responses
+    headers_enabled=False,  # Disabled due to slowapi/starlette compatibility issue
 )
 
 # Rate limit decorators for different endpoint types
