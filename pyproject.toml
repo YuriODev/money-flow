@@ -23,6 +23,8 @@ dependencies = [
     "python-dateutil>=2.8.2",
     "httpx>=0.26.0",
     "python-multipart>=0.0.6",
+    # Authentication dependencies
+    "passlib[bcrypt]>=1.7.4",
     # RAG dependencies
     "qdrant-client>=1.7.0",
     "sentence-transformers>=2.2.0",
