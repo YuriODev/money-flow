@@ -20,9 +20,9 @@ import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from slowapi import _rate_limit_exceeded_handler
+from fastapi.responses import JSONResponse
 from slowapi.errors import RateLimitExceeded
 
 from src.api import agent, analytics, auth, calendar, cards, insights, search, subscriptions
@@ -83,7 +83,21 @@ app = FastAPI(
 
 # Rate limiting - attach limiter to app state
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+
+async def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
+    """Custom handler for rate limit exceeded errors.
+
+    Replaces slowapi._rate_limit_exceeded_handler which has compatibility
+    issues with newer Starlette versions.
+    """
+    return JSONResponse(
+        status_code=429,
+        content={"detail": f"Rate limit exceeded: {exc.detail}"},
+    )
+
+
+app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
 
 # Security headers middleware (XSS, clickjacking, HSTS, CSP)
 # Note: Must be added before CORS middleware to ensure headers are applied
