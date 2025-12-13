@@ -20,7 +20,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.api import agent, analytics, calendar, cards, insights, search, subscriptions
+from src.api import agent, analytics, auth, calendar, cards, insights, search, subscriptions
 from src.core.config import settings
 from src.db.database import init_db
 from src.services.cache_service import close_cache_service, get_cache_service
@@ -69,6 +69,7 @@ app.add_middleware(
 )
 
 # Include API routers
+app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(subscriptions.router, prefix="/api/subscriptions", tags=["subscriptions"])
 app.include_router(calendar.router, prefix="/api/calendar", tags=["calendar"])
 app.include_router(agent.router, prefix="/api/agent", tags=["agent"])

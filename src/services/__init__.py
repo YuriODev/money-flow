@@ -12,6 +12,14 @@ from src.services.payment_service import PaymentService
 from src.services.rag_analytics import RAGAnalyticsService, get_rag_analytics_service
 from src.services.rag_service import RAGService, get_rag_service
 from src.services.subscription_service import SubscriptionService
+from src.services.user_service import (
+    AccountInactiveError,
+    AccountLockedError,
+    InvalidCredentialsError,
+    UserAlreadyExistsError,
+    UserNotFoundError,
+    UserService,
+)
 from src.services.vector_store import VectorStore, get_vector_store
 
 __all__ = [
@@ -24,6 +32,12 @@ __all__ = [
     "RAGAnalyticsService",
     "RAGService",
     "SubscriptionService",
+    "UserService",
+    "UserNotFoundError",
+    "UserAlreadyExistsError",
+    "InvalidCredentialsError",
+    "AccountLockedError",
+    "AccountInactiveError",
     "VectorStore",
     "generate_session_id",
     "get_cache_service",
