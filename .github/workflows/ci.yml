@@ -342,16 +342,14 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
+          MESSAGE="✅ <b>Money Flow - CI Passed</b>%0A%0A"
+          MESSAGE+="🔗 <b>Commit:</b> <a href=\"https://github.com/${{ github.repository }}/commit/${{ github.sha }}\">${{ github.sha }}</a>%0A"
+          MESSAGE+="👤 <b>Author:</b> ${{ github.actor }}%0A%0A"
+          MESSAGE+="📋 <a href=\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\">View CI run</a>"
           curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             -d chat_id="${TELEGRAM_CHAT_ID}" \
             -d parse_mode="HTML" \
-            -d text="✅ <b>Money Flow - CI Passed</b>
-
-🔗 <b>Commit:</b> <a href=\"https://github.com/${{ github.repository }}/commit/${{ github.sha }}\">${{ github.sha }}</a>
-👤 <b>Author:</b> ${{ github.actor }}
-📝 <b>Message:</b> ${{ github.event.head_commit.message }}
-
-📋 <a href=\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\">View CI run</a>"
+            -d text="${MESSAGE}"
 
   # ============================================================================
   # Notify CI Failure
@@ -368,12 +366,11 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
+          MESSAGE="❌ <b>Money Flow - CI Failed</b>%0A%0A"
+          MESSAGE+="🔗 <b>Commit:</b> <a href=\"https://github.com/${{ github.repository }}/commit/${{ github.sha }}\">${{ github.sha }}</a>%0A"
+          MESSAGE+="👤 <b>Author:</b> ${{ github.actor }}%0A%0A"
+          MESSAGE+="📋 <a href=\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\">View failed run</a>"
           curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             -d chat_id="${TELEGRAM_CHAT_ID}" \
             -d parse_mode="HTML" \
-            -d text="❌ <b>Money Flow - CI Failed</b>
-
-🔗 <b>Commit:</b> <a href=\"https://github.com/${{ github.repository }}/commit/${{ github.sha }}\">${{ github.sha }}</a>
-👤 <b>Author:</b> ${{ github.actor }}
-
-📋 <a href=\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\">View failed run</a>"
+            -d text="${MESSAGE}"
