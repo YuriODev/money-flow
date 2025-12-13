@@ -128,10 +128,13 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
+          # Note: RAG dependencies (torch, transformers) are optional and not installed in CI
+          # to save disk space. RAG tests are skipped when RAG_ENABLED=false.
 
       - name: Run Tests with Coverage
         run: |
           pytest tests/ \
+            --ignore=tests/unit/test_vector_store_hybrid.py \
             --cov=src \
             --cov-report=xml \
             --cov-report=term-missing \

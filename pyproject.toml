@@ -29,14 +29,17 @@ dependencies = [
     "pyjwt>=2.8.0",
     # Security dependencies
     "slowapi>=0.1.9",  # Rate limiting
-    # RAG dependencies
-    "qdrant-client>=1.7.0",
-    "sentence-transformers>=2.2.0",
-    "torch>=2.0.0",
+    # Caching
     "redis>=5.0.0",
 ]
 
 [project.optional-dependencies]
+rag = [
+    # RAG dependencies (optional - only needed when RAG_ENABLED=true)
+    "qdrant-client>=1.7.0",
+    "sentence-transformers>=2.2.0",
+    "torch>=2.0.0",
+]
 dev = [
     "pytest>=7.4.0",
     "pytest-asyncio>=0.23.0",

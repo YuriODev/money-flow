@@ -15,11 +15,20 @@ import uuid
 from dataclasses import dataclass
 from typing import Any, ClassVar
 
-from qdrant_client import QdrantClient
-from qdrant_client.http import models
-from qdrant_client.http.exceptions import UnexpectedResponse
-
 from src.core.config import settings
+
+# RAG dependencies are optional - only import if RAG is enabled
+try:
+    from qdrant_client import QdrantClient
+    from qdrant_client.http import models
+    from qdrant_client.http.exceptions import UnexpectedResponse
+
+    QDRANT_AVAILABLE = True
+except ImportError:
+    QDRANT_AVAILABLE = False
+    QdrantClient = None  # type: ignore
+    models = None  # type: ignore
+    UnexpectedResponse = Exception  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -103,7 +112,14 @@ class VectorStore:
 
         Raises:
             ConnectionError: If cannot connect to Qdrant.
+            ImportError: If qdrant-client is not installed.
         """
+        if not QDRANT_AVAILABLE:
+            raise ImportError(
+                "qdrant-client is required for RAG features. "
+                "Install with: pip install 'subscription-tracker[rag]'"
+            )
+
         if VectorStore._client is None:
             try:
                 VectorStore._client = QdrantClient(
