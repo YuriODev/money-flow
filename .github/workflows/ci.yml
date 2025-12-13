@@ -107,6 +107,7 @@ jobs:
       JWT_SECRET_KEY: test-secret-key-for-ci-only-do-not-use-in-production
       DEBUG: "true"
       RAG_ENABLED: "false"
+      RATE_LIMIT_ENABLED: "false"  # Disabled due to slowapi/starlette compatibility issue
 
     steps:
       - uses: actions/checkout@v4
