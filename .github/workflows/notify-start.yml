@@ -1,0 +1,32 @@
+name: Notify CI Started
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  notify:
+    name: Send Start Notification
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Send Telegram Notification
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "Telegram secrets not configured, skipping notification"
+            exit 0
+          fi
+          MESSAGE="🚀 <b>Money Flow - CI Started</b>%0A%0A"
+          MESSAGE+="🔗 <b>Commit:</b> <a href=\"https://github.com/${{ github.repository }}/commit/${{ github.sha }}\">${{ github.sha }}</a>%0A"
+          MESSAGE+="👤 <b>Author:</b> ${{ github.actor }}%0A"
+          MESSAGE+="📝 <b>Message:</b> $(echo '${{ github.event.head_commit.message }}' | head -1)%0A%0A"
+          MESSAGE+="📋 <a href=\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\">Watch CI run</a>"
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d parse_mode="HTML" \
+            -d text="${MESSAGE}"
