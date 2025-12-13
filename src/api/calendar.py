@@ -10,7 +10,7 @@ import logging
 from datetime import date
 from decimal import Decimal
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -18,6 +18,7 @@ from src.core.config import settings
 from src.core.dependencies import get_db
 from src.models.subscription import PaymentStatus
 from src.schemas.subscription import CalendarEvent, MonthlyPaymentsSummary, PaymentHistoryResponse
+from src.security.rate_limit import limiter, rate_limit_get, rate_limit_write
 from src.services.currency_service import CurrencyService
 from src.services.payment_service import PaymentService
 
@@ -71,7 +72,9 @@ class MonthlySummaryResponse(BaseModel):
 
 
 @router.get("/events", response_model=list[CalendarEvent])
+@limiter.limit(rate_limit_get)
 async def get_calendar_events(
+    request: Request,
     start_date: date = Query(..., description="Start date for calendar range"),
     end_date: date = Query(..., description="End date for calendar range"),
     db: AsyncSession = Depends(get_db),
@@ -111,7 +114,9 @@ async def get_calendar_events(
 
 
 @router.get("/monthly-summary", response_model=MonthlySummaryResponse)
+@limiter.limit(rate_limit_get)
 async def get_monthly_summary(
+    request: Request,
     year: int = Query(..., ge=2020, le=2100, description="Year"),
     month: int = Query(..., ge=1, le=12, description="Month (1-12)"),
     db: AsyncSession = Depends(get_db),
@@ -138,7 +143,9 @@ async def get_monthly_summary(
 
 
 @router.get("/payments/{subscription_id}", response_model=list[PaymentHistoryResponse])
+@limiter.limit(rate_limit_get)
 async def get_payment_history(
+    request: Request,
     subscription_id: str,
     limit: int = Query(default=50, ge=1, le=200, description="Maximum records"),
     offset: int = Query(default=0, ge=0, description="Records to skip"),
@@ -167,7 +174,9 @@ async def get_payment_history(
 
 
 @router.post("/payments/{subscription_id}", response_model=PaymentHistoryResponse)
+@limiter.limit(rate_limit_write)
 async def record_payment(
+    http_request: Request,
     subscription_id: str,
     request: RecordPaymentRequest,
     db: AsyncSession = Depends(get_db),
@@ -224,7 +233,9 @@ async def record_payment(
 
 
 @router.delete("/payments/{subscription_id}/{payment_date}", status_code=status.HTTP_204_NO_CONTENT)
+@limiter.limit(rate_limit_write)
 async def delete_payment(
+    request: Request,
     subscription_id: str,
     payment_date: date,
     db: AsyncSession = Depends(get_db),
@@ -262,7 +273,9 @@ async def delete_payment(
 
 
 @router.get("/payments-summary", response_model=MonthlyPaymentsSummary)
+@limiter.limit(rate_limit_get)
 async def get_monthly_payments_summary(
+    request: Request,
     currency: str = Query(default="GBP", description="Target currency for totals"),
     db: AsyncSession = Depends(get_db),
 ) -> MonthlyPaymentsSummary:

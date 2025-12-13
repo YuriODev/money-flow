@@ -10,12 +10,14 @@ The search endpoints support:
 
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.config import settings
 from src.core.dependencies import get_db
+from src.security.input_sanitizer import sanitize_input
+from src.security.rate_limit import limiter, rate_limit_get, rate_limit_write
 from src.services.conversation_service import ConversationService
 from src.services.rag_service import get_rag_service
 
@@ -101,7 +103,9 @@ class SearchResponse(BaseModel):
 
 
 @router.post("/notes", response_model=SearchResponse)
+@limiter.limit(rate_limit_write)
 async def search_notes(
+    http_request: Request,
     request: SearchRequest,
     db: AsyncSession = Depends(get_db),
 ) -> SearchResponse:
@@ -140,11 +144,22 @@ async def search_notes(
             detail="RAG search is not enabled. Set RAG_ENABLED=true to enable.",
         )
 
+    # Sanitize search query to prevent injection attacks
+    sanitization_result = sanitize_input(request.query)
+    if not sanitization_result.is_safe:
+        logger.warning(f"Blocked search query: {sanitization_result.blocked_reason}")
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid search query. Please rephrase and try again.",
+        )
+
+    safe_query = sanitization_result.sanitized_input
+
     try:
         rag = get_rag_service()
         results = await rag.search_notes(
             user_id=request.user_id,
-            query=request.query,
+            query=safe_query,
             limit=request.limit,
         )
 
@@ -168,7 +183,9 @@ async def search_notes(
 
 
 @router.post("/conversations", response_model=SearchResponse)
+@limiter.limit(rate_limit_write)
 async def search_conversations(
+    http_request: Request,
     request: SearchRequest,
     db: AsyncSession = Depends(get_db),
 ) -> SearchResponse:
@@ -207,9 +224,20 @@ async def search_conversations(
             detail="RAG search is not enabled. Set RAG_ENABLED=true to enable.",
         )
 
+    # Sanitize search query to prevent injection attacks
+    sanitization_result = sanitize_input(request.query)
+    if not sanitization_result.is_safe:
+        logger.warning(f"Blocked conversation search query: {sanitization_result.blocked_reason}")
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid search query. Please rephrase and try again.",
+        )
+
+    safe_query = sanitization_result.sanitized_input
+
     try:
         rag = get_rag_service()
-        embedding = await rag.embedding_service.embed(request.query, use_cache=True)
+        embedding = await rag.embedding_service.embed(safe_query, use_cache=True)
 
         # Search the conversations collection
         from src.services.vector_store import VectorStore
@@ -242,7 +270,9 @@ async def search_conversations(
 
 
 @router.get("/history/{session_id}")
+@limiter.limit(rate_limit_get)
 async def get_session_history(
+    request: Request,
     session_id: str,
     user_id: str = "default",
     limit: int = 20,

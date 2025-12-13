@@ -4,7 +4,7 @@ This module provides REST API endpoints for managing payment cards
 and getting balance summaries.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.dependencies import get_db
@@ -16,6 +16,7 @@ from src.schemas.payment_card import (
     PaymentCardResponse,
     PaymentCardUpdate,
 )
+from src.security.rate_limit import limiter, rate_limit_get, rate_limit_write
 from src.services.currency_service import CurrencyService
 from src.services.payment_card_service import PaymentCardService
 
@@ -49,6 +50,7 @@ def _card_to_response(card: PaymentCard) -> PaymentCardResponse:
         updated_at=card.updated_at,
     )
 
+
 router = APIRouter(prefix="/cards", tags=["Payment Cards"])
 
 
@@ -59,7 +61,9 @@ router = APIRouter(prefix="/cards", tags=["Payment Cards"])
     summary="Create payment card",
     description="Create a new payment card/account for tracking payments.",
 )
+@limiter.limit(rate_limit_write)
 async def create_card(
+    request: Request,
     data: PaymentCardCreate,
     db: AsyncSession = Depends(get_db),
 ) -> PaymentCardResponse:
@@ -76,7 +80,9 @@ async def create_card(
     summary="List payment cards",
     description="Get all payment cards, optionally filtered by active status.",
 )
+@limiter.limit(rate_limit_get)
 async def list_cards(
+    request: Request,
     is_active: bool | None = None,
     db: AsyncSession = Depends(get_db),
 ) -> list[PaymentCardResponse]:
@@ -92,7 +98,9 @@ async def list_cards(
     summary="Get card balance summary",
     description="Get summary of required balances for all cards based on subscriptions.",
 )
+@limiter.limit(rate_limit_get)
 async def get_balance_summary(
+    request: Request,
     currency: str = "GBP",
     db: AsyncSession = Depends(get_db),
 ) -> AllCardsBalanceSummary:
@@ -111,7 +119,9 @@ async def get_balance_summary(
     summary="Get payment card",
     description="Get a payment card by ID.",
 )
+@limiter.limit(rate_limit_get)
 async def get_card(
+    request: Request,
     card_id: str,
     db: AsyncSession = Depends(get_db),
 ) -> PaymentCardResponse:
@@ -132,7 +142,9 @@ async def get_card(
     summary="Update payment card",
     description="Update a payment card's details.",
 )
+@limiter.limit(rate_limit_write)
 async def update_card(
+    request: Request,
     card_id: str,
     data: PaymentCardUpdate,
     db: AsyncSession = Depends(get_db),
@@ -157,7 +169,9 @@ async def update_card(
     summary="Delete payment card",
     description="Delete a payment card. Subscriptions using this card will have card_id set to null.",
 )
+@limiter.limit(rate_limit_write)
 async def delete_card(
+    request: Request,
     card_id: str,
     db: AsyncSession = Depends(get_db),
 ) -> None:

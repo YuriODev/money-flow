@@ -8,12 +8,13 @@ import logging
 from datetime import datetime
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.config import settings
 from src.core.dependencies import get_db
+from src.security.rate_limit import limiter, rate_limit_get, rate_limit_write
 from src.services.cache_service import get_cache_service
 from src.services.rag_analytics import get_rag_analytics_service
 
@@ -92,7 +93,9 @@ class HourlyDataPoint(BaseModel):
 
 
 @router.get("/", response_model=dict[str, Any])
+@limiter.limit(rate_limit_get)
 async def get_analytics_overview(
+    request: Request,
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
     """Get overview of RAG analytics.
@@ -127,7 +130,9 @@ async def get_analytics_overview(
 
 
 @router.get("/daily", response_model=DailyReportResponse)
+@limiter.limit(rate_limit_get)
 async def get_daily_report(
+    request: Request,
     date: str | None = Query(
         None,
         description="Date in YYYY-MM-DD format (default: today)",
@@ -171,7 +176,9 @@ async def get_daily_report(
 
 
 @router.get("/hourly", response_model=list[HourlyDataPoint])
+@limiter.limit(rate_limit_get)
 async def get_hourly_breakdown(
+    request: Request,
     date: str | None = Query(
         None,
         description="Date in YYYY-MM-DD format (default: today)",
@@ -212,7 +219,8 @@ async def get_hourly_breakdown(
 
 
 @router.get("/cache", response_model=CacheStatsResponse)
-async def get_cache_stats() -> dict[str, Any]:
+@limiter.limit(rate_limit_get)
+async def get_cache_stats(request: Request) -> dict[str, Any]:
     """Get Redis cache statistics.
 
     Returns current cache health and performance metrics
@@ -234,7 +242,9 @@ async def get_cache_stats() -> dict[str, Any]:
 
 
 @router.get("/health", response_model=SystemHealthResponse)
+@limiter.limit(rate_limit_get)
 async def get_system_health(
+    request: Request,
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
     """Get overall RAG system health.
@@ -285,7 +295,8 @@ async def get_system_health(
 
 
 @router.delete("/cache/pattern/{pattern}")
-async def clear_cache_pattern(pattern: str) -> dict[str, Any]:
+@limiter.limit(rate_limit_write)
+async def clear_cache_pattern(request: Request, pattern: str) -> dict[str, Any]:
     """Clear cache keys matching a pattern.
 
     Use with caution - this deletes cached data.

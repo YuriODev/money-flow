@@ -433,7 +433,9 @@ class SubscriptionService:
 
             # Group by category (subcategory) - include one-time for tracking
             cat = sub.category or "Uncategorized"
-            by_category[cat] = by_category.get(cat, Decimal("0")) + (Decimal("0") if is_one_time else monthly)
+            by_category[cat] = by_category.get(cat, Decimal("0")) + (
+                Decimal("0") if is_one_time else monthly
+            )
 
             # Group by payment type - show one-time as total amount, not monthly
             ptype = sub.payment_type.value

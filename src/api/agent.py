@@ -10,7 +10,7 @@ database while maintaining a natural conversational flow.
 
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -18,6 +18,8 @@ from src.agent.conversational_agent import ConversationalAgent
 from src.agent.executor import AgentExecutor
 from src.core.config import settings
 from src.core.dependencies import get_db
+from src.security.input_sanitizer import sanitize_input
+from src.security.rate_limit import limiter, rate_limit_agent
 
 logger = logging.getLogger(__name__)
 
@@ -96,7 +98,9 @@ class AgentResponse(BaseModel):
 
 
 @router.post("/execute", response_model=AgentResponse)
+@limiter.limit(rate_limit_agent)
 async def execute_command(
+    http_request: Request,
     request: AgentRequest,
     db: AsyncSession = Depends(get_db),
 ) -> AgentResponse:
@@ -106,6 +110,10 @@ async def execute_command(
     natural conversations, answer questions, and perform subscription
     management tasks.
 
+    Security:
+        Input is sanitized to prevent prompt injection attacks before
+        being passed to the AI agent.
+
     Args:
         request: Agent request containing the user's message.
         db: Async database session from dependency injection.
@@ -114,7 +122,8 @@ async def execute_command(
         AgentResponse with the agent's reply and optional data.
 
     Raises:
-        HTTPException: 500 error if an unexpected error occurs.
+        HTTPException: 400 if input fails security validation.
+        HTTPException: 500 if an unexpected error occurs.
 
     Example:
         POST /api/agent/execute
@@ -127,6 +136,29 @@ async def execute_command(
             "data": null
         }
     """
+    # Sanitize user input to prevent prompt injection attacks
+    sanitization_result = sanitize_input(request.command)
+    if not sanitization_result.is_safe:
+        logger.warning(
+            f"Blocked potentially malicious input from user {request.user_id}: "
+            f"{sanitization_result.blocked_reason}"
+        )
+        return AgentResponse(
+            success=False,
+            message="I'm sorry, but I couldn't process your message. "
+            "Please rephrase and try again.",
+            data=None,
+        )
+
+    # Use sanitized input for all further processing
+    safe_command = sanitization_result.sanitized_input
+
+    # Log warnings for suspicious but allowed patterns
+    if sanitization_result.warnings:
+        logger.info(
+            f"User {request.user_id} input passed with warnings: {sanitization_result.warnings}"
+        )
+
     # Check if we have an API key for the conversational agent
     if settings.anthropic_api_key:
         try:
@@ -142,7 +174,7 @@ async def execute_command(
                         }
                     )
 
-            result = await agent.chat(request.command)
+            result = await agent.chat(safe_command)
             return AgentResponse(
                 success=True,
                 message=result.get("message", ""),
@@ -162,7 +194,7 @@ async def execute_command(
             user_id=request.user_id,
             session_id=request.session_id,
         )
-        result = await executor.execute(request.command)
+        result = await executor.execute(safe_command)
         return AgentResponse(
             success=True,
             message=result.get("message", "Command executed successfully"),

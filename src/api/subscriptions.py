@@ -13,7 +13,7 @@ import logging
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile, status
 from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -29,6 +29,7 @@ from src.schemas.subscription import (
     SubscriptionSummary,
     SubscriptionUpdate,
 )
+from src.security.rate_limit import limiter, rate_limit_get, rate_limit_write
 from src.services.currency_service import CurrencyService
 from src.services.subscription_service import SubscriptionService
 
@@ -38,7 +39,9 @@ router = APIRouter()
 
 
 @router.get("", response_model=list[SubscriptionResponse])
+@limiter.limit(rate_limit_get)
 async def list_subscriptions(
+    request: Request,
     is_active: bool | None = None,
     category: str | None = None,
     payment_type: PaymentType | None = Query(
@@ -75,7 +78,9 @@ async def list_subscriptions(
 
 
 @router.get("/summary", response_model=SubscriptionSummary)
+@limiter.limit(rate_limit_get)
 async def get_summary(
+    request: Request,
     payment_type: PaymentType | None = Query(
         default=None, description="Filter summary by payment type"
     ),
@@ -109,7 +114,9 @@ async def get_summary(
 
 
 @router.get("/{subscription_id}", response_model=SubscriptionResponse)
+@limiter.limit(rate_limit_get)
 async def get_subscription(
+    request: Request,
     subscription_id: str,
     db: AsyncSession = Depends(get_db),
 ) -> SubscriptionResponse:
@@ -143,7 +150,9 @@ async def get_subscription(
 
 
 @router.post("", response_model=SubscriptionResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit(rate_limit_write)
 async def create_subscription(
+    request: Request,
     data: SubscriptionCreate,
     db: AsyncSession = Depends(get_db),
 ) -> SubscriptionResponse:
@@ -179,7 +188,9 @@ async def create_subscription(
 
 
 @router.put("/{subscription_id}", response_model=SubscriptionResponse)
+@limiter.limit(rate_limit_write)
 async def update_subscription(
+    request: Request,
     subscription_id: str,
     data: SubscriptionUpdate,
     db: AsyncSession = Depends(get_db),
@@ -220,7 +231,9 @@ async def update_subscription(
 
 
 @router.delete("/{subscription_id}", status_code=status.HTTP_204_NO_CONTENT)
+@limiter.limit(rate_limit_write)
 async def delete_subscription(
+    request: Request,
     subscription_id: str,
     db: AsyncSession = Depends(get_db),
 ) -> None:
@@ -254,7 +267,9 @@ async def delete_subscription(
 
 
 @router.get("/export/json", response_model=ExportData)
+@limiter.limit(rate_limit_get)
 async def export_subscriptions_json(
+    request: Request,
     include_inactive: bool = Query(default=True, description="Include inactive payments"),
     payment_type: PaymentType | None = Query(default=None, description="Filter by payment type"),
     db: AsyncSession = Depends(get_db),
@@ -325,7 +340,9 @@ async def export_subscriptions_json(
 
 
 @router.get("/export/csv")
+@limiter.limit(rate_limit_get)
 async def export_subscriptions_csv(
+    request: Request,
     include_inactive: bool = Query(default=True, description="Include inactive payments"),
     payment_type: PaymentType | None = Query(default=None, description="Filter by payment type"),
     db: AsyncSession = Depends(get_db),
@@ -432,7 +449,9 @@ async def export_subscriptions_csv(
 
 
 @router.post("/import/json", response_model=ImportResult)
+@limiter.limit(rate_limit_write)
 async def import_subscriptions_json(
+    request: Request,
     file: UploadFile = File(..., description="JSON file to import"),
     skip_duplicates: bool = Query(default=True, description="Skip subscriptions with same name"),
     db: AsyncSession = Depends(get_db),
@@ -488,7 +507,9 @@ async def import_subscriptions_json(
 
 
 @router.post("/import/csv", response_model=ImportResult)
+@limiter.limit(rate_limit_write)
 async def import_subscriptions_csv(
+    request: Request,
     file: UploadFile = File(..., description="CSV file to import"),
     skip_duplicates: bool = Query(default=True, description="Skip subscriptions with same name"),
     db: AsyncSession = Depends(get_db),

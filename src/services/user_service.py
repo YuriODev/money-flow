@@ -7,7 +7,7 @@ All database operations are async for non-blocking I/O.
 """
 
 import logging
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,6 +19,9 @@ from src.auth.security import (
     validate_password_strength,
     verify_password,
 )
+
+# Note: Direct imports from src.auth.jwt and src.auth.security
+# to avoid circular imports through src.auth.__init__.py
 from src.models.user import User, UserRole
 from src.schemas.user import UserCreate, UserUpdate
 
@@ -272,7 +275,7 @@ class UserService:
         # Reset failed attempts and update login time
         user.failed_login_attempts = 0
         user.locked_until = None
-        user.last_login_at = datetime.now(UTC)
+        user.last_login_at = datetime.utcnow()
 
         await self.db.commit()
         await self.db.refresh(user)
@@ -297,7 +300,7 @@ class UserService:
         user.failed_login_attempts += 1
 
         if user.failed_login_attempts >= MAX_FAILED_ATTEMPTS:
-            user.locked_until = datetime.now(UTC) + timedelta(minutes=LOCKOUT_DURATION_MINUTES)
+            user.locked_until = datetime.utcnow() + timedelta(minutes=LOCKOUT_DURATION_MINUTES)
             logger.warning(f"Account locked due to failed attempts: {user.email}")
 
         await self.db.commit()

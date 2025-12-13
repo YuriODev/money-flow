@@ -9,11 +9,13 @@ import logging
 from datetime import date
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.dependencies import get_db
+from src.security.input_sanitizer import sanitize_input
+from src.security.rate_limit import limiter, rate_limit_get, rate_limit_write
 from src.services.historical_query_service import (
     get_historical_query_service,
 )
@@ -136,7 +138,9 @@ class HistoricalQueryResponse(BaseModel):
 
 
 @router.get("/", response_model=InsightsResponse)
+@limiter.limit(rate_limit_get)
 async def get_insights(
+    request: Request,
     months_back: int = Query(default=6, ge=1, le=24, description="Months of trend data"),
     db: AsyncSession = Depends(get_db),
 ) -> InsightsResponse:
@@ -222,7 +226,9 @@ async def get_insights(
 
 
 @router.get("/cost-comparison", response_model=CostComparisonResponse)
+@limiter.limit(rate_limit_get)
 async def get_cost_comparison(
+    request: Request,
     db: AsyncSession = Depends(get_db),
 ) -> CostComparisonResponse:
     """Get cost comparison across time periods.
@@ -268,7 +274,9 @@ async def get_cost_comparison(
 
 
 @router.get("/spending/{start_date}/{end_date}")
+@limiter.limit(rate_limit_get)
 async def get_spending_by_period(
+    request: Request,
     start_date: date,
     end_date: date,
     db: AsyncSession = Depends(get_db),
@@ -311,7 +319,9 @@ async def get_spending_by_period(
 
 
 @router.get("/renewals")
+@limiter.limit(rate_limit_get)
 async def get_upcoming_renewals(
+    request: Request,
     days: int = Query(default=30, ge=1, le=365, description="Days ahead to look"),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
@@ -368,7 +378,9 @@ async def get_upcoming_renewals(
 
 
 @router.get("/recommendations")
+@limiter.limit(rate_limit_get)
 async def get_recommendations(
+    request: Request,
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
     """Get optimization recommendations.
@@ -421,7 +433,9 @@ async def get_recommendations(
 
 
 @router.post("/historical", response_model=HistoricalQueryResponse)
+@limiter.limit(rate_limit_write)
 async def query_historical(
+    http_request: Request,
     request: HistoricalQueryRequest,
     db: AsyncSession = Depends(get_db),
 ) -> HistoricalQueryResponse:
@@ -449,9 +463,20 @@ async def query_historical(
             "summary": "Added 2 subscription(s) in last month: Netflix, Spotify"
         }
     """
+    # Sanitize the natural language query
+    sanitization_result = sanitize_input(request.query)
+    if not sanitization_result.is_safe:
+        logger.warning(f"Blocked historical query: {sanitization_result.blocked_reason}")
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid query. Please rephrase and try again.",
+        )
+
+    safe_query = sanitization_result.sanitized_input
+
     try:
         service = get_historical_query_service(db)
-        result = await service.query(request.query)
+        result = await service.query(safe_query)
 
         return HistoricalQueryResponse(
             query=result.query,

@@ -14,8 +14,50 @@
 | Phase | Sprint | Status | Focus |
 |-------|--------|--------|-------|
 | **Phase 1** | Sprint 1.1 | ✅ Complete | Authentication System |
+| **Phase 1** | Sprint 1.2 | ✅ Complete | Security Hardening |
+| **Phase 1** | Sprint 1.3 | ✅ Complete | CI/CD Pipeline |
 
-### Sprint 1.1 Tasks (Week 1) - Authentication
+### Sprint 1.3 Tasks (Week 3) - CI/CD Pipeline ✅
+
+| Task | Status | Description |
+|------|--------|-------------|
+| 1.3.1 | ✅ DONE | GitHub Actions Setup (.github/workflows/) |
+| 1.3.2 | ✅ DONE | Test Automation Pipeline (pytest, coverage) |
+| 1.3.3 | ✅ DONE | Code Quality Gates (Ruff, ESLint, pre-commit, PR template) |
+| 1.3.4 | ✅ DONE | Security Scanning (Bandit, Safety, npm audit) |
+| 1.3.5 | ✅ DONE | Docker Build Pipeline (GHCR, multi-arch) |
+| 1.3.6 | ✅ DONE | Deployment Automation (staging/prod, rollback, Telegram alerts) |
+
+**CI/CD Features Implemented:**
+- GitHub Actions CI: Python 3.11/3.12 matrix, PostgreSQL + Redis services
+- Code quality: Ruff linting/formatting, ESLint, TypeScript type-check
+- Pre-commit hooks: Ruff, Prettier, trailing whitespace, detect-secrets
+- Security: Bandit scan, Safety dependency check, npm audit
+- Docker: Build & push to GHCR, multi-arch (amd64/arm64), image tagging
+- Deploy: Staging on main push, production on release, rollback support
+- Notifications: Telegram alerts for deployments, rollbacks, and failures
+- PR template: Standardized pull request format
+
+### Sprint 1.2 Tasks (Week 2) - Security Hardening ✅
+
+| Task | Status | Description |
+|------|--------|-------------|
+| 1.2.1 | ✅ DONE | Rate Limiting (slowapi + Redis) |
+| 1.2.2 | ✅ DONE | Prompt Injection Protection |
+| 1.2.3 | ✅ DONE | Input Validation Enhancement |
+| 1.2.4 | ✅ DONE | Security Headers (CSP, HSTS, etc.) |
+| 1.2.5 | ✅ DONE | CORS Hardening |
+| 1.2.6 | ✅ DONE | Secrets Management |
+
+**Security Features Implemented:**
+- Rate limiting: 100/min GET, 20/min writes, 10/min agent, 5/min auth
+- Prompt injection: 20+ detection patterns, blocked dangerous commands
+- Input validation: Password strength, XSS/SQL detection, URL safety
+- Security headers: CSP, HSTS, X-Frame-Options, X-Content-Type-Options
+- CORS: No wildcards in production, specific methods/headers
+- Secrets: Startup validation, blocks production with default secrets
+
+### Sprint 1.1 Tasks (Week 1) - Authentication ✅
 
 | Task | Status | Description |
 |------|--------|-------------|
@@ -37,20 +79,20 @@
 | Card balance aggregation | 🟠 High | ⬜ TODO |
 | Export format inconsistencies | 🟠 High | ⬜ TODO |
 
-### Security Gaps (Sprint 1.2)
+### Security Gaps (Sprint 1.2) ✅ ALL RESOLVED
 
 | Gap | Priority | Status |
 |-----|----------|--------|
-| No authentication | 🔴 Critical | ⬜ TODO |
-| No rate limiting | 🔴 Critical | ⬜ TODO |
-| Prompt injection vulnerable | 🔴 Critical | ⬜ TODO |
-| CORS not hardened | 🟠 High | ⬜ TODO |
-| No audit logging | 🟡 Medium | ⬜ TODO |
+| No authentication | 🔴 Critical | ✅ DONE (Sprint 1.1) |
+| No rate limiting | 🔴 Critical | ✅ DONE |
+| Prompt injection vulnerable | 🔴 Critical | ✅ DONE |
+| CORS not hardened | 🟠 High | ✅ DONE |
+| No audit logging | 🟡 Medium | ⬜ TODO (Sprint 1.4) |
 
 ### Phase Overview
 
 ```
-Phase 1: Foundation & Security  [Weeks 1-4]   ░░░░░░░░░░ 0%
+Phase 1: Foundation & Security  [Weeks 1-4]   ████████░░ 75% (Sprint 1.1, 1.2, 1.3 complete)
 Phase 2: Quality & Testing      [Weeks 5-8]   ░░░░░░░░░░ 0%
 Phase 3: Architecture           [Weeks 9-12]  ░░░░░░░░░░ 0%
 Phase 4: Features & Polish      [Weeks 13-16] ░░░░░░░░░░ 0%

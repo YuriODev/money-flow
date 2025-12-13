@@ -66,8 +66,20 @@ class Settings(BaseSettings):
     api_port: int = 8000
     debug: bool = True
 
-    # CORS
+    # CORS - Security hardened configuration
+    # In production, set specific origins (no wildcards)
     cors_origins: list[str] = ["http://localhost:3000", "http://localhost:8000"]
+    # Production-only settings (override in .env for production)
+    cors_allow_credentials: bool = True
+    cors_allow_methods: list[str] = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    cors_allow_headers: list[str] = [
+        "Authorization",
+        "Content-Type",
+        "Accept",
+        "Origin",
+        "X-Requested-With",
+    ]
+    cors_max_age: int = 600  # 10 minutes preflight cache
 
     # Claude API for agentic features
     anthropic_api_key: str = ""
@@ -98,6 +110,14 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     jwt_access_token_expire_minutes: int = 30  # 30 minutes
     jwt_refresh_token_expire_days: int = 7  # 7 days
+
+    # Rate Limiting
+    rate_limit_enabled: bool = True
+    rate_limit_default: str = "100/minute"  # Default rate limit
+    rate_limit_get: str = "100/minute"  # GET endpoints
+    rate_limit_write: str = "20/minute"  # POST/PUT/DELETE endpoints
+    rate_limit_agent: str = "10/minute"  # AI agent endpoint (expensive)
+    rate_limit_auth: str = "5/minute"  # Auth endpoints (prevent brute force)
 
     # GCP
     gcp_project_id: str = ""

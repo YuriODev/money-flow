@@ -12,14 +12,28 @@ Schemas:
     SubscriptionSummary: For spending analytics responses.
     PaymentHistoryResponse: For payment history records.
     CalendarEvent: For calendar view payment events.
+
+Security:
+    - Names are sanitized to prevent XSS
+    - URLs are validated for safe schemes (no javascript:, data:)
+    - Currency codes are validated against allowed list
+    - Notes are checked for dangerous patterns
+    - UUIDs are validated for proper format
 """
 
 from datetime import date, datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from src.models.subscription import Frequency, PaymentStatus, PaymentType
+from src.security.validators import (
+    sanitize_name,
+    validate_currency,
+    validate_safe_text,
+    validate_safe_url,
+    validate_uuid,
+)
 
 
 class SubscriptionBase(BaseModel):
@@ -100,6 +114,55 @@ class SubscriptionBase(BaseModel):
 
     # Payment card link
     card_id: str | None = Field(default=None, description="Payment card UUID")
+
+    # Validators for security
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, v: str) -> str:
+        """Sanitize name to prevent XSS."""
+        return sanitize_name(v)
+
+    @field_validator("currency")
+    @classmethod
+    def validate_currency_code(cls, v: str) -> str:
+        """Validate currency against allowed list."""
+        return validate_currency(v)
+
+    @field_validator("icon_url")
+    @classmethod
+    def validate_icon_url(cls, v: str | None) -> str | None:
+        """Validate icon URL is safe."""
+        return validate_safe_url(v)
+
+    @field_validator("notes")
+    @classmethod
+    def validate_notes(cls, v: str | None) -> str | None:
+        """Validate notes don't contain dangerous content."""
+        if v is None:
+            return v
+        return validate_safe_text(v)
+
+    @field_validator("card_id")
+    @classmethod
+    def validate_card_id(cls, v: str | None) -> str | None:
+        """Validate card_id is a valid UUID."""
+        return validate_uuid(v)
+
+    @field_validator("creditor", "recipient")
+    @classmethod
+    def validate_person_names(cls, v: str | None) -> str | None:
+        """Sanitize creditor/recipient names."""
+        if v is None:
+            return v
+        return sanitize_name(v)
+
+    @field_validator("category")
+    @classmethod
+    def validate_category(cls, v: str | None) -> str | None:
+        """Sanitize category name."""
+        if v is None:
+            return v
+        return sanitize_name(v)
 
 
 class SubscriptionCreate(SubscriptionBase):
@@ -195,6 +258,59 @@ class SubscriptionUpdate(BaseModel):
 
     # Payment card link
     card_id: str | None = None
+
+    # Validators for security (same as SubscriptionBase)
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, v: str | None) -> str | None:
+        """Sanitize name to prevent XSS."""
+        if v is None:
+            return v
+        return sanitize_name(v)
+
+    @field_validator("currency")
+    @classmethod
+    def validate_currency_code(cls, v: str | None) -> str | None:
+        """Validate currency against allowed list."""
+        if v is None:
+            return v
+        return validate_currency(v)
+
+    @field_validator("icon_url")
+    @classmethod
+    def validate_icon_url(cls, v: str | None) -> str | None:
+        """Validate icon URL is safe."""
+        return validate_safe_url(v)
+
+    @field_validator("notes")
+    @classmethod
+    def validate_notes(cls, v: str | None) -> str | None:
+        """Validate notes don't contain dangerous content."""
+        if v is None:
+            return v
+        return validate_safe_text(v)
+
+    @field_validator("card_id")
+    @classmethod
+    def validate_card_id(cls, v: str | None) -> str | None:
+        """Validate card_id is a valid UUID."""
+        return validate_uuid(v)
+
+    @field_validator("creditor", "recipient")
+    @classmethod
+    def validate_person_names(cls, v: str | None) -> str | None:
+        """Sanitize creditor/recipient names."""
+        if v is None:
+            return v
+        return sanitize_name(v)
+
+    @field_validator("category")
+    @classmethod
+    def validate_category(cls, v: str | None) -> str | None:
+        """Sanitize category name."""
+        if v is None:
+            return v
+        return sanitize_name(v)
 
 
 class SubscriptionResponse(SubscriptionBase):

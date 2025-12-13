@@ -11,13 +11,19 @@ Schemas:
     UserResponse: For API responses (excludes password).
     TokenResponse: For JWT token responses.
     TokenRefreshRequest: For token refresh requests.
+
+Security:
+    - Passwords are validated for strength (uppercase, lowercase, digit, special char)
+    - Common passwords are rejected
+    - URLs are validated for safe schemes (no javascript:, data:, etc.)
 """
 
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 from src.models.user import UserRole
+from src.security.validators import validate_password_strength, validate_safe_url
 
 
 class UserCreate(BaseModel):
@@ -25,24 +31,39 @@ class UserCreate(BaseModel):
 
     Validates registration data including email format and password strength.
 
+    Security:
+        Password must contain:
+        - At least 8 characters
+        - At least one uppercase letter
+        - At least one lowercase letter
+        - At least one digit
+        - At least one special character
+        - Cannot be a common password
+
     Attributes:
         email: Valid email address (unique).
-        password: Plain text password (will be hashed).
+        password: Strong password (will be hashed).
         full_name: Optional display name.
 
     Example:
         >>> user = UserCreate(
         ...     email="user@example.com",
-        ...     password="SecurePass123!",
+        ...     password="SecureP@ss123!",
         ...     full_name="John Doe"
         ... )
     """
 
     email: EmailStr = Field(..., description="User email address")
     password: str = Field(
-        ..., min_length=8, max_length=128, description="Password (8-128 characters)"
+        ..., min_length=8, max_length=128, description="Strong password (8-128 characters)"
     )
     full_name: str | None = Field(None, max_length=255, description="User's full name")
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, v: str) -> str:
+        """Validate password strength."""
+        return validate_password_strength(v)
 
 
 class UserLogin(BaseModel):
@@ -70,9 +91,12 @@ class UserUpdate(BaseModel):
 
     All fields are optional for partial updates.
 
+    Security:
+        - Avatar URL is validated for safe schemes (no javascript:, data:)
+
     Attributes:
         full_name: Updated display name.
-        avatar_url: Updated avatar URL.
+        avatar_url: Updated avatar URL (validated for safety).
         preferences: JSON string of user preferences.
 
     Example:
@@ -82,6 +106,12 @@ class UserUpdate(BaseModel):
     full_name: str | None = Field(None, max_length=255, description="User's full name")
     avatar_url: str | None = Field(None, max_length=500, description="Avatar URL")
     preferences: str | None = Field(None, description="User preferences (JSON)")
+
+    @field_validator("avatar_url")
+    @classmethod
+    def validate_avatar_url(cls, v: str | None) -> str | None:
+        """Validate avatar URL is safe."""
+        return validate_safe_url(v)
 
 
 class UserResponse(BaseModel):
@@ -187,18 +217,33 @@ class LoginResponse(BaseModel):
 class PasswordChangeRequest(BaseModel):
     """Schema for password change requests.
 
+    Security:
+        New password must meet strength requirements:
+        - At least 8 characters
+        - At least one uppercase letter
+        - At least one lowercase letter
+        - At least one digit
+        - At least one special character
+        - Cannot be a common password
+
     Attributes:
         current_password: User's current password.
-        new_password: New password to set.
+        new_password: New strong password to set.
 
     Example:
         >>> change = PasswordChangeRequest(
-        ...     current_password="OldPass123!",
-        ...     new_password="NewPass456!"
+        ...     current_password="OldP@ss123!",
+        ...     new_password="NewP@ss456!"
         ... )
     """
 
     current_password: str = Field(..., description="Current password")
     new_password: str = Field(
-        ..., min_length=8, max_length=128, description="New password (8-128 characters)"
+        ..., min_length=8, max_length=128, description="New strong password (8-128 characters)"
     )
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_new_password(cls, v: str) -> str:
+        """Validate new password strength."""
+        return validate_password_strength(v)

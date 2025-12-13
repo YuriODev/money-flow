@@ -17,7 +17,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth.dependencies import get_current_active_user
@@ -36,6 +36,7 @@ from src.schemas.user import (
     UserResponse,
     UserUpdate,
 )
+from src.security.rate_limit import limiter, rate_limit_auth, rate_limit_get, rate_limit_write
 from src.services.user_service import (
     AccountInactiveError,
     AccountLockedError,
@@ -60,7 +61,9 @@ router = APIRouter()
     summary="Register new user",
     description="Create a new user account with email and password.",
 )
+@limiter.limit(rate_limit_auth)
 async def register(
+    request: Request,
     user_data: UserCreate,
     db: AsyncSession = Depends(get_db),
 ) -> UserResponse:
@@ -115,7 +118,9 @@ async def register(
     summary="Login user",
     description="Authenticate user and return JWT tokens.",
 )
+@limiter.limit(rate_limit_auth)
 async def login(
+    request: Request,
     login_data: UserLogin,
     db: AsyncSession = Depends(get_db),
 ) -> LoginResponse:
@@ -181,7 +186,9 @@ async def login(
     summary="Refresh access token",
     description="Get new access token using refresh token.",
 )
+@limiter.limit(rate_limit_auth)
 async def refresh_token(
+    request: Request,
     refresh_data: TokenRefreshRequest,
     db: AsyncSession = Depends(get_db),
 ) -> TokenResponse:
@@ -245,7 +252,9 @@ async def refresh_token(
     summary="Get current user",
     description="Get profile of currently authenticated user.",
 )
+@limiter.limit(rate_limit_get)
 async def get_me(
+    request: Request,
     current_user: User = Depends(get_current_active_user),
 ) -> UserResponse:
     """Get current user's profile.
@@ -271,7 +280,9 @@ async def get_me(
     summary="Update current user",
     description="Update profile of currently authenticated user.",
 )
+@limiter.limit(rate_limit_write)
 async def update_me(
+    request: Request,
     user_data: UserUpdate,
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
@@ -306,7 +317,9 @@ async def update_me(
     summary="Change password",
     description="Change password for currently authenticated user.",
 )
+@limiter.limit(rate_limit_auth)
 async def change_password(
+    request: Request,
     password_data: PasswordChangeRequest,
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),

@@ -2,14 +2,28 @@
 
 This module defines Pydantic v2 schemas for request/response validation
 of payment card data.
+
+Security:
+    - Names are sanitized to prevent XSS
+    - URLs are validated for safe schemes (no javascript:, data:)
+    - Currency codes are validated against allowed list
+    - Notes are checked for dangerous patterns
+    - UUIDs are validated for proper format
 """
 
 from datetime import datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from src.models.payment_card import CardType
+from src.security.validators import (
+    sanitize_name,
+    validate_currency,
+    validate_safe_text,
+    validate_safe_url,
+    validate_uuid,
+)
 
 
 class PaymentCardBase(BaseModel):
@@ -40,6 +54,39 @@ class PaymentCardBase(BaseModel):
     sort_order: int = Field(default=0, ge=0, description="Display order")
     funding_card_id: str | None = Field(default=None, description="ID of card that funds this card")
 
+    # Validators for security
+    @field_validator("name", "bank_name")
+    @classmethod
+    def validate_names(cls, v: str) -> str:
+        """Sanitize name to prevent XSS."""
+        return sanitize_name(v)
+
+    @field_validator("currency")
+    @classmethod
+    def validate_currency_code(cls, v: str) -> str:
+        """Validate currency against allowed list."""
+        return validate_currency(v)
+
+    @field_validator("icon_url")
+    @classmethod
+    def validate_icon_url(cls, v: str | None) -> str | None:
+        """Validate icon URL is safe."""
+        return validate_safe_url(v)
+
+    @field_validator("notes")
+    @classmethod
+    def validate_notes(cls, v: str | None) -> str | None:
+        """Validate notes don't contain dangerous content."""
+        if v is None:
+            return v
+        return validate_safe_text(v)
+
+    @field_validator("funding_card_id")
+    @classmethod
+    def validate_funding_card_id(cls, v: str | None) -> str | None:
+        """Validate funding_card_id is a valid UUID."""
+        return validate_uuid(v)
+
 
 class PaymentCardCreate(PaymentCardBase):
     """Schema for creating a payment card."""
@@ -62,6 +109,43 @@ class PaymentCardUpdate(BaseModel):
     sort_order: int | None = Field(default=None, ge=0)
     funding_card_id: str | None = Field(default=None, description="ID of card that funds this card")
 
+    # Validators for security
+    @field_validator("name", "bank_name")
+    @classmethod
+    def validate_names(cls, v: str | None) -> str | None:
+        """Sanitize name to prevent XSS."""
+        if v is None:
+            return v
+        return sanitize_name(v)
+
+    @field_validator("currency")
+    @classmethod
+    def validate_currency_code(cls, v: str | None) -> str | None:
+        """Validate currency against allowed list."""
+        if v is None:
+            return v
+        return validate_currency(v)
+
+    @field_validator("icon_url")
+    @classmethod
+    def validate_icon_url(cls, v: str | None) -> str | None:
+        """Validate icon URL is safe."""
+        return validate_safe_url(v)
+
+    @field_validator("notes")
+    @classmethod
+    def validate_notes(cls, v: str | None) -> str | None:
+        """Validate notes don't contain dangerous content."""
+        if v is None:
+            return v
+        return validate_safe_text(v)
+
+    @field_validator("funding_card_id")
+    @classmethod
+    def validate_funding_card_id(cls, v: str | None) -> str | None:
+        """Validate funding_card_id is a valid UUID."""
+        return validate_uuid(v)
+
 
 class FundingCardInfo(BaseModel):
     """Brief info about a funding card."""
@@ -79,7 +163,9 @@ class PaymentCardResponse(PaymentCardBase):
 
     id: str = Field(..., description="Card UUID")
     is_active: bool = Field(..., description="Active status")
-    funding_card: FundingCardInfo | None = Field(default=None, description="Card that funds this one")
+    funding_card: FundingCardInfo | None = Field(
+        default=None, description="Card that funds this one"
+    )
     created_at: datetime = Field(..., description="Creation timestamp")
     updated_at: datetime = Field(..., description="Last update timestamp")
 
@@ -109,15 +195,23 @@ class CardBalanceSummary(BaseModel):
     icon_url: str | None = Field(default=None, description="Bank logo")
     currency: str = Field(..., description="Card currency")
     total_this_month: Decimal = Field(..., description="Due this month (direct)")
-    funded_this_month: Decimal = Field(default=Decimal("0"), description="Due this month (from funded cards)")
+    funded_this_month: Decimal = Field(
+        default=Decimal("0"), description="Due this month (from funded cards)"
+    )
     paid_this_month: Decimal = Field(default=Decimal("0"), description="Paid this month")
     remaining_this_month: Decimal = Field(default=Decimal("0"), description="Remaining this month")
     total_next_month: Decimal = Field(..., description="Due next month (direct)")
-    funded_next_month: Decimal = Field(default=Decimal("0"), description="Due next month (from funded cards)")
+    funded_next_month: Decimal = Field(
+        default=Decimal("0"), description="Due next month (from funded cards)"
+    )
     subscription_count: int = Field(..., description="Number of direct subscriptions")
-    funded_subscription_count: int = Field(default=0, description="Number of subscriptions from funded cards")
+    funded_subscription_count: int = Field(
+        default=0, description="Number of subscriptions from funded cards"
+    )
     subscriptions: list[str] = Field(..., description="Subscription names")
-    funded_subscriptions: list[str] = Field(default_factory=list, description="Subscriptions from funded cards")
+    funded_subscriptions: list[str] = Field(
+        default_factory=list, description="Subscriptions from funded cards"
+    )
 
 
 class AllCardsBalanceSummary(BaseModel):

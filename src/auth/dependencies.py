@@ -46,7 +46,9 @@ from src.auth.jwt import (
 )
 from src.core.dependencies import get_db
 from src.models.user import User, UserRole
-from src.services.user_service import UserNotFoundError, UserService
+
+# Import UserService and UserNotFoundError inside functions to avoid circular import
+# These are imported at module level in functions that need them
 
 if TYPE_CHECKING:
     pass
@@ -90,6 +92,9 @@ async def get_current_user(
         - Does not verify user is active (use get_current_active_user for that)
         - Token validation is synchronous, user lookup is async
     """
+    # Import here to avoid circular import
+    from src.services.user_service import UserNotFoundError, UserService
+
     try:
         payload = decode_token(
             credentials.credentials,
@@ -194,6 +199,9 @@ async def get_optional_user(
         - Returns None on any auth failure (doesn't raise)
         - Useful for public endpoints with optional personalization
     """
+    # Import here to avoid circular import
+    from src.services.user_service import UserNotFoundError, UserService
+
     if credentials is None:
         return None
 
