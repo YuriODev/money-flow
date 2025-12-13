@@ -115,6 +115,7 @@ limiter = Limiter(
     storage_uri=_storage_uri,
     strategy="fixed-window",  # Simple fixed window strategy
     headers_enabled=False,  # Disabled due to slowapi/starlette compatibility issue
+    enabled=settings.rate_limit_enabled,  # Fully disable when RATE_LIMIT_ENABLED=false
 )
 
 # Rate limit decorators for different endpoint types
