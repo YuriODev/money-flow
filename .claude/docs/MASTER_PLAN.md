@@ -189,17 +189,17 @@ Implement complete CI/CD pipeline with GitHub Actions for automated testing, sec
 | 1.3.3.3 | Add ESLint for frontend | ✅ | 0.5h | - | JS/TS linting |
 | 1.3.3.4 | Add Prettier check for frontend | ✅ | 0.5h | 1.3.3.3 | Frontend format (via pre-commit) |
 | 1.3.3.5 | Configure pre-commit hooks | ✅ | 1h | 1.3.3.2 | Local checks |
-| 1.3.3.6 | Add commit message linting | 🟡 | 0.5h | 1.3.3.5 | Conventional commits |
+| 1.3.3.6 | Add commit message linting | ✅ | 0.5h | 1.3.3.5 | Conventional commits |
 | 1.3.3.7 | Add PR template | ✅ | 0.5h | - | PR standards |
 | **1.3.4** | **Security Scanning** | ✅ | 4h | 1.3.1 | Security gates |
 | 1.3.4.1 | Add Bandit for Python security scan | ✅ | 0.5h | - | Python security |
 | 1.3.4.2 | Add Safety for dependency vulnerabilities | ✅ | 0.5h | 1.3.4.1 | Dep scanning |
 | 1.3.4.3 | Add npm audit for frontend | ✅ | 0.5h | - | JS dep scanning |
-| 1.3.4.4 | Add Trivy for Docker image scanning | 🟠 | 1h | - | Image security |
-| 1.3.4.5 | Configure SAST with CodeQL | 🟠 | 1h | - | Static analysis |
-| 1.3.4.6 | Add secret scanning | 🟠 | 0.5h | - | Leaked secrets |
+| 1.3.4.4 | Add Trivy for Docker image scanning | ✅ | 1h | - | Image security |
+| 1.3.4.5 | Configure SAST with CodeQL | ✅ | 1h | - | Static analysis |
+| 1.3.4.6 | Add secret scanning | ✅ | 0.5h | - | Leaked secrets |
 | **1.3.5** | **Docker Build Pipeline** | ✅ | 4h | 1.3.4 | Container builds |
-| 1.3.5.1 | Multi-stage Dockerfile optimization | 🟠 | 1h | - | Smaller images |
+| 1.3.5.1 | Multi-stage Dockerfile optimization | ✅ | 1h | - | Smaller images |
 | 1.3.5.2 | Build backend image on PR | ✅ | 0.5h | 1.3.5.1 | Backend build |
 | 1.3.5.3 | Build frontend image on PR | ✅ | 0.5h | 1.3.5.1 | Frontend build |
 | 1.3.5.4 | Push to GitHub Container Registry | ✅ | 1h | 1.3.5.2 | Image registry |

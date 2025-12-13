@@ -1,0 +1,79 @@
+name: CodeQL Analysis
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    # Run weekly on Sundays at 00:00 UTC
+    - cron: '0 0 * * 0'
+
+jobs:
+  # ============================================================================
+  # CodeQL Static Analysis for Python
+  # ============================================================================
+  analyze-python:
+    name: Analyze Python Code
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: python
+          queries: security-and-quality
+          # Customize CodeQL analysis
+          config: |
+            paths:
+              - src/
+            paths-ignore:
+              - tests/
+              - '**/*_test.py'
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:python"
+
+  # ============================================================================
+  # CodeQL Static Analysis for JavaScript/TypeScript
+  # ============================================================================
+  analyze-javascript:
+    name: Analyze JavaScript/TypeScript Code
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          queries: security-and-quality
+          # Customize CodeQL analysis
+          config: |
+            paths:
+              - frontend/src/
+            paths-ignore:
+              - frontend/node_modules/
+              - frontend/.next/
+              - '**/*.test.ts'
+              - '**/*.test.tsx'
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:javascript-typescript"
