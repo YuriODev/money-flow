@@ -75,7 +75,7 @@ class VectorStore:
     """
 
     _instance: ClassVar["VectorStore | None"] = None
-    _client: ClassVar[QdrantClient | None] = None
+    _client: ClassVar[Any] = None  # QdrantClient when available
 
     # Collection names
     CONVERSATIONS_COLLECTION = "conversations"
@@ -104,7 +104,7 @@ class VectorStore:
         self._initialized = True
         logger.info(f"VectorStore initialized for {settings.qdrant_host}:{settings.qdrant_port}")
 
-    def _ensure_client(self) -> QdrantClient:
+    def _ensure_client(self) -> Any:  # Returns QdrantClient
         """Get or create the Qdrant client.
 
         Returns:
