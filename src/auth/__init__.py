@@ -8,6 +8,15 @@ This module provides authentication and authorization functionality including:
 Sprint 1.1 - Authentication System
 """
 
+from src.auth.dependencies import (
+    RoleChecker,
+    get_current_active_user,
+    get_current_user,
+    get_optional_user,
+    get_token_payload,
+    require_admin,
+    require_verified,
+)
 from src.auth.jwt import (
     TokenError,
     TokenExpiredError,
@@ -58,4 +67,12 @@ __all__ = [
     "needs_rehash",
     "validate_password_strength",
     "verify_password",
+    # Authentication dependencies
+    "RoleChecker",
+    "get_current_active_user",
+    "get_current_user",
+    "get_optional_user",
+    "get_token_payload",
+    "require_admin",
+    "require_verified",
 ]

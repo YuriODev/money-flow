@@ -13,7 +13,7 @@
 
 | Phase | Sprint | Status | Focus |
 |-------|--------|--------|-------|
-| **Phase 1** | Sprint 1.1 | 🟡 In Progress | Authentication System |
+| **Phase 1** | Sprint 1.1 | ✅ Complete | Authentication System |
 
 ### Sprint 1.1 Tasks (Week 1) - Authentication
 
@@ -23,7 +23,7 @@
 | 1.1.2 | ✅ DONE | Password Security (bcrypt) |
 | 1.1.3 | ✅ DONE | JWT Token System |
 | 1.1.4 | ✅ DONE | Auth API Endpoints |
-| 1.1.5 | ⬜ TODO | Auth Middleware |
+| 1.1.5 | ✅ DONE | Auth Middleware |
 
 ### Known Issues to Fix (Sprint 2.2)
 

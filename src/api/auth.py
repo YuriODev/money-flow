@@ -18,22 +18,14 @@ import logging
 from typing import TYPE_CHECKING
 
 from fastapi import APIRouter, Depends, HTTPException, status
-
-if TYPE_CHECKING:
-    from src.models.user import User
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.auth.jwt import (
-    TokenError,
-    TokenExpiredError,
-    TokenInvalidError,
-    TokenType,
-    decode_token,
-)
+from src.auth.dependencies import get_current_active_user
+from src.auth.jwt import TokenError, TokenExpiredError, TokenInvalidError
 from src.auth.security import PasswordStrengthError
 from src.core.config import settings
 from src.core.dependencies import get_db
+from src.models.user import User
 from src.schemas.user import (
     LoginResponse,
     PasswordChangeRequest,
@@ -53,80 +45,12 @@ from src.services.user_service import (
     UserService,
 )
 
+if TYPE_CHECKING:
+    pass
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
-security = HTTPBearer()
-
-
-async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: AsyncSession = Depends(get_db),
-) -> User:
-    """Dependency to get current authenticated user.
-
-    Extracts and validates JWT token from Authorization header,
-    then loads the user from database.
-
-    Args:
-        credentials: Bearer token from Authorization header.
-        db: Database session.
-
-    Returns:
-        Authenticated User model instance.
-
-    Raises:
-        HTTPException: If token is invalid or user not found.
-
-    Example:
-        >>> @router.get("/protected")
-        ... async def protected(user: User = Depends(get_current_user)):
-        ...     return {"user_id": user.id}
-    """
-
-    try:
-        payload = decode_token(
-            credentials.credentials,
-            expected_type=TokenType.ACCESS,
-        )
-    except TokenExpiredError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token has expired",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    except TokenInvalidError as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=str(e),
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    except TokenError as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=str(e),
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    # Get user from database
-    service = UserService(db)
-    try:
-        user = await service.get_by_id(payload.user_id)
-    except UserNotFoundError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Account is inactive",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    return user
 
 
 @router.post(
@@ -322,7 +246,7 @@ async def refresh_token(
     description="Get profile of currently authenticated user.",
 )
 async def get_me(
-    current_user=Depends(get_current_user),
+    current_user: User = Depends(get_current_active_user),
 ) -> UserResponse:
     """Get current user's profile.
 
@@ -349,7 +273,7 @@ async def get_me(
 )
 async def update_me(
     user_data: UserUpdate,
-    current_user=Depends(get_current_user),
+    current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> UserResponse:
     """Update current user's profile.
@@ -384,7 +308,7 @@ async def update_me(
 )
 async def change_password(
     password_data: PasswordChangeRequest,
-    current_user=Depends(get_current_user),
+    current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> None:
     """Change current user's password.
