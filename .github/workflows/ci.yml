@@ -337,11 +337,15 @@ jobs:
         run: echo "All CI checks passed successfully!"
 
       - name: Notify CI Success (Telegram)
-        if: github.ref == 'refs/heads/main' && secrets.TELEGRAM_BOT_TOKEN != ''
+        if: github.ref == 'refs/heads/main'
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "Telegram secrets not configured, skipping notification"
+            exit 0
+          fi
           MESSAGE="✅ <b>Money Flow - CI Passed</b>%0A%0A"
           MESSAGE+="🔗 <b>Commit:</b> <a href=\"https://github.com/${{ github.repository }}/commit/${{ github.sha }}\">${{ github.sha }}</a>%0A"
           MESSAGE+="👤 <b>Author:</b> ${{ github.actor }}%0A%0A"
@@ -361,11 +365,14 @@ jobs:
     if: failure() && github.ref == 'refs/heads/main'
     steps:
       - name: Notify CI Failure (Telegram)
-        if: secrets.TELEGRAM_BOT_TOKEN != ''
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "Telegram secrets not configured, skipping notification"
+            exit 0
+          fi
           MESSAGE="❌ <b>Money Flow - CI Failed</b>%0A%0A"
           MESSAGE+="🔗 <b>Commit:</b> <a href=\"https://github.com/${{ github.repository }}/commit/${{ github.sha }}\">${{ github.sha }}</a>%0A"
           MESSAGE+="👤 <b>Author:</b> ${{ github.actor }}%0A%0A"
