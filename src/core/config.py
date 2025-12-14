@@ -123,6 +123,16 @@ class Settings(BaseSettings):
     gcp_project_id: str = ""
     gcp_region: str = "us-central1"
 
+    # Sentry Error Tracking
+    sentry_dsn: str = ""  # Set via SENTRY_DSN env var
+    sentry_environment: str = "development"  # development, staging, production
+    sentry_traces_sample_rate: float = 0.1  # 10% of requests traced
+    sentry_profiles_sample_rate: float = 0.1  # 10% of transactions profiled
+
+    # Prometheus Metrics
+    metrics_enabled: bool = True  # Enable/disable Prometheus metrics
+    metrics_endpoint: str = "/metrics"  # Metrics endpoint path
+
 
 @lru_cache
 def get_settings() -> Settings:

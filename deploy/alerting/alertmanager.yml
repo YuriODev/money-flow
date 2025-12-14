@@ -1,0 +1,101 @@
+# Prometheus Alertmanager Configuration for Money Flow
+#
+# This configuration sends alerts to Telegram topics based on severity.
+# Deploy alongside Prometheus and your application.
+#
+# Environment Variables Required (in Docker/K8s):
+#   TELEGRAM_BOT_TOKEN: Bot token from @BotFather
+#   TELEGRAM_CHAT_ID: Target chat/group ID
+#   TELEGRAM_THREAD_MONITORING: Thread ID for monitoring topic
+#
+# Usage:
+#   docker run -d \
+#     -v $(pwd)/alertmanager.yml:/etc/alertmanager/alertmanager.yml \
+#     -e TELEGRAM_BOT_TOKEN=xxx \
+#     -e TELEGRAM_CHAT_ID=xxx \
+#     prom/alertmanager
+
+global:
+  # How long to wait before sending a notification again
+  resolve_timeout: 5m
+
+# Route tree for alert routing
+route:
+  # Default receiver
+  receiver: telegram-monitoring
+
+  # Group alerts by alertname and service
+  group_by: ['alertname', 'service']
+
+  # Wait before sending first notification
+  group_wait: 30s
+
+  # Wait before sending notification about new alerts in group
+  group_interval: 5m
+
+  # Wait before re-sending notification
+  repeat_interval: 4h
+
+  # Child routes for specific alert types
+  routes:
+    # Critical alerts - send immediately
+    - match:
+        severity: critical
+      receiver: telegram-monitoring
+      group_wait: 10s
+      repeat_interval: 1h
+
+    # High severity - slightly longer wait
+    - match:
+        severity: high
+      receiver: telegram-monitoring
+      group_wait: 30s
+      repeat_interval: 2h
+
+    # Warning alerts - batch more
+    - match:
+        severity: warning
+      receiver: telegram-monitoring
+      group_wait: 1m
+      repeat_interval: 6h
+
+# Notification receivers
+receivers:
+  - name: telegram-monitoring
+    telegram_configs:
+      - bot_token: '${TELEGRAM_BOT_TOKEN}'
+        chat_id: ${TELEGRAM_CHAT_ID}
+        # Note: message_thread_id support requires custom template
+        # or using a webhook receiver with custom handler
+        parse_mode: HTML
+        send_resolved: true
+        message: |
+          {{ if eq .Status "firing" }}🔴{{ else }}✅{{ end }} <b>Money Flow Alert {{ .Status | toUpper }}</b>
+
+          {{ range .Alerts }}
+          <b>Alert:</b> {{ .Labels.alertname }}
+          <b>Severity:</b> {{ .Labels.severity }}
+          <b>Service:</b> {{ .Labels.service | default "unknown" }}
+          {{ if .Annotations.summary }}<b>Summary:</b> {{ .Annotations.summary }}{{ end }}
+          {{ if .Annotations.description }}<b>Details:</b> {{ .Annotations.description }}{{ end }}
+
+          <b>Started:</b> {{ .StartsAt.Format "2006-01-02 15:04:05" }}
+          {{ if eq $.Status "resolved" }}<b>Resolved:</b> {{ .EndsAt.Format "2006-01-02 15:04:05" }}{{ end }}
+          ---
+          {{ end }}
+
+# Inhibition rules - suppress certain alerts when others are firing
+inhibit_rules:
+  # Don't send warning if critical is already firing for same alertname
+  - source_match:
+      severity: critical
+    target_match:
+      severity: warning
+    equal: ['alertname', 'service']
+
+  # Don't send any alerts if the entire service is down
+  - source_match:
+      alertname: ServiceDown
+    target_match_re:
+      alertname: .+
+    equal: ['service']

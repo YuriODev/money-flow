@@ -31,6 +31,10 @@ dependencies = [
     "slowapi>=0.1.9",  # Rate limiting
     # Caching
     "redis>=5.0.0",
+    # Observability
+    "structlog>=24.1.0",  # Structured logging
+    "sentry-sdk[fastapi]>=1.40.0",  # Error tracking
+    "prometheus-fastapi-instrumentator>=6.1.0",  # Prometheus metrics
 ]
 
 [project.optional-dependencies]

@@ -1,12 +1,16 @@
 """Pytest configuration and fixtures."""
 
 import asyncio
+import os
 from collections.abc import AsyncGenerator
 
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
+# Disable rate limiting for tests (must be set before importing app)
+os.environ.setdefault("RATE_LIMIT_ENABLED", "false")
 
 from src.core.dependencies import get_db
 from src.db.database import Base

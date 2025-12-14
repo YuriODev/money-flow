@@ -9,6 +9,7 @@ The application provides:
 - Health check endpoint for container orchestration
 - Rate limiting for API protection
 - Security headers (XSS, clickjacking, HSTS, CSP)
+- Structured logging with request tracing
 
 Access URLs (default):
 - API: http://localhost:8001
@@ -16,7 +17,6 @@ Access URLs (default):
 - Health: http://localhost:8001/health
 """
 
-import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
@@ -25,15 +25,24 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from slowapi.errors import RateLimitExceeded
 
-from src.api import agent, analytics, auth, calendar, cards, insights, search, subscriptions
+from src.api import agent, analytics, auth, calendar, cards, health, insights, search, subscriptions
 from src.core.config import settings
+from src.core.logging import configure_logging, get_logger
+from src.core.metrics import setup_metrics
+from src.core.sentry import init_sentry
 from src.db.database import init_db
+from src.middleware.logging_middleware import RequestLoggingMiddleware
 from src.security.headers import SecurityHeadersMiddleware
 from src.security.rate_limit import limiter
 from src.security.secrets_validator import validate_secrets
 from src.services.cache_service import close_cache_service, get_cache_service
 
-logger = logging.getLogger(__name__)
+# Configure structured logging before anything else
+configure_logging()
+logger = get_logger(__name__)
+
+# Initialize Sentry error tracking (before FastAPI app creation)
+init_sentry()
 
 
 @asynccontextmanager
@@ -132,7 +141,12 @@ app.add_middleware(
     max_age=settings.cors_max_age,
 )
 
+# Request logging middleware (added last so it runs first)
+# Provides request ID generation, timing, and structured logging
+app.add_middleware(RequestLoggingMiddleware)
+
 # Include API routers
+app.include_router(health.router, tags=["health"])  # Health checks at root level
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(subscriptions.router, prefix="/api/subscriptions", tags=["subscriptions"])
 app.include_router(calendar.router, prefix="/api/calendar", tags=["calendar"])
@@ -142,22 +156,8 @@ app.include_router(insights.router, prefix="/api/insights", tags=["insights"])
 app.include_router(analytics.router, prefix="/api/analytics", tags=["analytics"])
 app.include_router(cards.router, prefix="/api", tags=["cards"])
 
-
-@app.get("/health")
-async def health_check() -> dict[str, str]:
-    """Health check endpoint for container orchestration.
-
-    Used by Docker, Kubernetes, and load balancers to verify
-    the application is running and ready to accept requests.
-
-    Returns:
-        Dictionary with status key indicating health.
-
-    Example:
-        GET /health
-        Response: {"status": "healthy"}
-    """
-    return {"status": "healthy"}
+# Set up Prometheus metrics (must be after all routers are added)
+setup_metrics(app)
 
 
 def run() -> None:

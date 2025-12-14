@@ -1,0 +1,215 @@
+# Prometheus Alerting Rules for Money Flow
+#
+# These rules define when alerts should fire. Deploy with Prometheus.
+#
+# Usage in prometheus.yml:
+#   rule_files:
+#     - /etc/prometheus/rules/money_flow_rules.yml
+
+groups:
+  # ============================================================================
+  # Service Availability Alerts
+  # ============================================================================
+  - name: money_flow_availability
+    interval: 30s
+    rules:
+      # Backend service down
+      - alert: BackendDown
+        expr: up{job="money-flow-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: backend
+        annotations:
+          summary: "Money Flow backend is down"
+          description: "The backend service has been unreachable for more than 1 minute."
+
+      # Frontend service down
+      - alert: FrontendDown
+        expr: up{job="money-flow-frontend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: frontend
+        annotations:
+          summary: "Money Flow frontend is down"
+          description: "The frontend service has been unreachable for more than 1 minute."
+
+      # Database connection issues
+      - alert: DatabaseConnectionFailed
+        expr: money_flow_health_database_status == 0
+        for: 30s
+        labels:
+          severity: critical
+          service: database
+        annotations:
+          summary: "Database connection failed"
+          description: "Cannot connect to PostgreSQL database."
+
+      # Redis connection issues
+      - alert: RedisConnectionFailed
+        expr: money_flow_health_redis_status == 0
+        for: 1m
+        labels:
+          severity: high
+          service: redis
+        annotations:
+          summary: "Redis connection failed"
+          description: "Cannot connect to Redis. Caching and rate limiting may be affected."
+
+  # ============================================================================
+  # Performance Alerts
+  # ============================================================================
+  - name: money_flow_performance
+    interval: 30s
+    rules:
+      # High API latency (p95 > 1s)
+      - alert: HighAPILatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="money-flow-backend"}[5m])) > 1
+        for: 5m
+        labels:
+          severity: high
+          service: backend
+        annotations:
+          summary: "High API latency detected"
+          description: "95th percentile API latency is above 1 second for the past 5 minutes."
+
+      # Very high API latency (p95 > 3s)
+      - alert: CriticalAPILatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="money-flow-backend"}[5m])) > 3
+        for: 2m
+        labels:
+          severity: critical
+          service: backend
+        annotations:
+          summary: "Critical API latency"
+          description: "95th percentile API latency is above 3 seconds. Users are experiencing severe delays."
+
+      # AI Agent slow response
+      - alert: AIAgentSlowResponse
+        expr: histogram_quantile(0.95, rate(money_flow_agent_latency_seconds_bucket[5m])) > 5
+        for: 5m
+        labels:
+          severity: warning
+          service: ai-agent
+        annotations:
+          summary: "AI Agent responding slowly"
+          description: "Claude AI agent 95th percentile latency is above 5 seconds."
+
+      # Database query slow
+      - alert: SlowDatabaseQueries
+        expr: histogram_quantile(0.95, rate(money_flow_db_query_seconds_bucket[5m])) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          service: database
+        annotations:
+          summary: "Slow database queries detected"
+          description: "Database query 95th percentile latency is above 500ms."
+
+  # ============================================================================
+  # Error Rate Alerts
+  # ============================================================================
+  - name: money_flow_errors
+    interval: 30s
+    rules:
+      # High error rate (> 5%)
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(http_requests_total{job="money-flow-backend", status=~"5.."}[5m]))
+          /
+          sum(rate(http_requests_total{job="money-flow-backend"}[5m]))
+          > 0.05
+        for: 2m
+        labels:
+          severity: high
+          service: backend
+        annotations:
+          summary: "High error rate (>5%)"
+          description: "More than 5% of requests are failing with 5xx errors."
+
+      # Critical error rate (> 20%)
+      - alert: CriticalErrorRate
+        expr: |
+          sum(rate(http_requests_total{job="money-flow-backend", status=~"5.."}[5m]))
+          /
+          sum(rate(http_requests_total{job="money-flow-backend"}[5m]))
+          > 0.20
+        for: 1m
+        labels:
+          severity: critical
+          service: backend
+        annotations:
+          summary: "Critical error rate (>20%)"
+          description: "More than 20% of requests are failing. Service is severely degraded."
+
+      # AI Agent failures
+      - alert: AIAgentHighFailureRate
+        expr: |
+          sum(rate(money_flow_agent_requests_total{success="false"}[5m]))
+          /
+          sum(rate(money_flow_agent_requests_total[5m]))
+          > 0.10
+        for: 5m
+        labels:
+          severity: warning
+          service: ai-agent
+        annotations:
+          summary: "AI Agent high failure rate"
+          description: "More than 10% of AI agent requests are failing."
+
+  # ============================================================================
+  # Resource Alerts
+  # ============================================================================
+  - name: money_flow_resources
+    interval: 1m
+    rules:
+      # High memory usage
+      - alert: HighMemoryUsage
+        expr: process_resident_memory_bytes{job="money-flow-backend"} / 1024 / 1024 > 500
+        for: 5m
+        labels:
+          severity: warning
+          service: backend
+        annotations:
+          summary: "High memory usage"
+          description: "Backend is using more than 500MB of memory."
+
+      # Many concurrent requests
+      - alert: HighConcurrentRequests
+        expr: money_flow_http_requests_inprogress > 100
+        for: 2m
+        labels:
+          severity: warning
+          service: backend
+        annotations:
+          summary: "High concurrent requests"
+          description: "More than 100 concurrent requests are being processed."
+
+  # ============================================================================
+  # Business Metrics Alerts
+  # ============================================================================
+  - name: money_flow_business
+    interval: 5m
+    rules:
+      # No subscription activity (might indicate issues)
+      - alert: NoSubscriptionActivity
+        expr: increase(money_flow_subscription_operations_total[1h]) == 0
+        for: 2h
+        labels:
+          severity: warning
+          service: application
+        annotations:
+          summary: "No subscription activity"
+          description: "No subscription operations in the last 2 hours during business hours."
+
+      # Rate limiting triggered frequently
+      - alert: FrequentRateLimiting
+        expr: increase(http_requests_total{status="429"}[5m]) > 50
+        for: 5m
+        labels:
+          severity: warning
+          service: backend
+        annotations:
+          summary: "Frequent rate limiting"
+          description: "Many requests are being rate limited. Possible abuse or misconfiguration."
