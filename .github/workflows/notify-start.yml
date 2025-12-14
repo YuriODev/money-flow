@@ -22,16 +22,33 @@ jobs:
             echo "Telegram secrets not configured, skipping notification"
             exit 0
           fi
-          MESSAGE="🚀 <b>Money Flow - CI Started</b>%0A%0A"
-          MESSAGE+="🔗 <b>Commit:</b> <a href=\"https://github.com/${{ github.repository }}/commit/${{ github.sha }}\">${{ github.sha }}</a>%0A"
-          MESSAGE+="👤 <b>Author:</b> ${{ github.actor }}%0A"
-          MESSAGE+="📝 <b>Message:</b> $(echo '${{ github.event.head_commit.message }}' | head -1)%0A%0A"
-          MESSAGE+="📋 <a href=\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\">Watch CI run</a>"
 
-          # Build request with optional topic thread
-          CURL_DATA="-d chat_id=${TELEGRAM_CHAT_ID} -d parse_mode=HTML -d text=${MESSAGE}"
+          # Get first line of commit message
+          COMMIT_MSG=$(echo '${{ github.event.head_commit.message }}' | head -1)
+
+          # Build message with newlines
+          MESSAGE="🚀 <b>Money Flow - CI Started</b>
+
+🔗 <b>Commit:</b> <a href=\"https://github.com/${{ github.repository }}/commit/${{ github.sha }}\">${{ github.sha }}</a>
+👤 <b>Author:</b> ${{ github.actor }}
+📝 <b>Message:</b> ${COMMIT_MSG}
+
+📋 <a href=\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\">Watch CI run</a>"
+
+          # Build JSON payload
           if [ -n "$TELEGRAM_THREAD_CI" ]; then
-            CURL_DATA="$CURL_DATA -d message_thread_id=${TELEGRAM_THREAD_CI}"
+            JSON_PAYLOAD=$(jq -n \
+              --arg chat_id "$TELEGRAM_CHAT_ID" \
+              --arg text "$MESSAGE" \
+              --arg thread_id "$TELEGRAM_THREAD_CI" \
+              '{chat_id: $chat_id, text: $text, parse_mode: "HTML", message_thread_id: ($thread_id | tonumber)}')
+          else
+            JSON_PAYLOAD=$(jq -n \
+              --arg chat_id "$TELEGRAM_CHAT_ID" \
+              --arg text "$MESSAGE" \
+              '{chat_id: $chat_id, text: $text, parse_mode: "HTML"}')
           fi
 
-          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" $CURL_DATA
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -H "Content-Type: application/json" \
+            -d "$JSON_PAYLOAD"
