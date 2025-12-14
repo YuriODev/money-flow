@@ -16,6 +16,53 @@
 | **Phase 1** | Sprint 1.1 | ✅ Complete | Authentication System |
 | **Phase 1** | Sprint 1.2 | ✅ Complete | Security Hardening |
 | **Phase 1** | Sprint 1.3 | ✅ Complete | CI/CD Pipeline |
+| **Phase 1** | Sprint 1.4 | ✅ Complete | Logging & Observability |
+| **Phase 2** | Sprint 2.1 | ✅ Complete | E2E Testing Framework |
+
+### Sprint 2.1 Tasks (Week 5) - E2E Testing Framework ✅
+
+| Task | Status | Description |
+|------|--------|-------------|
+| 2.1.1 | ✅ DONE | Playwright Setup (install, config, browsers) |
+| 2.1.2 | ✅ DONE | Authentication E2E Tests (login, register, logout, protected routes) |
+| 2.1.3 | ✅ DONE | Subscription CRUD E2E Tests (create, edit, delete, filter) |
+| 2.1.4 | ✅ DONE | Agent Chat E2E Tests (NL commands, payment types) |
+| 2.1.5 | ✅ DONE | CI Pipeline Integration (GitHub Actions with services) |
+
+**E2E Testing Features Implemented:**
+- Playwright installed with Chromium browser
+- playwright.config.ts with multi-project setup (desktop, mobile)
+- Test fixtures: DashboardPage, AgentChatPage, API helpers
+- Auth setup for authenticated test state
+- Auth E2E tests: login, logout, validation, protected routes
+- Subscription E2E tests: CRUD operations, filters, search
+- Agent E2E tests: NL commands, all payment types
+- Docker E2E config: docker-compose.e2e.yml, Dockerfile.e2e
+- CI integration: test-e2e job in ci.yml with services
+
+### Sprint 1.4 Tasks (Week 4) - Logging & Observability ✅
+
+| Task | Status | Description |
+|------|--------|-------------|
+| 1.4.1 | ✅ DONE | Structured Logging (structlog, JSON, request_id, redaction) |
+| 1.4.2 | ✅ DONE | Request/Response Logging (middleware, latency, slow queries) |
+| 1.4.3 | ⚠️ PARTIAL | Error Tracking - Backend Sentry ✅, Frontend Sentry → Phase 2 |
+| 1.4.4 | ✅ DONE | Health Check Enhancement (DB, Redis, Qdrant, Anthropic) |
+| 1.4.5 | ✅ DONE | Metrics Collection (Prometheus, custom business metrics) |
+| 1.4.6 | ✅ DONE | Telegram CI Notifications (start, success, failure) |
+
+**Observability Features Implemented:**
+- Structured logging: JSON format, request_id tracking, user_id context
+- Sensitive data redaction: API keys, tokens, emails, credit cards
+- Request logging middleware: latency, status, slow query warnings (>1s)
+- Sentry backend: FastAPI + SQLAlchemy integration, PII filtering
+- Health endpoints: /health, /health/live, /health/ready with dependency checks
+- Prometheus metrics: HTTP metrics, business metrics, AI agent latency, RAG performance
+- Telegram notifications: CI start/pass/fail to ci-builds topic
+
+**Moved to Phase 2 (Sprint 2.2):**
+- Frontend Sentry integration (@sentry/nextjs)
+- Frontend error logging to backend API
 
 ### Sprint 1.3 Tasks (Week 3) - CI/CD Pipeline ✅
 
@@ -78,6 +125,8 @@
 | Savings progress calculation | 🔴 Critical | ⬜ TODO |
 | Card balance aggregation | 🟠 High | ⬜ TODO |
 | Export format inconsistencies | 🟠 High | ⬜ TODO |
+| Frontend Sentry integration | 🟠 High | ⬜ TODO (from 1.4) |
+| Frontend error logging to backend | 🟡 Medium | ⬜ TODO (from 1.4) |
 
 ### Security Gaps (Sprint 1.2) ✅ ALL RESOLVED
 
@@ -87,15 +136,28 @@
 | No rate limiting | 🔴 Critical | ✅ DONE |
 | Prompt injection vulnerable | 🔴 Critical | ✅ DONE |
 | CORS not hardened | 🟠 High | ✅ DONE |
-| No audit logging | 🟡 Medium | ⬜ TODO (Sprint 1.4) |
+| No audit logging | 🟡 Medium | ✅ DONE (Sprint 1.4 - structlog) |
 
 ### Phase Overview
 
 ```
-Phase 1: Foundation & Security  [Weeks 1-4]   ████████░░ 75% (Sprint 1.1, 1.2, 1.3 complete)
-Phase 2: Quality & Testing      [Weeks 5-8]   ░░░░░░░░░░ 0%
+Phase 1: Foundation & Security  [Weeks 1-4]   ██████████ 100% ✅ COMPLETE
+Phase 2: Quality & Testing      [Weeks 5-8]   ██░░░░░░░░ 25%  🔄 IN PROGRESS
 Phase 3: Architecture           [Weeks 9-12]  ░░░░░░░░░░ 0%
 Phase 4: Features & Polish      [Weeks 13-16] ░░░░░░░░░░ 0%
+```
+
+### Phase 1 Completion Checklist ✅
+
+```
+✅ User authentication fully functional (Sprint 1.1)
+✅ All endpoints protected and rate limited (Sprint 1.2)
+✅ Security scanning in CI/CD (Sprint 1.3)
+✅ Automated deployment pipeline (Sprint 1.3)
+✅ Structured logging with request tracing (Sprint 1.4)
+✅ Error tracking with Sentry - Backend (Sprint 1.4)
+✅ Health checks for all services (Sprint 1.4)
+⚠️ Frontend Sentry - Moved to Sprint 2.2
 ```
 
 ---
@@ -583,7 +645,8 @@ This ensures context is preserved for future development.
 
 ---
 
-**Last Updated**: 2025-12-13
-**Version**: 2.1 (Master Plan Integration)
-**Current Sprint**: 1.1 - Authentication System
+**Last Updated**: 2025-12-14
+**Version**: 2.2 (Phase 1 Complete)
+**Current Phase**: Phase 1 Complete - Ready for Phase 2
+**Next Sprint**: 2.1 - E2E Testing Framework
 **For Questions**: Check [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md) or [.claude/CHANGELOG.md](.claude/CHANGELOG.md)

@@ -1,0 +1,24 @@
+# Playwright E2E Test Runner Dockerfile
+FROM mcr.microsoft.com/playwright:v1.57.0-jammy
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci
+
+# Copy Playwright configuration
+COPY playwright.config.ts ./
+
+# Copy test files
+COPY e2e ./e2e
+
+# Set environment variables
+ENV CI=true
+ENV E2E_BASE_URL=http://frontend:3000
+ENV E2E_API_URL=http://backend:8000
+
+# Default command runs tests
+CMD ["npx", "playwright", "test"]

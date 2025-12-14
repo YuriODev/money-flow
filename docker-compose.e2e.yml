@@ -1,0 +1,64 @@
+# Docker Compose configuration for E2E testing
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.e2e.yml up
+
+services:
+  # Override backend with test configuration
+  backend:
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://subscriptions:localdev@db:5432/subscriptions_test
+      - DEBUG=true
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - CORS_ORIGINS=["http://localhost:3001","http://localhost:3002","http://localhost:8001","http://frontend:3000","http://e2e:3000"]
+      - REDIS_URL=redis://redis:6379/1
+      - TESTING=true
+
+  # Override frontend with test environment
+  frontend:
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8001
+      - BACKEND_URL=http://backend:8000
+      - E2E_TEST_MODE=true
+
+  # E2E Test Runner (Playwright)
+  e2e:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.e2e
+    container_name: subscription-e2e
+    environment:
+      - E2E_BASE_URL=http://frontend:3000
+      - E2E_API_URL=http://backend:8000
+      - E2E_TEST_EMAIL=test@example.com
+      - E2E_TEST_PASSWORD=TestPassword123!
+      - CI=${CI:-false}
+    volumes:
+      - ./frontend/e2e:/app/e2e
+      - ./frontend/playwright.config.ts:/app/playwright.config.ts
+      - ./frontend/e2e/test-results:/app/e2e/test-results
+      - ./frontend/playwright-report:/app/playwright-report
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - subscription-network
+    command: npx playwright test --reporter=html
+
+  # Test database initialization
+  db-test-init:
+    image: postgres:15-alpine
+    container_name: subscription-db-test-init
+    environment:
+      PGPASSWORD: localdev
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - subscription-network
+    entrypoint: >
+      sh -c "
+        psql -h db -U subscriptions -d postgres -c 'DROP DATABASE IF EXISTS subscriptions_test;'
+        psql -h db -U subscriptions -d postgres -c 'CREATE DATABASE subscriptions_test;'
+        echo 'Test database created successfully'
+      "
