@@ -357,30 +357,16 @@ jobs:
             exit 0
           fi
 
-          MESSAGE="✅ <b>Money Flow - CI Passed</b>
-
-🔗 <b>Commit:</b> <a href=\"https://github.com/${{ github.repository }}/commit/${{ github.sha }}\">${{ github.sha }}</a>
-👤 <b>Author:</b> ${{ github.actor }}
-
-📋 <a href=\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\">View CI run</a>"
-
-          # Build JSON payload
+          # Build JSON payload directly
           if [ -n "$TELEGRAM_THREAD_CI" ]; then
-            JSON_PAYLOAD=$(jq -n \
-              --arg chat_id "$TELEGRAM_CHAT_ID" \
-              --arg text "$MESSAGE" \
-              --arg thread_id "$TELEGRAM_THREAD_CI" \
-              '{chat_id: $chat_id, text: $text, parse_mode: "HTML", message_thread_id: ($thread_id | tonumber)}')
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              -H "Content-Type: application/json" \
+              -d "{\"chat_id\": \"${TELEGRAM_CHAT_ID}\", \"message_thread_id\": ${TELEGRAM_THREAD_CI}, \"parse_mode\": \"HTML\", \"text\": \"✅ <b>Money Flow - CI Passed</b>\n\n🔗 <b>Commit:</b> <a href=\\\"https://github.com/${{ github.repository }}/commit/${{ github.sha }}\\\">${{ github.sha }}</a>\n👤 <b>Author:</b> ${{ github.actor }}\n\n📋 <a href=\\\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\\\">View CI run</a>\"}"
           else
-            JSON_PAYLOAD=$(jq -n \
-              --arg chat_id "$TELEGRAM_CHAT_ID" \
-              --arg text "$MESSAGE" \
-              '{chat_id: $chat_id, text: $text, parse_mode: "HTML"}')
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              -H "Content-Type: application/json" \
+              -d "{\"chat_id\": \"${TELEGRAM_CHAT_ID}\", \"parse_mode\": \"HTML\", \"text\": \"✅ <b>Money Flow - CI Passed</b>\n\n🔗 <b>Commit:</b> <a href=\\\"https://github.com/${{ github.repository }}/commit/${{ github.sha }}\\\">${{ github.sha }}</a>\n👤 <b>Author:</b> ${{ github.actor }}\n\n📋 <a href=\\\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\\\">View CI run</a>\"}"
           fi
-
-          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-            -H "Content-Type: application/json" \
-            -d "$JSON_PAYLOAD"
 
   # ============================================================================
   # Notify CI Failure
@@ -402,27 +388,13 @@ jobs:
             exit 0
           fi
 
-          MESSAGE="❌ <b>Money Flow - CI Failed</b>
-
-🔗 <b>Commit:</b> <a href=\"https://github.com/${{ github.repository }}/commit/${{ github.sha }}\">${{ github.sha }}</a>
-👤 <b>Author:</b> ${{ github.actor }}
-
-📋 <a href=\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\">View failed run</a>"
-
-          # Build JSON payload
+          # Build JSON payload directly
           if [ -n "$TELEGRAM_THREAD_CI" ]; then
-            JSON_PAYLOAD=$(jq -n \
-              --arg chat_id "$TELEGRAM_CHAT_ID" \
-              --arg text "$MESSAGE" \
-              --arg thread_id "$TELEGRAM_THREAD_CI" \
-              '{chat_id: $chat_id, text: $text, parse_mode: "HTML", message_thread_id: ($thread_id | tonumber)}')
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              -H "Content-Type: application/json" \
+              -d "{\"chat_id\": \"${TELEGRAM_CHAT_ID}\", \"message_thread_id\": ${TELEGRAM_THREAD_CI}, \"parse_mode\": \"HTML\", \"text\": \"❌ <b>Money Flow - CI Failed</b>\n\n🔗 <b>Commit:</b> <a href=\\\"https://github.com/${{ github.repository }}/commit/${{ github.sha }}\\\">${{ github.sha }}</a>\n👤 <b>Author:</b> ${{ github.actor }}\n\n📋 <a href=\\\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\\\">View failed run</a>\"}"
           else
-            JSON_PAYLOAD=$(jq -n \
-              --arg chat_id "$TELEGRAM_CHAT_ID" \
-              --arg text "$MESSAGE" \
-              '{chat_id: $chat_id, text: $text, parse_mode: "HTML"}')
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              -H "Content-Type: application/json" \
+              -d "{\"chat_id\": \"${TELEGRAM_CHAT_ID}\", \"parse_mode\": \"HTML\", \"text\": \"❌ <b>Money Flow - CI Failed</b>\n\n🔗 <b>Commit:</b> <a href=\\\"https://github.com/${{ github.repository }}/commit/${{ github.sha }}\\\">${{ github.sha }}</a>\n👤 <b>Author:</b> ${{ github.actor }}\n\n📋 <a href=\\\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\\\">View failed run</a>\"}"
           fi
-
-          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-            -H "Content-Type: application/json" \
-            -d "$JSON_PAYLOAD"
