@@ -283,7 +283,7 @@ Implement structured logging, error tracking, and basic monitoring infrastructur
 ✅ Structured logging with request tracing (Sprint 1.4)
 ✅ Error tracking with Sentry - Backend (Sprint 1.4)
 ✅ Health checks for all services (Sprint 1.4)
-⚠️ Frontend Sentry integration → Moved to Sprint 2.2
+✅ Frontend Sentry integration (Completed in Sprint 2.2)
 ```
 
 **Phase 1 Status: ✅ COMPLETE** (December 14, 2025)
@@ -352,17 +352,32 @@ Set up comprehensive E2E testing with Playwright, covering all user workflows.
 ### Overview
 E2E tests for AI agent functionality and fixing identified endpoint issues.
 
+**Sprint 2.2.1 Status: ✅ COMPLETE** (December 14, 2025)
+
+**Completed:**
+- AI Agent E2E tests with comprehensive test coverage
+- Basic add command NL parsing (subscription, yearly, weekly frequencies)
+- Edit command NL parsing
+- Delete command NL parsing
+- Query commands (spending summary, upcoming payments, list all)
+- Debt tracking commands (add debt, make payment, total debt)
+- Savings goal commands (add goal, contribute, check progress)
+- Reference resolution ("cancel it", "that one")
+- Multi-turn conversations (context maintenance, follow-ups, corrections)
+- Additional payment types (housing, utilities, insurance, transfers)
+- Frontend Sentry integration completed (deferred from Sprint 1.4)
+
 | Task ID | Task Name | Priority | Hours | Dependencies | Deliverable |
 |---------|-----------|----------|-------|--------------|-------------|
-| **2.2.1** | **AI Agent E2E Tests** | 🔴 | 6h | Sprint 2.1 | Agent tests |
-| 2.2.1.1 | Test basic add command NL parsing | 🔴 | 1h | - | Add command test |
-| 2.2.1.2 | Test edit command NL parsing | 🟠 | 0.75h | 2.2.1.1 | Edit command test |
-| 2.2.1.3 | Test delete command NL parsing | 🟠 | 0.5h | 2.2.1.1 | Delete command test |
-| 2.2.1.4 | Test query commands (spending summary) | 🟠 | 0.75h | 2.2.1.1 | Query test |
-| 2.2.1.5 | Test debt tracking commands | 🟠 | 0.75h | 2.2.1.1 | Debt test |
-| 2.2.1.6 | Test savings goal commands | 🟠 | 0.75h | 2.2.1.1 | Savings test |
-| 2.2.1.7 | Test reference resolution ("cancel it") | 🟠 | 0.75h | 2.2.1.1 | Context test |
-| 2.2.1.8 | Test multi-turn conversations | 🟠 | 0.75h | 2.2.1.7 | Multi-turn test |
+| **2.2.1** | **AI Agent E2E Tests** | ✅ | 6h | Sprint 2.1 | Agent tests |
+| 2.2.1.1 | Test basic add command NL parsing | ✅ | 1h | - | Add command test |
+| 2.2.1.2 | Test edit command NL parsing | ✅ | 0.75h | 2.2.1.1 | Edit command test |
+| 2.2.1.3 | Test delete command NL parsing | ✅ | 0.5h | 2.2.1.1 | Delete command test |
+| 2.2.1.4 | Test query commands (spending summary) | ✅ | 0.75h | 2.2.1.1 | Query test |
+| 2.2.1.5 | Test debt tracking commands | ✅ | 0.75h | 2.2.1.1 | Debt test |
+| 2.2.1.6 | Test savings goal commands | ✅ | 0.75h | 2.2.1.1 | Savings test |
+| 2.2.1.7 | Test reference resolution ("cancel it") | ✅ | 0.75h | 2.2.1.1 | Context test |
+| 2.2.1.8 | Test multi-turn conversations | ✅ | 0.75h | 2.2.1.7 | Multi-turn test |
 | **2.2.2** | **Endpoint Bug Fixes** | 🔴 | 8h | None | Bug fixes |
 | 2.2.2.1 | Audit all GET endpoints for edge cases | 🔴 | 1h | - | Audit report |
 | 2.2.2.2 | Fix subscription summary calculation bugs | 🔴 | 1.5h | 2.2.2.1 | Summary fix |
