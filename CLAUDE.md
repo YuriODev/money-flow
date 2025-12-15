@@ -29,6 +29,7 @@
 |------|--------|-------------|
 | 3.1.1 | ✅ DONE | API Versioning (/api/v1/ prefix, header support) |
 | 3.1.2 | ✅ DONE | OpenAPI Enhancement (tags, descriptions) |
+| 3.1.3 | ✅ DONE | Developer Documentation (guides, Postman, changelog) |
 
 **Sprint 3.1.1 Features Completed:**
 - API versioning with v1 prefix (`src/api/v1/__init__.py`)
@@ -51,6 +52,19 @@
 - Enhanced API description with versioning docs
 - App version updated to 1.0.0
 - Title changed to "Money Flow API"
+
+**Sprint 3.1.3 Features Completed:**
+- API Documentation suite (`docs/api/`)
+  - README.md - API overview and quick links
+  - QUICKSTART.md - 5-minute getting started guide
+  - AUTHENTICATION.md - JWT auth flow with code examples
+  - RATE_LIMITING.md - Rate limits and best practices
+  - CHANGELOG.md - API version history
+  - MIGRATION_V0_TO_V1.md - v0 to v1 migration guide
+- Postman collection (`docs/postman/MoneyFlow.postman_collection.json`)
+  - All endpoints with examples
+  - Auto-token management scripts
+  - Environment variables
 
 ### Sprint 2.4 Tasks (Week 8) - Performance & Load Testing ✅
 
@@ -338,8 +352,8 @@
 
 ```
 Phase 1: Foundation & Security  [Weeks 1-4]   ██████████ 100% ✅ COMPLETE
-Phase 2: Quality & Testing      [Weeks 5-8]   ███████░░░ 68%  🔄 IN PROGRESS (2.3.2 done)
-Phase 3: Architecture           [Weeks 9-12]  ░░░░░░░░░░ 0%
+Phase 2: Quality & Testing      [Weeks 5-8]   ██████████ 100% ✅ COMPLETE
+Phase 3: Architecture           [Weeks 9-12]  ██░░░░░░░░ 25%  🔄 IN PROGRESS (3.1 done)
 Phase 4: Features & Polish      [Weeks 13-16] ░░░░░░░░░░ 0%
 ```
 
@@ -848,8 +862,9 @@ This ensures context is preserved for future development.
 ---
 
 **Last Updated**: 2025-12-15
-**Version**: 2.3.4 (Phase 2 In Progress)
-**Current Phase**: Phase 2 - Quality & Testing (75% complete)
-**Current Sprint**: 2.3 - Integration Tests & Contract Testing (2.3.1 ✅, 2.3.2 ✅, 2.3.3 ⏭️, 2.3.4 ✅, 2.3.5 next)
+**Version**: 3.1.0 (Phase 3 In Progress)
+**Current Phase**: Phase 3 - Architecture & Performance (25% complete)
+**Current Sprint**: 3.1 - API Versioning & Documentation ✅ COMPLETE
+**Next Sprint**: 3.2 - Database Scalability
 **Upcoming Feature**: Settings Page - See [Settings Roadmap](docs/SETTINGS_ROADMAP.md)
-**For Questions**: Check [.claude/docs/MASTER_PLAN.md](.claude/docs/MASTER_PLAN.md) or [.claude/CHANGELOG.md](.claude/CHANGELOG.md)
+**For Questions**: Check [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md) or [.claude/CHANGELOG.md](.claude/CHANGELOG.md)
