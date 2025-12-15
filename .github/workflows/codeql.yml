@@ -16,6 +16,8 @@ jobs:
   analyze-python:
     name: Analyze Python Code
     runs-on: ubuntu-latest
+    # Continue even if code scanning is not enabled in repo settings
+    continue-on-error: true
     permissions:
       actions: read
       contents: read
@@ -49,6 +51,8 @@ jobs:
   analyze-javascript:
     name: Analyze JavaScript/TypeScript Code
     runs-on: ubuntu-latest
+    # Continue even if code scanning is not enabled in repo settings
+    continue-on-error: true
     permissions:
       actions: read
       contents: read
