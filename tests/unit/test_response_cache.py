@@ -13,7 +13,6 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from src.core.response_cache import (
-    CACHE_TTL_LIST,
     ResponseCache,
     _generate_cache_key,
     get_response_cache,
@@ -32,24 +31,16 @@ class TestCacheKeyGeneration:
 
     def test_generate_key_with_params(self):
         """Test cache key includes params hash."""
-        key1 = _generate_cache_key(
-            "user-123", "subscriptions:list", {"is_active": True}
-        )
-        key2 = _generate_cache_key(
-            "user-123", "subscriptions:list", {"is_active": False}
-        )
+        key1 = _generate_cache_key("user-123", "subscriptions:list", {"is_active": True})
+        key2 = _generate_cache_key("user-123", "subscriptions:list", {"is_active": False})
 
         # Different params should produce different keys
         assert key1 != key2
 
     def test_generate_key_param_order_independent(self):
         """Test cache key is same regardless of param order."""
-        key1 = _generate_cache_key(
-            "user-123", "subscriptions:list", {"a": 1, "b": 2}
-        )
-        key2 = _generate_cache_key(
-            "user-123", "subscriptions:list", {"b": 2, "a": 1}
-        )
+        key1 = _generate_cache_key("user-123", "subscriptions:list", {"a": 1, "b": 2})
+        key2 = _generate_cache_key("user-123", "subscriptions:list", {"b": 2, "a": 1})
 
         # Same params in different order should produce same key
         assert key1 == key2
@@ -112,9 +103,7 @@ class TestResponseCache:
         """Test set stores data in cache."""
         data = {"subscriptions": [1, 2, 3]}
 
-        result = await response_cache.set(
-            "user-123", "subscriptions:list", data, ttl=60
-        )
+        result = await response_cache.set("user-123", "subscriptions:list", data, ttl=60)
 
         assert result is True
         mock_cache_service.set.assert_called_once()
@@ -147,15 +136,11 @@ class TestResponseCache:
         mock_cache_service.clear_pattern.assert_called_once_with("response:user-123:*")
 
     @pytest.mark.asyncio
-    async def test_invalidate_user_cache_resource(
-        self, response_cache, mock_cache_service
-    ):
+    async def test_invalidate_user_cache_resource(self, response_cache, mock_cache_service):
         """Test invalidating specific resource cache for a user."""
         mock_cache_service.clear_pattern = AsyncMock(return_value=3)
 
-        count = await response_cache.invalidate_user_cache(
-            "user-123", resource="subscriptions"
-        )
+        count = await response_cache.invalidate_user_cache("user-123", resource="subscriptions")
 
         assert count == 3
         mock_cache_service.clear_pattern.assert_called_once_with(
@@ -248,11 +233,9 @@ class TestInvalidateSubscriptionCache:
         response_cache = ResponseCache(cache_service=mock_cache_service)
 
         # Patch the global cache
-        monkeypatch.setattr(
-            "src.core.response_cache._response_cache", response_cache
-        )
+        monkeypatch.setattr("src.core.response_cache._response_cache", response_cache)
 
-        count = await invalidate_subscription_cache("user-123")
+        await invalidate_subscription_cache("user-123")
 
         # Should invalidate subscriptions, summary, and upcoming (3 calls)
         assert mock_cache_service.clear_pattern.call_count == 3
