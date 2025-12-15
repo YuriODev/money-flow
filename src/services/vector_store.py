@@ -138,6 +138,9 @@ class VectorStore:
     async def ensure_collection(self, collection_name: str) -> None:
         """Ensure a collection exists, creating it if necessary.
 
+        Also creates payload indexes for efficient filtering on user_id
+        and timestamp fields.
+
         Args:
             collection_name: Name of the collection to ensure exists.
 
@@ -160,12 +163,59 @@ class VectorStore:
                     ),
                 )
                 logger.info(f"Collection created: {collection_name}")
+
+                # Create payload indexes for efficient filtering
+                await self._ensure_payload_indexes(collection_name)
             else:
                 logger.debug(f"Collection already exists: {collection_name}")
+                # Ensure indexes exist even for existing collections
+                await self._ensure_payload_indexes(collection_name)
 
         except Exception as e:
             logger.error(f"Failed to ensure collection {collection_name}: {e}")
             raise RuntimeError(f"Failed to ensure collection: {e}") from e
+
+    async def _ensure_payload_indexes(self, collection_name: str) -> None:
+        """Ensure payload indexes exist for efficient filtering.
+
+        Creates keyword index on user_id (required for every query)
+        and integer index on timestamp (for recency sorting).
+
+        Args:
+            collection_name: Name of the collection.
+        """
+        client = self._ensure_client()
+
+        # Define required indexes
+        indexes_to_create = [
+            ("user_id", models.PayloadSchemaType.KEYWORD),
+            ("timestamp", models.PayloadSchemaType.INTEGER),
+            ("session_id", models.PayloadSchemaType.KEYWORD),
+            ("subscription_id", models.PayloadSchemaType.KEYWORD),
+        ]
+
+        try:
+            # Get current collection info to check existing indexes
+            collection_info = client.get_collection(collection_name)
+            existing_indexes = (
+                set(collection_info.payload_schema.keys())
+                if collection_info.payload_schema
+                else set()
+            )
+
+            for field_name, schema_type in indexes_to_create:
+                if field_name not in existing_indexes:
+                    logger.info(f"Creating payload index: {collection_name}.{field_name}")
+                    client.create_payload_index(
+                        collection_name=collection_name,
+                        field_name=field_name,
+                        field_schema=schema_type,
+                    )
+                    logger.debug(f"Index created: {collection_name}.{field_name}")
+
+        except Exception as e:
+            # Log warning but don't fail - indexes improve performance but aren't required
+            logger.warning(f"Failed to create payload indexes for {collection_name}: {e}")
 
     async def upsert(
         self,
@@ -266,6 +316,7 @@ class VectorStore:
         limit: int | None = None,
         min_score: float | None = None,
         filters: dict[str, Any] | None = None,
+        recency_weight: float = 0.0,
     ) -> list[SearchResult]:
         """Search for similar vectors with user filtering.
 
@@ -276,16 +327,20 @@ class VectorStore:
             limit: Maximum number of results (default from settings).
             min_score: Minimum similarity score threshold (default from settings).
             filters: Additional filters to apply.
+            recency_weight: Weight for recency boost (0.0-0.5). If > 0, adjusts
+                scores to favor recent results. The final score is:
+                (1 - recency_weight) * similarity + recency_weight * recency_score
 
         Returns:
-            List of SearchResult objects sorted by similarity (highest first).
+            List of SearchResult objects sorted by combined score (highest first).
 
         Example:
             >>> results = await store.search(
             ...     collection_name="conversations",
             ...     vector=[0.1, 0.2, ...],
             ...     user_id="user-1",
-            ...     limit=5
+            ...     limit=5,
+            ...     recency_weight=0.2  # 80% similarity, 20% recency
             ... )
             >>> for r in results:
             ...     print(f"{r.payload['text']}: {r.score:.2f}")
@@ -314,15 +369,22 @@ class VectorStore:
                 )
 
         try:
+            # Fetch more results if we need to re-rank by recency
+            fetch_limit = limit * 2 if recency_weight > 0 else limit
+
             results = client.search(
                 collection_name=collection_name,
                 query_vector=vector,
                 query_filter=models.Filter(must=must_conditions),
-                limit=limit,
+                limit=fetch_limit,
                 score_threshold=min_score,
             )
 
-            return [
+            if not results:
+                return []
+
+            # Convert to SearchResult objects
+            search_results = [
                 SearchResult(
                     id=str(r.id),
                     score=r.score,
@@ -330,6 +392,13 @@ class VectorStore:
                 )
                 for r in results
             ]
+
+            # Apply recency boost if requested
+            if recency_weight > 0 and search_results:
+                search_results = self._apply_recency_boost(search_results, recency_weight)
+
+            # Return top results
+            return search_results[:limit]
 
         except UnexpectedResponse as e:
             # Collection might not exist yet
@@ -341,6 +410,68 @@ class VectorStore:
         except Exception as e:
             logger.error(f"Search failed: {e}")
             raise RuntimeError(f"Search failed: {e}") from e
+
+    def _apply_recency_boost(
+        self,
+        results: list[SearchResult],
+        recency_weight: float,
+    ) -> list[SearchResult]:
+        """Apply recency boost to search results.
+
+        Adjusts scores to favor more recent results based on timestamp payload.
+
+        Args:
+            results: List of search results to re-rank.
+            recency_weight: Weight for recency (0.0-0.5).
+
+        Returns:
+            Re-ranked results with adjusted scores.
+        """
+        if not results:
+            return results
+
+        # Clamp weight to reasonable range
+        recency_weight = max(0.0, min(0.5, recency_weight))
+
+        # Get timestamps and normalize
+        timestamps = []
+        for r in results:
+            ts = r.payload.get("timestamp", 0)
+            if isinstance(ts, (int, float)):
+                timestamps.append(ts)
+            else:
+                timestamps.append(0)
+
+        if not timestamps or max(timestamps) == 0:
+            return results
+
+        # Calculate recency scores (1.0 for most recent, 0.0 for oldest)
+        min_ts = min(t for t in timestamps if t > 0) if any(t > 0 for t in timestamps) else 0
+        max_ts = max(timestamps)
+        ts_range = max_ts - min_ts if max_ts > min_ts else 1.0
+
+        boosted_results = []
+        for i, result in enumerate(results):
+            ts = timestamps[i]
+            if ts > 0:
+                recency_score = (ts - min_ts) / ts_range
+            else:
+                recency_score = 0.0
+
+            # Combined score: weighted average
+            combined_score = (1 - recency_weight) * result.score + recency_weight * recency_score
+
+            boosted_results.append(
+                SearchResult(
+                    id=result.id,
+                    score=combined_score,
+                    payload=result.payload,
+                )
+            )
+
+        # Sort by combined score descending
+        boosted_results.sort(key=lambda x: x.score, reverse=True)
+        return boosted_results
 
     async def delete(self, collection_name: str, ids: list[str]) -> None:
         """Delete vectors by their IDs.

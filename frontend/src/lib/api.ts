@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 
 // Use relative path for API calls - Next.js will proxy to backend
 const API_URL = typeof window === 'undefined'
@@ -11,6 +11,108 @@ export const api = axios.create({
     "Content-Type": "application/json",
   },
 });
+
+// API Response envelope types (for new standardized format)
+export interface APIErrorDetail {
+  code: string;
+  message: string;
+  details?: Record<string, unknown>;
+}
+
+export interface APIResponse<T = unknown> {
+  success: boolean;
+  data?: T;
+  meta?: {
+    request_id?: string;
+    timestamp?: string;
+  };
+  error?: APIErrorDetail;
+  message?: string;
+}
+
+// Custom error class for API errors
+export class APIError extends Error {
+  code: string;
+  details?: Record<string, unknown>;
+  requestId?: string;
+
+  constructor(
+    message: string,
+    code: string = "UNKNOWN_ERROR",
+    details?: Record<string, unknown>,
+    requestId?: string
+  ) {
+    super(message);
+    this.name = "APIError";
+    this.code = code;
+    this.details = details;
+    this.requestId = requestId;
+  }
+}
+
+// Response interceptor to handle both old and new API formats
+api.interceptors.response.use(
+  (response) => {
+    // Check if response follows new envelope format
+    const data = response.data;
+    if (data && typeof data === "object" && "success" in data) {
+      // New format: { success, data, meta, error }
+      if (data.success === false && data.error) {
+        // Convert to error
+        const error = new APIError(
+          data.error.message || "An error occurred",
+          data.error.code || "UNKNOWN_ERROR",
+          data.error.details,
+          data.meta?.request_id
+        );
+        return Promise.reject(error);
+      }
+      // Success: return unwrapped data for backwards compatibility
+      // Only unwrap if 'data' key exists, otherwise return as-is
+      if ("data" in data && data.data !== undefined) {
+        response.data = data.data;
+      }
+    }
+    return response;
+  },
+  (error: AxiosError<APIResponse>) => {
+    // Handle error responses with new format
+    if (error.response?.data) {
+      const data = error.response.data;
+
+      // Check for new error format
+      if (data.error) {
+        return Promise.reject(
+          new APIError(
+            data.error.message || "An error occurred",
+            data.error.code || "UNKNOWN_ERROR",
+            data.error.details,
+            data.meta?.request_id
+          )
+        );
+      }
+
+      // Check for old format with 'detail'
+      if ("detail" in data) {
+        const detail = (data as Record<string, unknown>).detail;
+        return Promise.reject(
+          new APIError(
+            typeof detail === "string" ? detail : JSON.stringify(detail),
+            "HTTP_ERROR"
+          )
+        );
+      }
+    }
+
+    // Network or other errors
+    return Promise.reject(
+      new APIError(
+        error.message || "Network error",
+        "NETWORK_ERROR"
+      )
+    );
+  }
+);
 
 // Payment type enum for Money Flow
 export type PaymentType =

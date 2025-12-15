@@ -317,6 +317,7 @@ class RAGService:
                     vector=query_embedding,
                     user_id=user_id,
                     limit=settings.rag_top_k,
+                    recency_weight=0.2,  # 80% similarity, 20% recency boost
                 )
 
                 # Convert to ConversationTurn objects

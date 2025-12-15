@@ -365,6 +365,10 @@ class CommandParser:
                 r"(?:show|get)\s+(?:my\s+)?(?:spending\s+)?summary",
                 r"total\s+(?:spending|cost|expenses?)",
                 r"how\s+much\s+have\s+i\s+saved",
+                # Historical date period patterns
+                r"(?:how\s+much|what)\s+(?:did\s+i\s+)?spen[dt]\s+(?:in\s+)?(?P<date_period>last\s+month|last\s+year|this\s+month|this\s+year|(?:january|february|march|april|may|june|july|august|september|october|november|december)(?:\s+\d{4})?)",
+                r"(?:spending|expenses?)\s+(?:in\s+|for\s+)?(?P<date_period>last\s+month|last\s+year|this\s+month|this\s+year|(?:january|february|march|april|may|june|july|august|september|october|november|december)(?:\s+\d{4})?)",
+                r"(?:show|get)\s+(?:my\s+)?(?P<date_period>last\s+month(?:'s)?|last\s+year(?:'s)?|this\s+month(?:'s)?|this\s+year(?:'s)?)\s+(?:spending|expenses?|summary)",
             ],
             "upcoming": [
                 r"what(?:'s|\s+is)\s+(?:due|coming|upcoming)",
@@ -513,6 +517,14 @@ class CommandParser:
             if "active" in groups["filter"].lower():
                 entities["is_active"] = True
 
+        # Extract date period for historical queries
+        if "date_period" in groups and groups["date_period"]:
+            date_range = self._parse_date_period(groups["date_period"])
+            if date_range:
+                entities["date_from"] = date_range["from"]
+                entities["date_to"] = date_range["to"]
+                entities["date_period_label"] = groups["date_period"].strip()
+
         # Extract category from command if mentioned
         category_match = re.search(r"(?:category|type|for)\s+(\w+)", command, re.IGNORECASE)
         if category_match:
@@ -555,3 +567,106 @@ class CommandParser:
                     return payment_type
 
         return PaymentType.SUBSCRIPTION
+
+    def _parse_date_period(self, period: str) -> dict[str, str] | None:
+        """Parse a date period string into start and end dates.
+
+        Converts human-readable date periods (e.g., "last month", "january")
+        into ISO date strings for filtering historical queries.
+
+        Args:
+            period: Date period string (e.g., "last month", "january 2024").
+
+        Returns:
+            Dictionary with 'from' and 'to' ISO date strings, or None if invalid.
+
+        Example:
+            >>> # If current date is 2025-03-15
+            >>> parser._parse_date_period("last month")
+            {'from': '2025-02-01', 'to': '2025-02-28'}
+            >>> parser._parse_date_period("january")
+            {'from': '2025-01-01', 'to': '2025-01-31'}
+        """
+        from calendar import monthrange
+        from datetime import datetime
+
+        period_lower = period.lower().strip().rstrip("'s")  # Remove possessive
+        today = datetime.now()
+        current_year = today.year
+        current_month = today.month
+
+        # Month name mapping
+        month_names = {
+            "january": 1,
+            "february": 2,
+            "march": 3,
+            "april": 4,
+            "may": 5,
+            "june": 6,
+            "july": 7,
+            "august": 8,
+            "september": 9,
+            "october": 10,
+            "november": 11,
+            "december": 12,
+        }
+
+        try:
+            if period_lower == "last month":
+                # Previous month
+                if current_month == 1:
+                    year, month = current_year - 1, 12
+                else:
+                    year, month = current_year, current_month - 1
+                _, last_day = monthrange(year, month)
+                return {
+                    "from": f"{year}-{month:02d}-01",
+                    "to": f"{year}-{month:02d}-{last_day:02d}",
+                }
+
+            elif period_lower == "this month":
+                _, last_day = monthrange(current_year, current_month)
+                return {
+                    "from": f"{current_year}-{current_month:02d}-01",
+                    "to": f"{current_year}-{current_month:02d}-{last_day:02d}",
+                }
+
+            elif period_lower == "last year":
+                last_year = current_year - 1
+                return {
+                    "from": f"{last_year}-01-01",
+                    "to": f"{last_year}-12-31",
+                }
+
+            elif period_lower == "this year":
+                return {
+                    "from": f"{current_year}-01-01",
+                    "to": f"{current_year}-12-31",
+                }
+
+            else:
+                # Check for month name (with optional year)
+                parts = period_lower.split()
+                month_name = parts[0]
+
+                if month_name in month_names:
+                    month = month_names[month_name]
+                    # Check if year is specified
+                    if len(parts) > 1 and parts[1].isdigit():
+                        year = int(parts[1])
+                    else:
+                        # Use current year, or previous year if month is in future
+                        year = current_year
+                        if month > current_month:
+                            year = current_year - 1
+
+                    _, last_day = monthrange(year, month)
+                    return {
+                        "from": f"{year}-{month:02d}-01",
+                        "to": f"{year}-{month:02d}-{last_day:02d}",
+                    }
+
+        except (ValueError, KeyError):
+            logger.warning(f"Could not parse date period: {period}")
+
+        return None
