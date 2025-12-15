@@ -394,11 +394,11 @@ jobs:
     if: always() && (needs.deploy-staging.result == 'failure' || needs.deploy-production.result == 'failure')
 
     steps:
-      - name: Notify Failure (Telegram - Deploy Topic)
+      - name: Notify Failure (Telegram - Errors Topic)
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          TELEGRAM_THREAD_DEPLOY: ${{ secrets.TELEGRAM_THREAD_DEPLOY }}
+          TELEGRAM_THREAD_ERRORS: ${{ secrets.TELEGRAM_THREAD_ERRORS }}
         run: |
           if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
             echo "Telegram secrets not configured, skipping notification"
@@ -407,10 +407,10 @@ jobs:
 
           ENVIRONMENT="${{ needs.deploy-staging.result == 'failure' && 'Staging' || 'Production' }}"
 
-          if [ -n "$TELEGRAM_THREAD_DEPLOY" ]; then
+          if [ -n "$TELEGRAM_THREAD_ERRORS" ]; then
             curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
               -H "Content-Type: application/json" \
-              -d "{\"chat_id\": \"${TELEGRAM_CHAT_ID}\", \"message_thread_id\": ${TELEGRAM_THREAD_DEPLOY}, \"parse_mode\": \"HTML\", \"text\": \"❌ <b>Money Flow - Deployment Failed</b>\n\n🔴 <b>Environment:</b> ${ENVIRONMENT}\n🔗 <b>Commit:</b> <a href=\\\"https://github.com/${{ github.repository }}/commit/${{ github.sha }}\\\">${{ github.sha }}</a>\n👤 <b>Author:</b> ${{ github.actor }}\n\n📋 <a href=\\\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\\\">View workflow run</a>\"}"
+              -d "{\"chat_id\": \"${TELEGRAM_CHAT_ID}\", \"message_thread_id\": ${TELEGRAM_THREAD_ERRORS}, \"parse_mode\": \"HTML\", \"text\": \"❌ <b>Money Flow - Deployment Failed</b>\n\n🔴 <b>Environment:</b> ${ENVIRONMENT}\n🔗 <b>Commit:</b> <a href=\\\"https://github.com/${{ github.repository }}/commit/${{ github.sha }}\\\">${{ github.sha }}</a>\n👤 <b>Author:</b> ${{ github.actor }}\n\n📋 <a href=\\\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\\\">View workflow run</a>\"}"
           else
             curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
               -H "Content-Type: application/json" \
