@@ -352,7 +352,7 @@ Set up comprehensive E2E testing with Playwright, covering all user workflows.
 ### Overview
 E2E tests for AI agent functionality and fixing identified endpoint issues.
 
-**Sprint 2.2.1 Status: ✅ COMPLETE** (December 14, 2025)
+**Sprint 2.2 Status: ✅ COMPLETE** (December 15, 2025)
 
 **Completed:**
 - AI Agent E2E tests with comprehensive test coverage
@@ -366,6 +366,9 @@ E2E tests for AI agent functionality and fixing identified endpoint issues.
 - Multi-turn conversations (context maintenance, follow-ups, corrections)
 - Additional payment types (housing, utilities, insurance, transfers)
 - Frontend Sentry integration completed (deferred from Sprint 1.4)
+- **User data isolation** - Fixed subscription_service.py to filter by user_id
+- **API endpoint protection** - All subscription endpoints now require current_user
+- **Settings Roadmap** - Created comprehensive docs/SETTINGS_ROADMAP.md (1000+ lines)
 
 | Task ID | Task Name | Priority | Hours | Dependencies | Deliverable |
 |---------|-----------|----------|-------|--------------|-------------|
@@ -392,13 +395,21 @@ E2E tests for AI agent functionality and fixing identified endpoint issues.
 | 2.2.3.2 | Standardize success response format | ✅ | 0.5h | 2.2.3.1 | Success format |
 | 2.2.3.3 | Add consistent pagination format | ✅ | 1h | 2.2.3.2 | Pagination format |
 | 2.2.3.4 | Add response envelope (data, meta, errors) | ✅ | 1h | 2.2.3.3 | Response envelope |
-| 2.2.3.5 | Update frontend to handle new format | 🟠 | 0.5h | 2.2.3.4 | Frontend update |
+| 2.2.3.5 | Update frontend to handle new format | ✅ | 0.5h | 2.2.3.4 | Frontend update |
 | **2.2.4** | **RAG System Bug Fixes** | ✅ | 4h | None | RAG fixes |
 | 2.2.4.1 | Fix embedding cache invalidation | ✅ | 1h | - | Cache fix |
 | 2.2.4.2 | Fix conversation context retrieval | ✅ | 1h | - | Context fix |
-| 2.2.4.3 | Fix semantic search relevance scoring | 🟠 | 1h | - | Search fix |
-| 2.2.4.4 | Fix historical query date parsing | 🟠 | 0.5h | - | Date parsing fix |
-| 2.2.4.5 | Add missing index on vector collection | 🟠 | 0.5h | - | Index optimization |
+| 2.2.4.3 | Fix semantic search relevance scoring | ✅ | 1h | - | Search fix |
+| 2.2.4.4 | Fix historical query date parsing | ✅ | 0.5h | - | Date parsing fix |
+| 2.2.4.5 | Add missing index on vector collection | ✅ | 0.5h | - | Index optimization |
+| **2.2.5** | **User Data Isolation** | ✅ | 2h | None | Multi-user support |
+| 2.2.5.1 | Add user_id filtering to subscription_service | ✅ | 0.5h | - | Service fix |
+| 2.2.5.2 | Add current_user dependency to all endpoints | ✅ | 1h | 2.2.5.1 | Endpoint protection |
+| 2.2.5.3 | Verify data isolation between users | ✅ | 0.5h | 2.2.5.2 | Isolation test |
+| **2.2.6** | **Settings Roadmap Planning** | ✅ | 3h | None | Feature roadmap |
+| 2.2.6.1 | Define 10 settings tabs structure | ✅ | 1h | - | Tab structure |
+| 2.2.6.2 | Plan AI-powered features | ✅ | 1h | - | AI features |
+| 2.2.6.3 | Create docs/SETTINGS_ROADMAP.md | ✅ | 1h | - | Roadmap doc |
 
 ---
 
@@ -481,14 +492,16 @@ Performance benchmarking and load testing to ensure scalability.
 
 **Phase 2 Completion Checklist:**
 ```
-□ 50+ E2E tests passing
-□ All endpoint bugs fixed
-□ API contract tests in CI
-□ Integration tests for all services
-□ Performance baseline documented
-□ Load test results documented
-□ Database queries optimized
-□ Caching strategy implemented
+✅ 50+ E2E tests passing (Sprint 2.1)
+✅ All endpoint bugs fixed (Sprint 2.2)
+✅ User data isolation implemented (Sprint 2.2)
+✅ Settings roadmap planned (Sprint 2.2)
+□ API contract tests in CI (Sprint 2.3)
+□ Integration tests for all services (Sprint 2.3)
+□ Performance baseline documented (Sprint 2.4)
+□ Load test results documented (Sprint 2.4)
+□ Database queries optimized (Sprint 2.4)
+□ Caching strategy implemented (Sprint 2.4)
 ```
 
 ---
@@ -892,7 +905,8 @@ Final documentation, testing, and production launch preparation.
 | Phase 2: Quality & Testing | ~95h | 24% |
 | Phase 3: Architecture & Performance | ~105h | 26% |
 | Phase 4: Features & Polish | ~100h | 25% |
-| **Total** | **~400h** | **100%** |
+| **Total (Main Roadmap)** | **~400h** | **100%** |
+| **Future: Settings & AI Features** | **~240h** | *(see [Settings Roadmap](../SETTINGS_ROADMAP.md))* |
 
 ## Risk Register
 
@@ -973,10 +987,98 @@ pip install dependency-injector
 
 ---
 
-**Document Version**: 1.0.0
+**Document Version**: 1.1.0
 **Created**: December 13, 2025
+**Updated**: December 15, 2025
 **Total Tasks**: 250+
 **Total Sub-tasks**: 400+
+
+---
+
+# FUTURE FEATURES: Settings & AI-Powered Features
+
+> **Detailed Plan**: See [Settings Roadmap](../SETTINGS_ROADMAP.md) for comprehensive feature specifications.
+
+## Overview
+
+After completing Phase 4, the next major feature set focuses on user settings, AI-powered features, and third-party integrations.
+
+### Settings Page (10 Tabs)
+
+| Tab | Purpose | Priority | Effort |
+|-----|---------|----------|--------|
+| **Profile** | User info, password, 2FA | P1 | 8h |
+| **Preferences** | Display settings, defaults | P1 | 8h |
+| **Payment Cards** | Card management (exists, enhance) | P1 | 6h |
+| **Categories** | Custom categories, budgets | P1 | 10h |
+| **Notifications** | Reminders, channels, reports | P2 | 12h |
+| **Icons & Branding** | Icon library, AI generation | P2 | 15h |
+| **AI Assistant** | NL preferences, smart features | P2 | 8h |
+| **Data Import** | Bank statements, email scanning | P2 | 30h |
+| **Data Export** | PDF reports, scheduled backups | P2 | 12h |
+| **Integrations** | Calendar, webhooks, Open Banking | P3 | 40h |
+
+### AI-Powered Features
+
+| Feature | Description | Effort |
+|---------|-------------|--------|
+| **Bank Statement Import** | AI extracts recurring payments from PDF/CSV | 30h |
+| **Email Receipt Scanning** | Scan Gmail/Outlook for subscriptions | 20h |
+| **Icon Intelligence** | Auto-fetch from APIs + AI generation | 15h |
+| **Smart Suggestions** | Spending insights, savings opportunities | 12h |
+
+### Implementation Timeline
+
+| Phase | Focus | Duration | Total Effort |
+|-------|-------|----------|--------------|
+| Settings Phase 1 | Profile + Preferences | 2 weeks | ~28h |
+| Settings Phase 2 | Cards + Categories | 2 weeks | ~26h |
+| Settings Phase 3 | Notifications + Export | 2 weeks | ~28h |
+| Settings Phase 4 | Icons + AI Settings | 2 weeks | ~27h |
+| Settings Phase 5 | Smart Import (AI) | 3 weeks | ~46h |
+| Settings Phase 6 | Integrations | 3 weeks | ~40h |
+| Settings Phase 7 | Open Banking | 4 weeks | ~46h |
+
+**Total Estimated Effort**: ~240 hours (additional to main roadmap)
+
+### Key Database Changes
+
+```sql
+-- New tables required
+CREATE TABLE categories (user_id, name, color, icon, budget_amount);
+CREATE TABLE icon_cache (service_name, icon_url, brand_color, source);
+CREATE TABLE webhook_subscriptions (user_id, url, events[], secret);
+
+-- User preferences enhancement
+ALTER TABLE users ADD COLUMN notification_preferences JSONB;
+```
+
+### Key API Endpoints
+
+```
+Settings APIs:
+- PATCH /api/auth/profile
+- POST /api/auth/change-password
+- GET/PUT /api/users/preferences
+
+Category APIs:
+- GET/POST/PUT/DELETE /api/categories
+- POST /api/categories/merge
+
+Icon APIs:
+- GET /api/icons/search
+- GET /api/icons/service/{name}
+- POST /api/icons/generate (AI)
+
+Import APIs:
+- POST /api/import/bank-statement
+- GET /api/import/bank-statement/{job_id}
+
+Integration APIs:
+- GET/POST/DELETE /api/webhooks
+- GET /api/calendar/ical
+- POST /api/calendar/sync/google
+```
 
 ---
 
