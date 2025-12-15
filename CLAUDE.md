@@ -19,10 +19,10 @@
 | **Phase 1** | Sprint 1.4 | ✅ Complete | Logging & Observability |
 | **Phase 2** | Sprint 2.1 | ✅ Complete | E2E Testing Framework |
 | **Phase 2** | Sprint 2.2 | ✅ Complete | AI Agent E2E, Bug Fixes, Data Isolation |
-| **Phase 2** | Sprint 2.3 | 🔄 In Progress | Integration Tests & Contract Testing |
+| **Phase 2** | Sprint 2.3 | ✅ Complete | Integration Tests & Contract Testing |
 | **Phase 2** | Sprint 2.4 | ⬜ Planned | Performance & Load Testing |
 
-### Sprint 2.3 Tasks (Week 7) - Integration Tests & Contract Testing 🔄
+### Sprint 2.3 Tasks (Week 7) - Integration Tests & Contract Testing ✅
 
 | Task | Status | Description |
 |------|--------|-------------|
@@ -30,7 +30,7 @@
 | 2.3.2 | ✅ DONE | Database Integration Tests (CRUD, relationships, transactions) |
 | 2.3.3 | ⏭️ SKIPPED | Redis Integration Tests (cache, rate limiter, blacklist) |
 | 2.3.4 | ✅ DONE | Qdrant Integration Tests (vectors, search, filtering) |
-| 2.3.5 | ⬜ TODO | Claude API Integration Tests (classification, extraction) |
+| 2.3.5 | ✅ DONE | Claude API Integration Tests (classification, extraction) |
 
 **Sprint 2.3.1 Features Completed:**
 - OpenAPI spec generation script (`scripts/generate_openapi.py`)
@@ -65,6 +65,16 @@
   - Embedding update operations (upsert same ID, batch updates)
   - Recency boost functionality tests
   - Singleton behavior tests
+
+**Sprint 2.3.5 Features Completed:**
+- Claude API integration tests (`tests/integration/test_claude_api_integration.py`) - 45 tests
+  - API connection and authentication tests (4 tests, skipif no API key)
+  - Intent classification accuracy tests (CREATE, READ, UPDATE, DELETE, SUMMARY, etc.)
+  - Entity extraction accuracy tests (name, amount, frequency, currency, payment_type)
+  - API failure fallback tests (regex parsing when AI fails)
+  - Payment type detection tests (SUBSCRIPTION, HOUSING, UTILITY, DEBT, SAVINGS, etc.)
+  - Normalization tests (frequency strings, entity validation)
+  - PromptLoader integration tests (prompt loading, caching, system prompts)
 
 ### Sprint 2.2 Tasks (Week 6) - AI Agent E2E & Bug Fixes ✅
 

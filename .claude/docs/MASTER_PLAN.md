@@ -447,11 +447,11 @@ Comprehensive integration tests and API contract testing.
 | 2.3.4.4 | Test collection management | ✅ | 0.5h | - | Collection tests |
 | 2.3.4.5 | Test Qdrant connection failure handling | ✅ | 0.5h | - | Failure tests |
 | 2.3.4.6 | Test embedding update operations | ✅ | 0.75h | 2.3.4.1 | Update tests |
-| **2.3.5** | **Claude API Integration Tests** | 🟠 | 3h | None | AI tests |
-| 2.3.5.1 | Test API connection and auth | 🟠 | 0.5h | - | Connection test |
-| 2.3.5.2 | Test intent classification accuracy | 🟠 | 1h | 2.3.5.1 | Classification tests |
-| 2.3.5.3 | Test entity extraction accuracy | 🟠 | 1h | 2.3.5.1 | Extraction tests |
-| 2.3.5.4 | Test API failure fallback (regex) | 🔴 | 0.5h | - | Fallback test |
+| **2.3.5** | **Claude API Integration Tests** | ✅ | 3h | None | AI tests |
+| 2.3.5.1 | Test API connection and auth | ✅ | 0.5h | - | Connection test |
+| 2.3.5.2 | Test intent classification accuracy | ✅ | 1h | 2.3.5.1 | Classification tests |
+| 2.3.5.3 | Test entity extraction accuracy | ✅ | 1h | 2.3.5.1 | Extraction tests |
+| 2.3.5.4 | Test API failure fallback (regex) | ✅ | 0.5h | - | Fallback test |
 
 ---
 
@@ -500,7 +500,7 @@ Performance benchmarking and load testing to ensure scalability.
 ✅ Database integration tests (Sprint 2.3.2) - 33 tests
 ⏭️ Redis integration tests (Sprint 2.3.3) - Skipped
 ✅ Qdrant integration tests (Sprint 2.3.4) - 42 tests
-□ Claude API integration tests (Sprint 2.3.5)
+✅ Claude API integration tests (Sprint 2.3.5) - 45 tests
 □ Performance baseline documented (Sprint 2.4)
 □ Load test results documented (Sprint 2.4)
 □ Database queries optimized (Sprint 2.4)

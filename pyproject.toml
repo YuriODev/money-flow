@@ -81,3 +81,6 @@ ignore_missing_imports = true
 asyncio_mode = "auto"
 testpaths = ["tests"]
 addopts = "-v --tb=short"
+markers = [
+    "claude_api: mark test as requiring real Claude API access",
+]
