@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 os.environ.setdefault("RATE_LIMIT_ENABLED", "false")
 
 from src.auth.jwt import create_access_token
-from src.auth.security import hash_password
+from src.auth.security import get_password_hash
 from src.core.dependencies import get_db
 from src.db.database import Base
 from src.main import app
@@ -57,7 +57,7 @@ async def test_user(test_db: AsyncSession) -> User:
     user = User(
         id=str(uuid.uuid4()),
         email="test@example.com",
-        hashed_password=hash_password("testpassword123"),
+        hashed_password=get_password_hash("testpassword123"),
         role=UserRole.USER,
         is_active=True,
         is_verified=True,
