@@ -27,14 +27,38 @@ depends_on: str | Sequence[str] | None = None
 
 def upgrade() -> None:
     """Create initial database schema."""
-    # Create userrole enum type if it doesn't exist
-    # This handles cases where the database has been partially initialized
+    # Create enum types only if they don't exist
+    # This handles CI where init_db() may have already created these
     bind = op.get_bind()
-    result = bind.execute(sa.text("SELECT 1 FROM pg_type WHERE typname = 'userrole'"))
-    if not result.fetchone():
+
+    # Helper to check if enum type exists
+    def enum_exists(name: str) -> bool:
+        result = bind.execute(sa.text(f"SELECT 1 FROM pg_type WHERE typname = '{name}'"))
+        return result.fetchone() is not None
+
+    # Create all enum types upfront if they don't exist
+    if not enum_exists("userrole"):
         op.execute("CREATE TYPE userrole AS ENUM ('USER', 'ADMIN')")
+    if not enum_exists("cardtype"):
+        op.execute("CREATE TYPE cardtype AS ENUM ('debit', 'credit', 'prepaid', 'bank_account')")
+    if not enum_exists("frequency"):
+        op.execute(
+            "CREATE TYPE frequency AS ENUM "
+            "('daily', 'weekly', 'biweekly', 'monthly', 'quarterly', 'yearly', 'custom')"
+        )
+    if not enum_exists("paymenttype"):
+        op.execute(
+            "CREATE TYPE paymenttype AS ENUM "
+            "('subscription', 'housing', 'utility', 'professional_service', "
+            "'insurance', 'debt', 'savings', 'transfer', 'one_time')"
+        )
+    if not enum_exists("paymentstatus"):
+        op.execute(
+            "CREATE TYPE paymentstatus AS ENUM ('completed', 'pending', 'failed', 'cancelled')"
+        )
 
     # Create users table first (subscriptions references it)
+    # Use sa.Enum with create_type=False since we created them above
     op.create_table(
         "users",
         sa.Column("id", sa.String(length=36), nullable=False),
@@ -44,8 +68,6 @@ def upgrade() -> None:
         sa.Column("full_name", sa.String(length=255), nullable=True),
         sa.Column("avatar_url", sa.String(length=500), nullable=True),
         # Role and status
-        # Note: SQLAlchemy uses enum NAMES (uppercase) by default, not values
-        # create_type=False because we created it manually above
         sa.Column(
             "role",
             sa.Enum("USER", "ADMIN", name="userrole", create_type=False),
@@ -76,7 +98,9 @@ def upgrade() -> None:
         sa.Column("name", sa.String(length=100), nullable=False),
         sa.Column(
             "card_type",
-            sa.Enum("debit", "credit", "prepaid", "bank_account", name="cardtype"),
+            sa.Enum(
+                "debit", "credit", "prepaid", "bank_account", name="cardtype", create_type=False
+            ),
             nullable=False,
         ),
         sa.Column("last_four", sa.String(length=4), nullable=True),
@@ -113,6 +137,7 @@ def upgrade() -> None:
                 "yearly",
                 "custom",
                 name="frequency",
+                create_type=False,
             ),
             nullable=False,
             server_default="monthly",
@@ -135,6 +160,7 @@ def upgrade() -> None:
                 "transfer",
                 "one_time",
                 name="paymenttype",
+                create_type=False,
             ),
             nullable=False,
             server_default="subscription",
@@ -187,7 +213,14 @@ def upgrade() -> None:
         sa.Column("currency", sa.String(length=3), nullable=False, server_default="GBP"),
         sa.Column(
             "status",
-            sa.Enum("completed", "pending", "failed", "cancelled", name="paymentstatus"),
+            sa.Enum(
+                "completed",
+                "pending",
+                "failed",
+                "cancelled",
+                name="paymentstatus",
+                create_type=False,
+            ),
             nullable=False,
             server_default="completed",
         ),
