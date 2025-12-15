@@ -28,8 +28,8 @@
 |------|--------|-------------|
 | 2.3.1 | ✅ DONE | API Contract Testing (Schemathesis, OpenAPI diff) |
 | 2.3.2 | ✅ DONE | Database Integration Tests (CRUD, relationships, transactions) |
-| 2.3.3 | ⬜ TODO | Redis Integration Tests (cache, rate limiter, blacklist) |
-| 2.3.4 | ⬜ TODO | Qdrant Integration Tests (vectors, search, filtering) |
+| 2.3.3 | ⏭️ SKIPPED | Redis Integration Tests (cache, rate limiter, blacklist) |
+| 2.3.4 | ✅ DONE | Qdrant Integration Tests (vectors, search, filtering) |
 | 2.3.5 | ⬜ TODO | Claude API Integration Tests (classification, extraction) |
 
 **Sprint 2.3.1 Features Completed:**
@@ -54,6 +54,17 @@
   - Migration file validation (upgrade/downgrade functions, revision IDs)
   - Alembic history and heads verification
   - PostgreSQL migration tests (run in CI)
+
+**Sprint 2.3.4 Features Completed:**
+- Qdrant integration tests (`tests/integration/test_qdrant_integration.py`) - 42 tests
+  - Vector insertion tests (single, batch, collection creation)
+  - Similarity search tests (basic, min_score, recency boost, hybrid)
+  - User filtering tests (data isolation, cross-user separation)
+  - Collection management tests (ensure, skip existing, indexes)
+  - Connection failure handling (errors, missing collections)
+  - Embedding update operations (upsert same ID, batch updates)
+  - Recency boost functionality tests
+  - Singleton behavior tests
 
 ### Sprint 2.2 Tasks (Week 6) - AI Agent E2E & Bug Fixes ✅
 
@@ -734,8 +745,8 @@ This ensures context is preserved for future development.
 ---
 
 **Last Updated**: 2025-12-15
-**Version**: 2.3.2 (Phase 2 In Progress)
-**Current Phase**: Phase 2 - Quality & Testing (68% complete)
-**Current Sprint**: 2.3 - Integration Tests & Contract Testing (2.3.1 ✅, 2.3.2 ✅, 2.3.3 next)
+**Version**: 2.3.4 (Phase 2 In Progress)
+**Current Phase**: Phase 2 - Quality & Testing (75% complete)
+**Current Sprint**: 2.3 - Integration Tests & Contract Testing (2.3.1 ✅, 2.3.2 ✅, 2.3.3 ⏭️, 2.3.4 ✅, 2.3.5 next)
 **Upcoming Feature**: Settings Page - See [Settings Roadmap](docs/SETTINGS_ROADMAP.md)
 **For Questions**: Check [.claude/docs/MASTER_PLAN.md](.claude/docs/MASTER_PLAN.md) or [.claude/CHANGELOG.md](.claude/CHANGELOG.md)
