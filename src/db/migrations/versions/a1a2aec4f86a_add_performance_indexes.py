@@ -30,6 +30,17 @@ depends_on: str | Sequence[str] | None = None
 
 def upgrade() -> None:
     """Add performance indexes for query optimization."""
+    # Use raw SQL with IF NOT EXISTS for PostgreSQL compatibility
+    # This handles cases where init_db() creates tables via create_all()
+    # before migrations run (e.g., in E2E tests)
+    from sqlalchemy import text
+
+    bind = op.get_bind()
+
+    def create_index_if_not_exists(index_name: str, table: str, columns: list[str]) -> None:
+        """Create index only if it doesn't exist."""
+        cols = ", ".join(columns)
+        bind.execute(text(f"CREATE INDEX IF NOT EXISTS {index_name} ON {table} ({cols})"))
 
     # ==========================================
     # CRITICAL: Subscriptions table indexes
@@ -37,38 +48,34 @@ def upgrade() -> None:
 
     # Index for dashboard loads and API list queries
     # Used by: get_all(), get_upcoming(), summary calculations
-    op.create_index(
+    create_index_if_not_exists(
         "ix_subscriptions_user_active_next_payment",
         "subscriptions",
         ["user_id", "is_active", "next_payment_date"],
-        unique=False,
     )
 
     # Index for payment type filtering (Money Flow feature)
     # Used by: get_all(payment_type=...), debt/savings views
-    op.create_index(
+    create_index_if_not_exists(
         "ix_subscriptions_user_payment_type_active",
         "subscriptions",
         ["user_id", "payment_type", "is_active"],
-        unique=False,
     )
 
     # Index for card balance calculations
     # Used by: get_balance_summary(), card-related queries
-    op.create_index(
+    create_index_if_not_exists(
         "ix_subscriptions_card_active",
         "subscriptions",
         ["card_id", "is_active"],
-        unique=False,
     )
 
     # Index for category filtering
     # Used by: get_all(category=...), category-based views
-    op.create_index(
+    create_index_if_not_exists(
         "ix_subscriptions_user_category",
         "subscriptions",
         ["user_id", "category"],
-        unique=False,
     )
 
     # ==========================================
@@ -77,11 +84,10 @@ def upgrade() -> None:
 
     # Index for balance calculations and payment lookup
     # Used by: get_balance_summary(), monthly payment calculations
-    op.create_index(
+    create_index_if_not_exists(
         "ix_payment_history_sub_date_status",
         "payment_history",
         ["subscription_id", "payment_date", "status"],
-        unique=False,
     )
 
     # ==========================================
@@ -90,11 +96,10 @@ def upgrade() -> None:
 
     # Composite index for RAG context retrieval
     # Used by: get_context(), session-based queries
-    op.create_index(
+    create_index_if_not_exists(
         "ix_conversations_user_session",
         "conversations",
         ["user_id", "session_id"],
-        unique=False,
     )
 
     # ==========================================
@@ -103,22 +108,28 @@ def upgrade() -> None:
 
     # Index for analytics time-range queries
     # Used by: get_metrics_for_period(), analytics dashboard
-    op.create_index(
+    create_index_if_not_exists(
         "ix_rag_analytics_user_created",
         "rag_analytics",
         ["user_id", "created_at"],
-        unique=False,
     )
 
 
 def downgrade() -> None:
     """Remove performance indexes."""
+    from sqlalchemy import text
+
+    bind = op.get_bind()
+
+    def drop_index_if_exists(index_name: str) -> None:
+        """Drop index only if it exists."""
+        bind.execute(text(f"DROP INDEX IF EXISTS {index_name}"))
 
     # Remove indexes in reverse order
-    op.drop_index("ix_rag_analytics_user_created", table_name="rag_analytics")
-    op.drop_index("ix_conversations_user_session", table_name="conversations")
-    op.drop_index("ix_payment_history_sub_date_status", table_name="payment_history")
-    op.drop_index("ix_subscriptions_user_category", table_name="subscriptions")
-    op.drop_index("ix_subscriptions_card_active", table_name="subscriptions")
-    op.drop_index("ix_subscriptions_user_payment_type_active", table_name="subscriptions")
-    op.drop_index("ix_subscriptions_user_active_next_payment", table_name="subscriptions")
+    drop_index_if_exists("ix_rag_analytics_user_created")
+    drop_index_if_exists("ix_conversations_user_session")
+    drop_index_if_exists("ix_payment_history_sub_date_status")
+    drop_index_if_exists("ix_subscriptions_user_category")
+    drop_index_if_exists("ix_subscriptions_card_active")
+    drop_index_if_exists("ix_subscriptions_user_payment_type_active")
+    drop_index_if_exists("ix_subscriptions_user_active_next_payment")
