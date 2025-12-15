@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING
 from dateutil.relativedelta import relativedelta
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from src.core.config import settings
 from src.models.subscription import Frequency, PaymentType, Subscription
@@ -224,6 +225,7 @@ class SubscriptionService:
         is_active: bool | None = None,
         category: str | None = None,
         payment_type: PaymentType | None = None,
+        include_card: bool = False,
     ) -> Sequence[Subscription]:
         """Get all subscriptions/payments with optional filters.
 
@@ -240,10 +242,18 @@ class SubscriptionService:
             category: Filter by subcategory name. If None, returns all categories.
             payment_type: Filter by payment type (subscription, debt, etc.).
                 If None, returns all payment types.
+            include_card: If True, eagerly load the payment_card relationship
+                to avoid N+1 queries when accessing subscription.payment_card.
 
         Returns:
             Sequence of Subscription objects matching the filters,
             ordered by next_payment_date.
+
+        Note:
+            Uses composite indexes for optimal query performance:
+            - ix_subscriptions_user_active_next_payment (user_id, is_active, next_payment_date)
+            - ix_subscriptions_user_payment_type_active (user_id, payment_type, is_active)
+            - ix_subscriptions_user_category (user_id, category)
 
         Example:
             >>> # Get all active subscriptions
@@ -255,11 +265,18 @@ class SubscriptionService:
 
             >>> # Get all debt payments
             >>> debts = await service.get_all(payment_type=PaymentType.DEBT)
+
+            >>> # Get subscriptions with card info (avoids N+1)
+            >>> subs = await service.get_all(is_active=True, include_card=True)
         """
         query = select(Subscription)
 
+        # Eager load payment_card if requested
+        if include_card:
+            query = query.options(selectinload(Subscription.payment_card))
+
         conditions = []
-        # Always filter by user_id if not "default"
+        # Always filter by user_id if not "default" - uses composite index
         if self.user_id and self.user_id != "default":
             conditions.append(Subscription.user_id == self.user_id)
         if is_active is not None:
@@ -557,6 +574,11 @@ class SubscriptionService:
             Sequence of subscriptions due within the specified period,
             ordered by next_payment_date.
 
+        Note:
+            Uses the ix_subscriptions_user_active_next_payment index for
+            optimal query performance when filtering by user_id, is_active,
+            and next_payment_date.
+
         Example:
             >>> upcoming = await service.get_upcoming(days=30)
             >>> for sub in upcoming:
@@ -565,16 +587,18 @@ class SubscriptionService:
         today = date.today()
         end_date = today + timedelta(days=days)
 
+        conditions = [
+            Subscription.is_active == True,  # noqa: E712
+            Subscription.next_payment_date >= today,
+            Subscription.next_payment_date <= end_date,
+        ]
+
+        # Filter by user_id if not "default" - uses composite index
+        if self.user_id and self.user_id != "default":
+            conditions.insert(0, Subscription.user_id == self.user_id)
+
         result = await self.db.execute(
-            select(Subscription)
-            .where(
-                and_(
-                    Subscription.is_active == True,  # noqa: E712
-                    Subscription.next_payment_date >= today,
-                    Subscription.next_payment_date <= end_date,
-                )
-            )
-            .order_by(Subscription.next_payment_date)
+            select(Subscription).where(and_(*conditions)).order_by(Subscription.next_payment_date)
         )
         return result.scalars().all()
 

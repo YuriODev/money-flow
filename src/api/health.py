@@ -21,7 +21,7 @@ from sqlalchemy import text
 
 from src.core.config import settings
 from src.core.logging import get_logger
-from src.db.database import async_session_maker
+from src.db.database import async_session_maker, get_pool_status
 
 logger = get_logger(__name__)
 
@@ -42,12 +42,25 @@ class ComponentHealth(BaseModel):
     message: str | None = None
 
 
+class PoolStatus(BaseModel):
+    """Database connection pool status."""
+
+    pool_size: int
+    checked_out: int
+    checked_in: int
+    overflow: int
+    invalid: int
+    total: int
+    pool_type: str
+
+
 class HealthResponse(BaseModel):
     """Complete health check response."""
 
     status: HealthStatus
-    version: str = "0.1.0"
+    version: str = "1.0.0"
     checks: dict[str, ComponentHealth] = {}
+    pool: PoolStatus | None = None
 
 
 router = APIRouter(tags=["health"])
@@ -268,9 +281,13 @@ async def readiness_probe() -> HealthResponse:
     else:
         overall_status = HealthStatus.HEALTHY
 
+    # Get pool status
+    pool_status = get_pool_status()
+
     return HealthResponse(
         status=overall_status,
         checks=checks,
+        pool=PoolStatus(**pool_status),
     )
 
 

@@ -61,6 +61,13 @@ class Settings(BaseSettings):
     # Database
     database_url: str = "sqlite+aiosqlite:///./subscriptions.db"
 
+    # Database Connection Pool (PostgreSQL only, ignored for SQLite)
+    db_pool_size: int = 5  # Number of persistent connections in pool
+    db_pool_max_overflow: int = 10  # Additional connections allowed when pool is full
+    db_pool_timeout: int = 30  # Seconds to wait for available connection
+    db_pool_recycle: int = 1800  # Recycle connections after 30 minutes
+    db_pool_pre_ping: bool = True  # Verify connections before using
+
     # API
     api_host: str = "0.0.0.0"
     api_port: int = 8000

@@ -22,6 +22,57 @@
 | **Phase 2** | Sprint 2.3 | ✅ Complete | Integration Tests & Contract Testing |
 | **Phase 2** | Sprint 2.4 | ✅ Complete | Performance & Load Testing |
 | **Phase 3** | Sprint 3.1 | ✅ Complete | API Versioning & Documentation |
+| **Phase 3** | Sprint 3.2 | ✅ Complete | Database Scalability |
+
+### Sprint 3.2 Tasks (Week 10) - Database Scalability ✅
+
+| Task | Status | Description |
+|------|--------|-------------|
+| 3.2.1 | ✅ DONE | Index Optimization (verified from Sprint 2.4.3) |
+| 3.2.2 | ✅ DONE | Connection Pool Optimization (pool_size, max_overflow, pre_ping) |
+| 3.2.3 | ✅ DONE | Backup Strategy (pg_dump scripts, DR docs) |
+| 3.2.4 | ✅ DONE | Query Optimization (user_id filters, eager loading) |
+
+**Sprint 3.2.1 Features Completed:**
+- Verified existing performance indexes from Sprint 2.4.3
+- Indexes cover all common query patterns (user_id, is_active, next_payment_date, etc.)
+
+**Sprint 3.2.2 Features Completed:**
+- Connection pool configuration (`src/core/config.py`)
+  - `db_pool_size`: 5 persistent connections
+  - `db_pool_max_overflow`: 10 additional connections
+  - `db_pool_timeout`: 30 seconds wait
+  - `db_pool_recycle`: 1800 seconds (30 minutes)
+  - `db_pool_pre_ping`: True (verify connections)
+- Database engine optimization (`src/db/database.py`)
+  - PostgreSQL-specific pool configuration
+  - SQLite NullPool fallback
+  - Pool event listeners (checkout, checkin, connect, invalidate)
+  - `get_pool_status()` function for monitoring
+- Health check pool status (`src/api/health.py`)
+  - PoolStatus model added to health response
+  - `/health/ready` returns pool metrics
+
+**Sprint 3.2.3 Features Completed:**
+- Backup script (`scripts/backup_database.sh`)
+  - pg_dump with compression
+  - Checksum verification
+  - Retention policy (30 days default)
+  - Latest symlink management
+- Restore script (`scripts/restore_database.sh`)
+  - Checksum verification
+  - Production safety confirmation
+  - Auto-migration after restore
+- Disaster Recovery documentation (`docs/DISASTER_RECOVERY.md`)
+  - RTO/RPO targets
+  - Recovery procedures
+  - Scenario-based runbooks
+
+**Sprint 3.2.4 Features Completed:**
+- Query optimization in subscription service
+  - `get_upcoming()` now filters by user_id
+  - `get_all()` has optional `include_card` for eager loading
+  - Index hint documentation in method docstrings
 
 ### Sprint 3.1 Tasks (Week 9) - API Versioning & Documentation ✅
 
@@ -353,7 +404,7 @@
 ```
 Phase 1: Foundation & Security  [Weeks 1-4]   ██████████ 100% ✅ COMPLETE
 Phase 2: Quality & Testing      [Weeks 5-8]   ██████████ 100% ✅ COMPLETE
-Phase 3: Architecture           [Weeks 9-12]  ██░░░░░░░░ 25%  🔄 IN PROGRESS (3.1 done)
+Phase 3: Architecture           [Weeks 9-12]  █████░░░░░ 50%  🔄 IN PROGRESS (3.1, 3.2 done)
 Phase 4: Features & Polish      [Weeks 13-16] ░░░░░░░░░░ 0%
 ```
 
@@ -862,9 +913,9 @@ This ensures context is preserved for future development.
 ---
 
 **Last Updated**: 2025-12-15
-**Version**: 3.1.0 (Phase 3 In Progress)
-**Current Phase**: Phase 3 - Architecture & Performance (25% complete)
-**Current Sprint**: 3.1 - API Versioning & Documentation ✅ COMPLETE
-**Next Sprint**: 3.2 - Database Scalability
+**Version**: 3.2.0 (Phase 3 In Progress)
+**Current Phase**: Phase 3 - Architecture & Performance (50% complete)
+**Current Sprint**: 3.2 - Database Scalability ✅ COMPLETE
+**Next Sprint**: 3.3 - Monitoring & Alerting
 **Upcoming Feature**: Settings Page - See [Settings Roadmap](docs/SETTINGS_ROADMAP.md)
 **For Questions**: Check [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md) or [.claude/CHANGELOG.md](.claude/CHANGELOG.md)
