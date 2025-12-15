@@ -28,7 +28,7 @@ class TestSubscriptionCreate:
     """Tests for subscription creation endpoint."""
 
     @pytest.mark.asyncio
-    async def test_create_subscription(self, client: AsyncClient):
+    async def test_create_subscription(self, auth_client: AsyncClient):
         """Test creating a subscription."""
         data = {
             "name": "Test Subscription",
@@ -38,7 +38,7 @@ class TestSubscriptionCreate:
             "start_date": "2024-01-01",
         }
 
-        response = await client.post("/api/subscriptions", json=data)
+        response = await auth_client.post("/api/subscriptions", json=data)
 
         assert response.status_code == 201
         result = response.json()
@@ -50,7 +50,7 @@ class TestSubscriptionCreate:
         assert "next_payment_date" in result
 
     @pytest.mark.asyncio
-    async def test_create_subscription_minimal(self, client: AsyncClient):
+    async def test_create_subscription_minimal(self, auth_client: AsyncClient):
         """Test creating subscription with minimal fields."""
         data = {
             "name": "Minimal",
@@ -58,7 +58,7 @@ class TestSubscriptionCreate:
             "start_date": "2024-01-01",
         }
 
-        response = await client.post("/api/subscriptions", json=data)
+        response = await auth_client.post("/api/subscriptions", json=data)
 
         assert response.status_code == 201
         result = response.json()
@@ -66,7 +66,7 @@ class TestSubscriptionCreate:
         assert result["frequency"] == "monthly"  # Default
 
     @pytest.mark.asyncio
-    async def test_create_subscription_with_category(self, client: AsyncClient):
+    async def test_create_subscription_with_category(self, auth_client: AsyncClient):
         """Test creating subscription with category."""
         data = {
             "name": "Netflix",
@@ -75,13 +75,13 @@ class TestSubscriptionCreate:
             "category": "entertainment",
         }
 
-        response = await client.post("/api/subscriptions", json=data)
+        response = await auth_client.post("/api/subscriptions", json=data)
 
         assert response.status_code == 201
         assert response.json()["category"] == "entertainment"
 
     @pytest.mark.asyncio
-    async def test_create_subscription_with_notes(self, client: AsyncClient):
+    async def test_create_subscription_with_notes(self, auth_client: AsyncClient):
         """Test creating subscription with notes."""
         data = {
             "name": "Insurance",
@@ -90,13 +90,13 @@ class TestSubscriptionCreate:
             "notes": "Annual home insurance",
         }
 
-        response = await client.post("/api/subscriptions", json=data)
+        response = await auth_client.post("/api/subscriptions", json=data)
 
         assert response.status_code == 201
         assert response.json()["notes"] == "Annual home insurance"
 
     @pytest.mark.asyncio
-    async def test_create_subscription_invalid_amount(self, client: AsyncClient):
+    async def test_create_subscription_invalid_amount(self, auth_client: AsyncClient):
         """Test creating subscription with invalid amount."""
         data = {
             "name": "Test",
@@ -104,24 +104,24 @@ class TestSubscriptionCreate:
             "start_date": "2024-01-01",
         }
 
-        response = await client.post("/api/subscriptions", json=data)
+        response = await auth_client.post("/api/subscriptions", json=data)
 
         assert response.status_code == 422
 
     @pytest.mark.asyncio
-    async def test_create_subscription_missing_name(self, client: AsyncClient):
+    async def test_create_subscription_missing_name(self, auth_client: AsyncClient):
         """Test creating subscription without name."""
         data = {
             "amount": "10.00",
             "start_date": "2024-01-01",
         }
 
-        response = await client.post("/api/subscriptions", json=data)
+        response = await auth_client.post("/api/subscriptions", json=data)
 
         assert response.status_code == 422
 
     @pytest.mark.asyncio
-    async def test_create_subscription_all_frequencies(self, client: AsyncClient):
+    async def test_create_subscription_all_frequencies(self, auth_client: AsyncClient):
         """Test creating subscriptions with all frequencies."""
         frequencies = ["daily", "weekly", "biweekly", "monthly", "quarterly", "yearly"]
 
@@ -133,7 +133,7 @@ class TestSubscriptionCreate:
                 "start_date": "2024-01-01",
             }
 
-            response = await client.post("/api/subscriptions", json=data)
+            response = await auth_client.post("/api/subscriptions", json=data)
 
             assert response.status_code == 201
             assert response.json()["frequency"] == freq
@@ -143,15 +143,15 @@ class TestSubscriptionList:
     """Tests for subscription listing endpoint."""
 
     @pytest.mark.asyncio
-    async def test_list_subscriptions_empty(self, client: AsyncClient):
+    async def test_list_subscriptions_empty(self, auth_client: AsyncClient):
         """Test listing when no subscriptions exist."""
-        response = await client.get("/api/subscriptions")
+        response = await auth_client.get("/api/subscriptions")
 
         assert response.status_code == 200
         assert response.json() == []
 
     @pytest.mark.asyncio
-    async def test_list_subscriptions(self, client: AsyncClient):
+    async def test_list_subscriptions(self, auth_client: AsyncClient):
         """Test listing subscriptions."""
         # Create a subscription first
         data = {
@@ -159,15 +159,15 @@ class TestSubscriptionList:
             "amount": "10.00",
             "start_date": "2024-01-01",
         }
-        await client.post("/api/subscriptions", json=data)
+        await auth_client.post("/api/subscriptions", json=data)
 
-        response = await client.get("/api/subscriptions")
+        response = await auth_client.get("/api/subscriptions")
 
         assert response.status_code == 200
         assert len(response.json()) == 1
 
     @pytest.mark.asyncio
-    async def test_list_subscriptions_filter_active(self, client: AsyncClient):
+    async def test_list_subscriptions_filter_active(self, auth_client: AsyncClient):
         """Test filtering by active status."""
         # Create active subscription
         data = {
@@ -175,16 +175,16 @@ class TestSubscriptionList:
             "amount": "10.00",
             "start_date": "2024-01-01",
         }
-        await client.post("/api/subscriptions", json=data)
+        await auth_client.post("/api/subscriptions", json=data)
 
-        response = await client.get("/api/subscriptions?is_active=true")
+        response = await auth_client.get("/api/subscriptions?is_active=true")
 
         assert response.status_code == 200
         subscriptions = response.json()
         assert all(s["is_active"] for s in subscriptions)
 
     @pytest.mark.asyncio
-    async def test_list_subscriptions_filter_category(self, client: AsyncClient):
+    async def test_list_subscriptions_filter_category(self, auth_client: AsyncClient):
         """Test filtering by category."""
         # Create subscriptions with different categories
         for cat in ["entertainment", "health"]:
@@ -194,9 +194,9 @@ class TestSubscriptionList:
                 "start_date": "2024-01-01",
                 "category": cat,
             }
-            await client.post("/api/subscriptions", json=data)
+            await auth_client.post("/api/subscriptions", json=data)
 
-        response = await client.get("/api/subscriptions?category=entertainment")
+        response = await auth_client.get("/api/subscriptions?category=entertainment")
 
         assert response.status_code == 200
         subscriptions = response.json()
@@ -208,7 +208,7 @@ class TestSubscriptionGet:
     """Tests for getting single subscription."""
 
     @pytest.mark.asyncio
-    async def test_get_subscription(self, client: AsyncClient):
+    async def test_get_subscription(self, auth_client: AsyncClient):
         """Test getting subscription by ID."""
         # Create subscription
         data = {
@@ -216,18 +216,18 @@ class TestSubscriptionGet:
             "amount": "10.00",
             "start_date": "2024-01-01",
         }
-        create_response = await client.post("/api/subscriptions", json=data)
+        create_response = await auth_client.post("/api/subscriptions", json=data)
         subscription_id = create_response.json()["id"]
 
-        response = await client.get(f"/api/subscriptions/{subscription_id}")
+        response = await auth_client.get(f"/api/subscriptions/{subscription_id}")
 
         assert response.status_code == 200
         assert response.json()["id"] == subscription_id
 
     @pytest.mark.asyncio
-    async def test_get_subscription_not_found(self, client: AsyncClient):
+    async def test_get_subscription_not_found(self, auth_client: AsyncClient):
         """Test getting non-existent subscription."""
-        response = await client.get("/api/subscriptions/non-existent-id")
+        response = await auth_client.get("/api/subscriptions/non-existent-id")
 
         assert response.status_code == 404
 
@@ -236,7 +236,7 @@ class TestSubscriptionUpdate:
     """Tests for subscription update endpoint."""
 
     @pytest.mark.asyncio
-    async def test_update_subscription(self, client: AsyncClient):
+    async def test_update_subscription(self, auth_client: AsyncClient):
         """Test updating a subscription."""
         # Create subscription
         data = {
@@ -244,7 +244,7 @@ class TestSubscriptionUpdate:
             "amount": "10.00",
             "start_date": "2024-01-01",
         }
-        create_response = await client.post("/api/subscriptions", json=data)
+        create_response = await auth_client.post("/api/subscriptions", json=data)
         subscription_id = create_response.json()["id"]
 
         # Update
@@ -252,22 +252,22 @@ class TestSubscriptionUpdate:
             "amount": "15.00",
             "category": "updated",
         }
-        response = await client.put(f"/api/subscriptions/{subscription_id}", json=update_data)
+        response = await auth_client.put(f"/api/subscriptions/{subscription_id}", json=update_data)
 
         assert response.status_code == 200
         assert response.json()["amount"] == "15.00"
         assert response.json()["category"] == "updated"
 
     @pytest.mark.asyncio
-    async def test_update_subscription_not_found(self, client: AsyncClient):
+    async def test_update_subscription_not_found(self, auth_client: AsyncClient):
         """Test updating non-existent subscription."""
         update_data = {"amount": "15.00"}
-        response = await client.put("/api/subscriptions/non-existent-id", json=update_data)
+        response = await auth_client.put("/api/subscriptions/non-existent-id", json=update_data)
 
         assert response.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_update_subscription_deactivate(self, client: AsyncClient):
+    async def test_update_subscription_deactivate(self, auth_client: AsyncClient):
         """Test deactivating a subscription."""
         # Create subscription
         data = {
@@ -275,12 +275,12 @@ class TestSubscriptionUpdate:
             "amount": "10.00",
             "start_date": "2024-01-01",
         }
-        create_response = await client.post("/api/subscriptions", json=data)
+        create_response = await auth_client.post("/api/subscriptions", json=data)
         subscription_id = create_response.json()["id"]
 
         # Deactivate
         update_data = {"is_active": False}
-        response = await client.put(f"/api/subscriptions/{subscription_id}", json=update_data)
+        response = await auth_client.put(f"/api/subscriptions/{subscription_id}", json=update_data)
 
         assert response.status_code == 200
         assert response.json()["is_active"] is False
@@ -290,7 +290,7 @@ class TestSubscriptionDelete:
     """Tests for subscription deletion endpoint."""
 
     @pytest.mark.asyncio
-    async def test_delete_subscription(self, client: AsyncClient):
+    async def test_delete_subscription(self, auth_client: AsyncClient):
         """Test deleting a subscription."""
         # Create subscription
         data = {
@@ -298,22 +298,22 @@ class TestSubscriptionDelete:
             "amount": "10.00",
             "start_date": "2024-01-01",
         }
-        create_response = await client.post("/api/subscriptions", json=data)
+        create_response = await auth_client.post("/api/subscriptions", json=data)
         subscription_id = create_response.json()["id"]
 
         # Delete
-        response = await client.delete(f"/api/subscriptions/{subscription_id}")
+        response = await auth_client.delete(f"/api/subscriptions/{subscription_id}")
 
         assert response.status_code == 204
 
         # Verify deleted
-        get_response = await client.get(f"/api/subscriptions/{subscription_id}")
+        get_response = await auth_client.get(f"/api/subscriptions/{subscription_id}")
         assert get_response.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_delete_subscription_not_found(self, client: AsyncClient):
+    async def test_delete_subscription_not_found(self, auth_client: AsyncClient):
         """Test deleting non-existent subscription."""
-        response = await client.delete("/api/subscriptions/non-existent-id")
+        response = await auth_client.delete("/api/subscriptions/non-existent-id")
 
         assert response.status_code == 404
 
@@ -322,9 +322,9 @@ class TestSubscriptionSummary:
     """Tests for subscription summary endpoint."""
 
     @pytest.mark.asyncio
-    async def test_summary_empty(self, client: AsyncClient):
+    async def test_summary_empty(self, auth_client: AsyncClient):
         """Test summary with no subscriptions."""
-        response = await client.get("/api/subscriptions/summary")
+        response = await auth_client.get("/api/subscriptions/summary")
 
         assert response.status_code == 200
         result = response.json()
@@ -334,7 +334,7 @@ class TestSubscriptionSummary:
         assert result["active_count"] == 0
 
     @pytest.mark.asyncio
-    async def test_summary_with_subscriptions(self, client: AsyncClient):
+    async def test_summary_with_subscriptions(self, auth_client: AsyncClient):
         """Test summary with subscriptions."""
         # Create subscription
         data = {
@@ -343,9 +343,9 @@ class TestSubscriptionSummary:
             "start_date": "2024-01-01",
             "category": "entertainment",
         }
-        await client.post("/api/subscriptions", json=data)
+        await auth_client.post("/api/subscriptions", json=data)
 
-        response = await client.get("/api/subscriptions/summary")
+        response = await auth_client.get("/api/subscriptions/summary")
 
         assert response.status_code == 200
         result = response.json()
@@ -357,9 +357,9 @@ class TestSummaryUpcoming:
     """Tests for upcoming payments in summary."""
 
     @pytest.mark.asyncio
-    async def test_summary_includes_upcoming_week(self, client: AsyncClient):
+    async def test_summary_includes_upcoming_week(self, auth_client: AsyncClient):
         """Test that summary includes upcoming_week field."""
-        response = await client.get("/api/subscriptions/summary")
+        response = await auth_client.get("/api/subscriptions/summary")
 
         assert response.status_code == 200
         result = response.json()
@@ -371,9 +371,9 @@ class TestAgentEndpoint:
     """Tests for agent execution endpoint."""
 
     @pytest.mark.asyncio
-    async def test_agent_execute_list(self, client: AsyncClient):
+    async def test_agent_execute_list(self, auth_client: AsyncClient):
         """Test agent list command."""
-        response = await client.post(
+        response = await auth_client.post(
             "/api/agent/execute",
             json={"command": "Show my subscriptions"},
         )
@@ -383,9 +383,9 @@ class TestAgentEndpoint:
         assert result["success"] is True
 
     @pytest.mark.asyncio
-    async def test_agent_execute_create(self, client: AsyncClient):
+    async def test_agent_execute_create(self, auth_client: AsyncClient):
         """Test agent create command."""
-        response = await client.post(
+        response = await auth_client.post(
             "/api/agent/execute",
             json={"command": "Add Netflix for £15.99 monthly"},
         )
@@ -395,9 +395,9 @@ class TestAgentEndpoint:
         assert "success" in response.json()
 
     @pytest.mark.asyncio
-    async def test_agent_execute_summary(self, client: AsyncClient):
+    async def test_agent_execute_summary(self, auth_client: AsyncClient):
         """Test agent summary command."""
-        response = await client.post(
+        response = await auth_client.post(
             "/api/agent/execute",
             json={"command": "How much am I spending?"},
         )
@@ -407,9 +407,9 @@ class TestAgentEndpoint:
         assert result["success"] is True
 
     @pytest.mark.asyncio
-    async def test_agent_execute_unknown(self, client: AsyncClient):
+    async def test_agent_execute_unknown(self, auth_client: AsyncClient):
         """Test agent unknown command."""
-        response = await client.post(
+        response = await auth_client.post(
             "/api/agent/execute",
             json={"command": "Hello world random text"},
         )
@@ -423,9 +423,9 @@ class TestAgentEndpoint:
         assert "message" in result
 
     @pytest.mark.asyncio
-    async def test_agent_execute_empty_command(self, client: AsyncClient):
+    async def test_agent_execute_empty_command(self, auth_client: AsyncClient):
         """Test agent with empty command."""
-        response = await client.post(
+        response = await auth_client.post(
             "/api/agent/execute",
             json={"command": ""},
         )

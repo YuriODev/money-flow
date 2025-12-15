@@ -12,6 +12,7 @@ Tests cover:
 import csv
 import io
 import json
+import uuid
 from datetime import date
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -19,13 +20,33 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
+from src.auth.dependencies import get_current_active_user
 from src.main import app
+from src.models.user import User, UserRole
 
 
 @pytest.fixture
-def client():
-    """Create a test client."""
-    return TestClient(app)
+def mock_user():
+    """Create a mock user for authentication."""
+    user = MagicMock(spec=User)
+    user.id = str(uuid.uuid4())
+    user.email = "test@example.com"
+    user.role = UserRole.USER
+    user.is_active = True
+    user.is_verified = True
+    return user
+
+
+@pytest.fixture
+def client(mock_user):
+    """Create a test client with mocked authentication."""
+    # Override authentication dependency
+    app.dependency_overrides[get_current_active_user] = lambda: mock_user
+
+    yield TestClient(app)
+
+    # Clean up
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture
