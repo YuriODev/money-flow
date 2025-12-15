@@ -52,6 +52,9 @@ dev = [
     "ruff>=0.1.0",
     "mypy>=1.8.0",
     "pre-commit>=3.6.0",
+    # Contract testing (Sprint 2.3)
+    "schemathesis>=3.25.0",
+    "openapi-spec-validator>=0.7.0",
 ]
 
 [project.scripts]

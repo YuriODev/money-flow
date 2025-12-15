@@ -1,0 +1,5870 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Subscription Tracker",
+    "description": "Track subscriptions and recurring payments with an agentic interface",
+    "version": "0.1.0",
+    "contact": {
+      "name": "Money Flow API Support",
+      "url": "https://github.com/subscription-tracker/issues"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "health",
+          "health"
+        ],
+        "summary": "Health Check",
+        "description": "Simple health check endpoint for container orchestration.\n\nThis is a fast, lightweight check that always returns healthy\nif the application is running. Use /health/ready for dependency checks.\n\nReturns:\n    Dictionary with status key.\n\nExample:\n    GET /health\n    Response: {\"status\": \"healthy\"}",
+        "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Health Check Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/live": {
+      "get": {
+        "tags": [
+          "health",
+          "health"
+        ],
+        "summary": "Liveness Probe",
+        "description": "Kubernetes liveness probe endpoint.\n\nReturns healthy if the application process is alive and responding.\nThis check should be fast and not depend on external services.\n\nReturns:\n    Dictionary with status key.\n\nExample:\n    GET /health/live\n    Response: {\"status\": \"healthy\"}",
+        "operationId": "liveness_probe_health_live_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Liveness Probe Health Live Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "tags": [
+          "health",
+          "health"
+        ],
+        "summary": "Readiness Probe",
+        "description": "Kubernetes readiness probe endpoint.\n\nChecks all dependencies (database, Redis, Qdrant, Claude API)\nand returns overall health status. The application is considered:\n- HEALTHY: All critical services (database) are up\n- DEGRADED: Optional services (Redis, Qdrant) are down\n- UNHEALTHY: Critical services (database) are down\n\nReturns:\n    HealthResponse with detailed component status.\n\nExample:\n    GET /health/ready\n    Response: {\n        \"status\": \"healthy\",\n        \"version\": \"0.1.0\",\n        \"checks\": {\n            \"database\": {\"status\": \"healthy\", \"latency_ms\": 5.2},\n            \"redis\": {\"status\": \"healthy\", \"latency_ms\": 1.1},\n            ...\n        }\n    }",
+        "operationId": "readiness_probe_health_ready_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/src__api__health__HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Register new user",
+        "description": "Create a new user account with email and password.",
+        "operationId": "register_api_auth_register_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Login user",
+        "description": "Authenticate user and return JWT tokens.",
+        "operationId": "login_api_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserLogin"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/refresh": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Refresh access token",
+        "description": "Get new access token using refresh token.",
+        "operationId": "refresh_token_api_auth_refresh_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenRefreshRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Get current user",
+        "description": "Get profile of currently authenticated user.",
+        "operationId": "get_me_api_auth_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Update current user",
+        "description": "Update profile of currently authenticated user.",
+        "operationId": "update_me_api_auth_me_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/auth/change-password": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Change password",
+        "description": "Change password for currently authenticated user.",
+        "operationId": "change_password_api_auth_change_password_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordChangeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/subscriptions": {
+      "get": {
+        "tags": [
+          "subscriptions"
+        ],
+        "summary": "List Subscriptions",
+        "description": "List all subscriptions/payments with optional filters.\n\nRetrieves all payments from the database with optional filtering\nby active status, category, and payment type. Results are ordered\nby next payment date.\n\nArgs:\n    is_active: Filter by active status. If not provided, returns all.\n    category: Filter by subcategory name. If not provided, returns all categories.\n    payment_type: Filter by payment type (subscription, debt, savings, etc.).\n    db: Database session (injected by dependency).\n    current_user: Authenticated user (injected by dependency).\n\nReturns:\n    List of SubscriptionResponse objects matching the filters.\n\nExample:\n    GET /api/subscriptions\n    GET /api/subscriptions?is_active=true\n    GET /api/subscriptions?payment_type=debt\n    GET /api/subscriptions?category=entertainment",
+        "operationId": "list_subscriptions_api_subscriptions_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "is_active",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Is Active"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category"
+            }
+          },
+          {
+            "name": "payment_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PaymentType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by payment type (subscription, debt, savings, etc.)",
+              "title": "Payment Type"
+            },
+            "description": "Filter by payment type (subscription, debt, savings, etc.)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SubscriptionResponse"
+                  },
+                  "title": "Response List Subscriptions Api Subscriptions Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "subscriptions"
+        ],
+        "summary": "Create Subscription",
+        "description": "Create a new subscription.\n\nCreates a new subscription record with automatically calculated\nnext payment date based on start date and frequency.\n\nArgs:\n    data: Subscription creation data including name, amount, currency,\n        frequency, and start date.\n    db: Database session (injected by dependency).\n\nReturns:\n    SubscriptionResponse with the created subscription details.\n\nRaises:\n    HTTPException 422: If validation fails.\n\nExample:\n    POST /api/subscriptions\n    {\n        \"name\": \"Netflix\",\n        \"amount\": \"15.99\",\n        \"currency\": \"GBP\",\n        \"frequency\": \"MONTHLY\",\n        \"start_date\": \"2025-01-01\"\n    }",
+        "operationId": "create_subscription_api_subscriptions_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubscriptionCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/subscriptions/summary": {
+      "get": {
+        "tags": [
+          "subscriptions"
+        ],
+        "summary": "Get Summary",
+        "description": "Get spending summary for all active subscriptions/payments.\n\nCalculates and returns comprehensive spending analytics including\ntotal monthly and yearly costs, breakdown by category and payment type,\nand upcoming payments. All amounts are converted to the default currency (GBP).\n\nIncludes Money Flow totals:\n- total_debt: Sum of all remaining debt balances\n- total_savings_target: Sum of all savings goals\n- total_current_saved: Sum of all current savings\n\nArgs:\n    payment_type: Optional filter for specific payment type.\n    db: Database session (injected by dependency).\n    current_user: Authenticated user (injected by dependency).\n\nReturns:\n    SubscriptionSummary with total costs, breakdowns, and upcoming payments.\n\nExample:\n    GET /api/subscriptions/summary\n    GET /api/subscriptions/summary?payment_type=debt",
+        "operationId": "get_summary_api_subscriptions_summary_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "payment_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PaymentType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter summary by payment type",
+              "title": "Payment Type"
+            },
+            "description": "Filter summary by payment type"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionSummary"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/subscriptions/{subscription_id}": {
+      "get": {
+        "tags": [
+          "subscriptions"
+        ],
+        "summary": "Get Subscription",
+        "description": "Get a single subscription by ID.\n\nRetrieves detailed information about a specific subscription.\n\nArgs:\n    subscription_id: UUID of the subscription to retrieve.\n    db: Database session (injected by dependency).\n\nReturns:\n    SubscriptionResponse with full subscription details.\n\nRaises:\n    HTTPException 404: If subscription not found.\n\nExample:\n    GET /api/subscriptions/123e4567-e89b-12d3-a456-426614174000",
+        "operationId": "get_subscription_api_subscriptions__subscription_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "subscription_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Subscription Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "subscriptions"
+        ],
+        "summary": "Update Subscription",
+        "description": "Update an existing subscription.\n\nUpdates a subscription with the provided data. Only fields that are\nexplicitly set will be updated (partial update supported).\n\nArgs:\n    subscription_id: UUID of the subscription to update.\n    data: Update data. Only include fields you want to change.\n    db: Database session (injected by dependency).\n\nReturns:\n    SubscriptionResponse with the updated subscription details.\n\nRaises:\n    HTTPException 404: If subscription not found.\n    HTTPException 422: If validation fails.\n\nExample:\n    PUT /api/subscriptions/123e4567-e89b-12d3-a456-426614174000\n    {\n        \"amount\": \"19.99\"\n    }",
+        "operationId": "update_subscription_api_subscriptions__subscription_id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "subscription_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Subscription Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubscriptionUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "subscriptions"
+        ],
+        "summary": "Delete Subscription",
+        "description": "Delete a subscription.\n\nPermanently removes a subscription from the database.\n\nArgs:\n    subscription_id: UUID of the subscription to delete.\n    db: Database session (injected by dependency).\n\nRaises:\n    HTTPException 404: If subscription not found.\n\nExample:\n    DELETE /api/subscriptions/123e4567-e89b-12d3-a456-426614174000",
+        "operationId": "delete_subscription_api_subscriptions__subscription_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "subscription_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Subscription Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/subscriptions/export/json": {
+      "get": {
+        "tags": [
+          "subscriptions"
+        ],
+        "summary": "Export Subscriptions Json",
+        "description": "Export all subscriptions/payments as JSON.\n\nExports payment data in a format suitable for backup or transfer.\nThe export includes metadata (version 2.0, timestamp) and all payment fields\nincluding Money Flow fields (payment_type, debt, savings).\n\nArgs:\n    include_inactive: Whether to include inactive payments.\n    payment_type: Optional filter for specific payment type.\n    db: Database session (injected by dependency).\n\nReturns:\n    ExportData with all payments.\n\nExample:\n    GET /api/subscriptions/export/json\n    GET /api/subscriptions/export/json?include_inactive=false\n    GET /api/subscriptions/export/json?payment_type=debt",
+        "operationId": "export_subscriptions_json_api_subscriptions_export_json_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "include_inactive",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Include inactive payments",
+              "default": true,
+              "title": "Include Inactive"
+            },
+            "description": "Include inactive payments"
+          },
+          {
+            "name": "payment_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PaymentType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by payment type",
+              "title": "Payment Type"
+            },
+            "description": "Filter by payment type"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportData"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/subscriptions/export/csv": {
+      "get": {
+        "tags": [
+          "subscriptions"
+        ],
+        "summary": "Export Subscriptions Csv",
+        "description": "Export all subscriptions/payments as CSV.\n\nExports payment data in CSV format for spreadsheet applications.\nHeaders are included in the first row. Includes Money Flow fields.\n\nArgs:\n    include_inactive: Whether to include inactive payments.\n    payment_type: Optional filter for specific payment type.\n    db: Database session (injected by dependency).\n\nReturns:\n    CSV file download response.\n\nExample:\n    GET /api/subscriptions/export/csv\n    GET /api/subscriptions/export/csv?payment_type=debt",
+        "operationId": "export_subscriptions_csv_api_subscriptions_export_csv_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "include_inactive",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Include inactive payments",
+              "default": true,
+              "title": "Include Inactive"
+            },
+            "description": "Include inactive payments"
+          },
+          {
+            "name": "payment_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PaymentType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by payment type",
+              "title": "Payment Type"
+            },
+            "description": "Filter by payment type"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/subscriptions/import/json": {
+      "post": {
+        "tags": [
+          "subscriptions"
+        ],
+        "summary": "Import Subscriptions Json",
+        "description": "Import subscriptions from JSON file.\n\nImports subscriptions from an export JSON file. Can skip duplicates\nor fail on duplicate names.\n\nArgs:\n    file: Uploaded JSON file.\n    skip_duplicates: Skip if subscription with same name exists.\n    db: Database session (injected by dependency).\n\nReturns:\n    ImportResult with counts and any errors.\n\nRaises:\n    HTTPException 400: If file is invalid or parsing fails.\n\nExample:\n    POST /api/subscriptions/import/json\n    Content-Type: multipart/form-data",
+        "operationId": "import_subscriptions_json_api_subscriptions_import_json_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "skip_duplicates",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Skip subscriptions with same name",
+              "default": true,
+              "title": "Skip Duplicates"
+            },
+            "description": "Skip subscriptions with same name"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_import_subscriptions_json_api_subscriptions_import_json_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/subscriptions/import/csv": {
+      "post": {
+        "tags": [
+          "subscriptions"
+        ],
+        "summary": "Import Subscriptions Csv",
+        "description": "Import subscriptions from CSV file.\n\nImports subscriptions from a CSV file. First row must be headers.\nCan skip duplicates or fail on duplicate names.\n\nArgs:\n    file: Uploaded CSV file.\n    skip_duplicates: Skip if subscription with same name exists.\n    db: Database session (injected by dependency).\n\nReturns:\n    ImportResult with counts and any errors.\n\nRaises:\n    HTTPException 400: If file is invalid or parsing fails.\n\nExample:\n    POST /api/subscriptions/import/csv\n    Content-Type: multipart/form-data",
+        "operationId": "import_subscriptions_csv_api_subscriptions_import_csv_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "skip_duplicates",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Skip subscriptions with same name",
+              "default": true,
+              "title": "Skip Duplicates"
+            },
+            "description": "Skip subscriptions with same name"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_import_subscriptions_csv_api_subscriptions_import_csv_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/calendar/events": {
+      "get": {
+        "tags": [
+          "calendar"
+        ],
+        "summary": "Get Calendar Events",
+        "description": "Get payment events for calendar view.\n\nRetrieves all scheduled payment events for active subscriptions\nwithin the specified date range.\n\nArgs:\n    start_date: Start of the date range.\n    end_date: End of the date range.\n    db: Database session (injected).\n\nReturns:\n    List of CalendarEvent objects for the date range.\n\nExample:\n    GET /api/calendar/events?start_date=2025-01-01&end_date=2025-01-31",
+        "operationId": "get_calendar_events_api_calendar_events_get",
+        "parameters": [
+          {
+            "name": "start_date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "description": "Start date for calendar range",
+              "title": "Start Date"
+            },
+            "description": "Start date for calendar range"
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "description": "End date for calendar range",
+              "title": "End Date"
+            },
+            "description": "End date for calendar range"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CalendarEvent"
+                  },
+                  "title": "Response Get Calendar Events Api Calendar Events Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/calendar/monthly-summary": {
+      "get": {
+        "tags": [
+          "calendar"
+        ],
+        "summary": "Get Monthly Summary",
+        "description": "Get payment summary for a specific month.\n\nAggregates payment data for the specified month including\ntotals, counts, and status breakdown.\n\nArgs:\n    year: Year to query.\n    month: Month to query (1-12).\n    db: Database session (injected).\n\nReturns:\n    Monthly payment summary.\n\nExample:\n    GET /api/calendar/monthly-summary?year=2025&month=1",
+        "operationId": "get_monthly_summary_api_calendar_monthly_summary_get",
+        "parameters": [
+          {
+            "name": "year",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 2100,
+              "minimum": 2020,
+              "description": "Year",
+              "title": "Year"
+            },
+            "description": "Year"
+          },
+          {
+            "name": "month",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 12,
+              "minimum": 1,
+              "description": "Month (1-12)",
+              "title": "Month"
+            },
+            "description": "Month (1-12)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MonthlySummaryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/calendar/payments/{subscription_id}": {
+      "get": {
+        "tags": [
+          "calendar"
+        ],
+        "summary": "Get Payment History",
+        "description": "Get payment history for a subscription.\n\nRetrieves payment records for the specified subscription,\nordered by payment date descending.\n\nArgs:\n    subscription_id: UUID of the subscription.\n    limit: Maximum number of records to return.\n    offset: Number of records to skip.\n    db: Database session (injected).\n\nReturns:\n    List of PaymentHistoryResponse records.\n\nExample:\n    GET /api/calendar/payments/uuid-string?limit=10",
+        "operationId": "get_payment_history_api_calendar_payments__subscription_id__get",
+        "parameters": [
+          {
+            "name": "subscription_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Subscription Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "description": "Maximum records",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Maximum records"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Records to skip",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Records to skip"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PaymentHistoryResponse"
+                  },
+                  "title": "Response Get Payment History Api Calendar Payments  Subscription Id  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "calendar"
+        ],
+        "summary": "Record Payment",
+        "description": "Record a payment for a subscription.\n\nCreates a payment history record and updates the subscription.\nFor installment payments, automatically tracks progress.\n\nArgs:\n    subscription_id: UUID of the subscription.\n    request: Payment details.\n    db: Database session (injected).\n\nReturns:\n    The created PaymentHistoryResponse record.\n\nRaises:\n    HTTPException 404: If subscription not found.\n\nExample:\n    POST /api/calendar/payments/uuid-string\n    {\n        \"payment_date\": \"2025-01-15\",\n        \"amount\": \"15.99\",\n        \"status\": \"completed\"\n    }",
+        "operationId": "record_payment_api_calendar_payments__subscription_id__post",
+        "parameters": [
+          {
+            "name": "subscription_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Subscription Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordPaymentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentHistoryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/calendar/payments/{subscription_id}/{payment_date}": {
+      "delete": {
+        "tags": [
+          "calendar"
+        ],
+        "summary": "Delete Payment",
+        "description": "Delete a payment record (unmark as paid).\n\nRemoves the payment history record for a specific subscription and date.\nThis allows users to undo an accidental payment marking.\n\nArgs:\n    subscription_id: UUID of the subscription.\n    payment_date: Date of the payment to delete.\n    db: Database session (injected).\n\nRaises:\n    HTTPException 404: If payment not found.\n\nExample:\n    DELETE /api/calendar/payments/uuid-string/2025-01-15",
+        "operationId": "delete_payment_api_calendar_payments__subscription_id___payment_date__delete",
+        "parameters": [
+          {
+            "name": "subscription_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Subscription Id"
+            }
+          },
+          {
+            "name": "payment_date",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "Payment Date"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/calendar/payments-summary": {
+      "get": {
+        "tags": [
+          "calendar"
+        ],
+        "summary": "Get Monthly Payments Summary",
+        "description": "Get unified monthly payments summary for current and next month.\n\nThis is the single source of truth for monthly payment totals used by both\nthe Calendar and Cards dashboard components. Returns totals for current month\n(total, paid, remaining) and next month total, all converted to the\nrequested display currency.\n\nArgs:\n    currency: Target currency code for totals (default: GBP).\n    db: Database session (injected).\n\nReturns:\n    MonthlyPaymentsSummary with current and next month totals.\n\nExample:\n    GET /api/calendar/payments-summary\n    GET /api/calendar/payments-summary?currency=USD",
+        "operationId": "get_monthly_payments_summary_api_calendar_payments_summary_get",
+        "parameters": [
+          {
+            "name": "currency",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Target currency for totals",
+              "default": "GBP",
+              "title": "Currency"
+            },
+            "description": "Target currency for totals"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MonthlyPaymentsSummary"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agent/execute": {
+      "post": {
+        "tags": [
+          "agent"
+        ],
+        "summary": "Execute Command",
+        "description": "Chat with the conversational AI agent.\n\nSends the user's message to the Claude-powered agent which can handle\nnatural conversations, answer questions, and perform subscription\nmanagement tasks.\n\nSecurity:\n    Input is sanitized to prevent prompt injection attacks before\n    being passed to the AI agent.\n\nArgs:\n    request: Agent request containing the user's message.\n    db: Async database session from dependency injection.\n\nReturns:\n    AgentResponse with the agent's reply and optional data.\n\nRaises:\n    HTTPException: 400 if input fails security validation.\n    HTTPException: 500 if an unexpected error occurs.\n\nExample:\n    POST /api/agent/execute\n    {\"command\": \"Hello!\"}\n\n    Response:\n    {\n        \"success\": true,\n        \"message\": \"Hello! I'm your subscription assistant...\",\n        \"data\": null\n    }",
+        "operationId": "execute_command_api_agent_execute_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/search/notes": {
+      "post": {
+        "tags": [
+          "search"
+        ],
+        "summary": "Search Notes",
+        "description": "Search subscription notes by semantic similarity.\n\nPerforms a semantic search over all subscription notes for the user,\nreturning the most relevant matches.\n\nArgs:\n    request: Search request with query and user ID.\n    db: Async database session.\n\nReturns:\n    SearchResponse with matching notes and scores.\n\nRaises:\n    HTTPException: 503 if RAG is disabled, 500 on unexpected errors.\n\nExample:\n    POST /api/search/notes\n    {\"query\": \"work subscriptions\", \"user_id\": \"user-123\"}\n\n    Response:\n    {\n        \"success\": true,\n        \"query\": \"work subscriptions\",\n        \"results\": [\n            {\"subscription_id\": \"...\", \"note\": \"Work expense\", \"score\": 0.85}\n        ],\n        \"total\": 1\n    }",
+        "operationId": "search_notes_api_search_notes_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/search/conversations": {
+      "post": {
+        "tags": [
+          "search"
+        ],
+        "summary": "Search Conversations",
+        "description": "Search conversation history by semantic similarity.\n\nPerforms a semantic search over past conversations for the user,\nreturning the most relevant matches.\n\nArgs:\n    request: Search request with query and user ID.\n    db: Async database session.\n\nReturns:\n    SearchResponse with matching conversation turns and scores.\n\nRaises:\n    HTTPException: 503 if RAG is disabled, 500 on unexpected errors.\n\nExample:\n    POST /api/search/conversations\n    {\"query\": \"cancellation requests\", \"user_id\": \"user-123\"}\n\n    Response:\n    {\n        \"success\": true,\n        \"query\": \"cancellation requests\",\n        \"results\": [\n            {\"role\": \"user\", \"content\": \"Cancel Netflix\", \"score\": 0.92}\n        ],\n        \"total\": 1\n    }",
+        "operationId": "search_conversations_api_search_conversations_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/search/history/{session_id}": {
+      "get": {
+        "tags": [
+          "search"
+        ],
+        "summary": "Get Session History",
+        "description": "Get conversation history for a session.\n\nRetrieves persisted conversation turns for a specific session.\n\nArgs:\n    session_id: The session ID to retrieve history for.\n    user_id: The user ID for data isolation.\n    limit: Maximum number of turns to retrieve.\n    db: Async database session.\n\nReturns:\n    Dictionary with session info and conversation history.\n\nExample:\n    GET /api/search/history/session-123?user_id=user-123\n\n    Response:\n    {\n        \"session_id\": \"session-123\",\n        \"user_id\": \"user-123\",\n        \"turns\": [\n            {\"role\": \"user\", \"content\": \"Hello\", \"timestamp\": \"...\"}\n        ],\n        \"total\": 1\n    }",
+        "operationId": "get_session_history_api_search_history__session_id__get",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "default",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Session History Api Search History  Session Id  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/insights/": {
+      "get": {
+        "tags": [
+          "insights"
+        ],
+        "summary": "Get Insights",
+        "description": "Get comprehensive spending insights.\n\nReturns spending trends, category breakdown, renewal predictions,\nand optimization recommendations.\n\nArgs:\n    months_back: Number of months for trend analysis (1-24).\n    db: Database session.\n\nReturns:\n    InsightsResponse with all analysis data.\n\nExample:\n    GET /api/insights?months_back=3\n\n    Response:\n    {\n        \"total_monthly\": 150.99,\n        \"total_yearly\": 1811.88,\n        \"trends\": [...],\n        \"category_breakdown\": [...],\n        \"recommendations\": [...],\n        \"summary\": \"You're spending \u00a3150.99 per month...\"\n    }",
+        "operationId": "get_insights_api_insights__get",
+        "parameters": [
+          {
+            "name": "months_back",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 24,
+              "minimum": 1,
+              "description": "Months of trend data",
+              "default": 6,
+              "title": "Months Back"
+            },
+            "description": "Months of trend data"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InsightsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/insights/cost-comparison": {
+      "get": {
+        "tags": [
+          "insights"
+        ],
+        "summary": "Get Cost Comparison",
+        "description": "Get cost comparison across time periods.\n\nReturns spending totals for different time periods\n(daily, weekly, monthly, quarterly, yearly).\n\nArgs:\n    db: Database session.\n\nReturns:\n    CostComparisonResponse with period totals.\n\nExample:\n    GET /api/insights/cost-comparison\n\n    Response:\n    {\n        \"daily\": 5.03,\n        \"weekly\": 37.75,\n        \"monthly\": 150.99,\n        \"quarterly\": 452.97,\n        \"yearly\": 1811.88,\n        \"subscription_count\": 8\n    }",
+        "operationId": "get_cost_comparison_api_insights_cost_comparison_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CostComparisonResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/insights/spending/{start_date}/{end_date}": {
+      "get": {
+        "tags": [
+          "insights"
+        ],
+        "summary": "Get Spending By Period",
+        "description": "Get spending breakdown for a specific period.\n\nArgs:\n    start_date: Start date (YYYY-MM-DD).\n    end_date: End date (YYYY-MM-DD).\n    db: Database session.\n\nReturns:\n    Dictionary with spending data for the period.\n\nExample:\n    GET /api/insights/spending/2025-01-01/2025-01-31\n\n    Response:\n    {\n        \"start_date\": \"2025-01-01\",\n        \"end_date\": \"2025-01-31\",\n        \"days\": 31,\n        \"total\": 165.49,\n        \"by_subscription\": [...]\n    }",
+        "operationId": "get_spending_by_period_api_insights_spending__start_date___end_date__get",
+        "parameters": [
+          {
+            "name": "start_date",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "Start Date"
+            }
+          },
+          {
+            "name": "end_date",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "End Date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Spending By Period Api Insights Spending  Start Date   End Date  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/insights/renewals": {
+      "get": {
+        "tags": [
+          "insights"
+        ],
+        "summary": "Get Upcoming Renewals",
+        "description": "Get upcoming subscription renewals.\n\nArgs:\n    days: Number of days ahead to check (1-365).\n    db: Database session.\n\nReturns:\n    Dictionary with renewal predictions.\n\nExample:\n    GET /api/insights/renewals?days=7\n\n    Response:\n    {\n        \"days_ahead\": 7,\n        \"renewals\": [...],\n        \"total_amount\": 45.98,\n        \"count\": 2\n    }",
+        "operationId": "get_upcoming_renewals_api_insights_renewals_get",
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 365,
+              "minimum": 1,
+              "description": "Days ahead to look",
+              "default": 30,
+              "title": "Days"
+            },
+            "description": "Days ahead to look"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Upcoming Renewals Api Insights Renewals Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/insights/recommendations": {
+      "get": {
+        "tags": [
+          "insights"
+        ],
+        "summary": "Get Recommendations",
+        "description": "Get optimization recommendations.\n\nReturns recommendations for potential cost savings,\nincluding duplicate subscriptions and high-cost items.\n\nArgs:\n    db: Database session.\n\nReturns:\n    Dictionary with recommendations.\n\nExample:\n    GET /api/insights/recommendations\n\n    Response:\n    {\n        \"recommendations\": [...],\n        \"total_potential_savings\": 25.99,\n        \"count\": 2\n    }",
+        "operationId": "get_recommendations_api_insights_recommendations_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Recommendations Api Insights Recommendations Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/insights/historical": {
+      "post": {
+        "tags": [
+          "insights"
+        ],
+        "summary": "Query Historical",
+        "description": "Execute a historical query with temporal parsing.\n\nParses natural language time expressions and retrieves\nmatching subscription data.\n\nArgs:\n    request: Query request with natural language query.\n    db: Database session.\n\nReturns:\n    HistoricalQueryResponse with matching data.\n\nExample:\n    POST /api/insights/historical\n    {\"query\": \"What did I add last month?\"}\n\n    Response:\n    {\n        \"query\": \"What did I add last month?\",\n        \"date_range\": {\"start\": \"2025-10-01\", \"end\": \"2025-10-31\", \"label\": \"last month\"},\n        \"subscriptions\": [...],\n        \"summary\": \"Added 2 subscription(s) in last month: Netflix, Spotify\"\n    }",
+        "operationId": "query_historical_api_insights_historical_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HistoricalQueryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoricalQueryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/analytics/": {
+      "get": {
+        "tags": [
+          "analytics"
+        ],
+        "summary": "Get Analytics Overview",
+        "description": "Get overview of RAG analytics.\n\nReturns a summary of key metrics and system health.\n\nReturns:\n    Dictionary with overview data including:\n    - enabled: Whether RAG is enabled\n    - daily_summary: Today's metrics summary\n    - health: Current health status",
+        "operationId": "get_analytics_overview_api_analytics__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Analytics Overview Api Analytics  Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/analytics/daily": {
+      "get": {
+        "tags": [
+          "analytics"
+        ],
+        "summary": "Get Daily Report",
+        "description": "Get detailed daily analytics report.\n\nProvides comprehensive metrics for a specific day including\nquery counts, latencies, cache performance, and health assessment.\n\nArgs:\n    date: Date to report on (YYYY-MM-DD format).\n    user_id: Optional user ID to filter by.\n\nReturns:\n    DailyReportResponse with full daily metrics.",
+        "operationId": "get_daily_report_api_analytics_daily_get",
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Date in YYYY-MM-DD format (default: today)",
+              "title": "Date"
+            },
+            "description": "Date in YYYY-MM-DD format (default: today)"
+          },
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by user ID",
+              "title": "User Id"
+            },
+            "description": "Filter by user ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DailyReportResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/analytics/hourly": {
+      "get": {
+        "tags": [
+          "analytics"
+        ],
+        "summary": "Get Hourly Breakdown",
+        "description": "Get hourly breakdown of metrics.\n\nProvides hour-by-hour metrics for a specific day,\nuseful for identifying usage patterns and peak times.\n\nArgs:\n    date: Date to report on (YYYY-MM-DD format).\n    user_id: Optional user ID to filter by.\n\nReturns:\n    List of hourly metric data points.",
+        "operationId": "get_hourly_breakdown_api_analytics_hourly_get",
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Date in YYYY-MM-DD format (default: today)",
+              "title": "Date"
+            },
+            "description": "Date in YYYY-MM-DD format (default: today)"
+          },
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by user ID",
+              "title": "User Id"
+            },
+            "description": "Filter by user ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HourlyDataPoint"
+                  },
+                  "title": "Response Get Hourly Breakdown Api Analytics Hourly Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/analytics/cache": {
+      "get": {
+        "tags": [
+          "analytics"
+        ],
+        "summary": "Get Cache Stats",
+        "description": "Get Redis cache statistics.\n\nReturns current cache health and performance metrics\nincluding memory usage and hit rates.\n\nReturns:\n    CacheStatsResponse with cache statistics.",
+        "operationId": "get_cache_stats_api_analytics_cache_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CacheStatsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/analytics/health": {
+      "get": {
+        "tags": [
+          "analytics"
+        ],
+        "summary": "Get System Health",
+        "description": "Get overall RAG system health.\n\nProvides a comprehensive health check of all RAG components\nincluding cache, vector store, and query performance.\n\nReturns:\n    SystemHealthResponse with health status and warnings.",
+        "operationId": "get_system_health_api_analytics_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemHealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/analytics/cache/pattern/{pattern}": {
+      "delete": {
+        "tags": [
+          "analytics"
+        ],
+        "summary": "Clear Cache Pattern",
+        "description": "Clear cache keys matching a pattern.\n\nUse with caution - this deletes cached data.\n\nArgs:\n    pattern: Redis key pattern to match (e.g., \"emb:*\").\n\nReturns:\n    Dictionary with count of deleted keys.",
+        "operationId": "clear_cache_pattern_api_analytics_cache_pattern__pattern__delete",
+        "parameters": [
+          {
+            "name": "pattern",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pattern"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Clear Cache Pattern Api Analytics Cache Pattern  Pattern  Delete"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cards": {
+      "post": {
+        "tags": [
+          "cards",
+          "Payment Cards"
+        ],
+        "summary": "Create payment card",
+        "description": "Create a new payment card/account for tracking payments.",
+        "operationId": "create_card_api_cards_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentCardCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentCardResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "cards",
+          "Payment Cards"
+        ],
+        "summary": "List payment cards",
+        "description": "Get all payment cards, optionally filtered by active status.",
+        "operationId": "list_cards_api_cards_get",
+        "parameters": [
+          {
+            "name": "is_active",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Is Active"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PaymentCardResponse"
+                  },
+                  "title": "Response List Cards Api Cards Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cards/balance-summary": {
+      "get": {
+        "tags": [
+          "cards",
+          "Payment Cards"
+        ],
+        "summary": "Get card balance summary",
+        "description": "Get summary of required balances for all cards based on subscriptions.",
+        "operationId": "get_balance_summary_api_cards_balance_summary_get",
+        "parameters": [
+          {
+            "name": "currency",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "GBP",
+              "title": "Currency"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AllCardsBalanceSummary"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cards/{card_id}": {
+      "get": {
+        "tags": [
+          "cards",
+          "Payment Cards"
+        ],
+        "summary": "Get payment card",
+        "description": "Get a payment card by ID.",
+        "operationId": "get_card_api_cards__card_id__get",
+        "parameters": [
+          {
+            "name": "card_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Card Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentCardResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "cards",
+          "Payment Cards"
+        ],
+        "summary": "Update payment card",
+        "description": "Update a payment card's details.",
+        "operationId": "update_card_api_cards__card_id__patch",
+        "parameters": [
+          {
+            "name": "card_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Card Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentCardUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentCardResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "cards",
+          "Payment Cards"
+        ],
+        "summary": "Delete payment card",
+        "description": "Delete a payment card. Subscriptions using this card will have card_id set to null.",
+        "operationId": "delete_card_api_cards__card_id__delete",
+        "parameters": [
+          {
+            "name": "card_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Card Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AgentRequest": {
+        "properties": {
+          "command": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Command",
+            "description": "Natural language message to the agent",
+            "examples": [
+              "Hello!",
+              "Add Netflix for \u00a315.99 monthly",
+              "Show all subscriptions",
+              "How much am I spending?"
+            ]
+          },
+          "user_id": {
+            "type": "string",
+            "title": "User Id",
+            "description": "User ID for RAG context isolation",
+            "default": "default"
+          },
+          "session_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Session Id",
+            "description": "Session ID for conversation tracking. Auto-generated if not provided."
+          },
+          "history": {
+            "items": {
+              "$ref": "#/components/schemas/ChatMessage"
+            },
+            "type": "array",
+            "title": "History",
+            "description": "Previous conversation messages for context",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "command"
+        ],
+        "title": "AgentRequest",
+        "description": "Request schema for agent chat.\n\nAttributes:\n    command: Natural language message from the user.\n    user_id: User identifier for RAG context isolation.\n    session_id: Session identifier for conversation tracking.\n    history: Optional conversation history for context.\n\nExample:\n    >>> request = AgentRequest(command=\"Hello!\", user_id=\"user-123\")\n    >>> request.command\n    'Hello!'"
+      },
+      "AgentResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Whether request succeeded"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "Agent's response message"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data",
+            "description": "Optional data payload with subscription or analytics info"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "message"
+        ],
+        "title": "AgentResponse",
+        "description": "Response schema from agent.\n\nAttributes:\n    success: Whether the request was processed successfully.\n    message: The agent's response message.\n    data: Optional data payload containing subscription info or analytics.\n\nExample:\n    >>> response = AgentResponse(\n    ...     success=True,\n    ...     message=\"Hello! I'm your subscription assistant.\",\n    ...     data=None\n    ... )"
+      },
+      "AllCardsBalanceSummary": {
+        "properties": {
+          "cards": {
+            "items": {
+              "$ref": "#/components/schemas/CardBalanceSummary"
+            },
+            "type": "array",
+            "title": "Cards",
+            "description": "Per-card summaries"
+          },
+          "total_all_cards_this_month": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total All Cards This Month",
+            "description": "Total this month"
+          },
+          "total_paid_this_month": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Paid This Month",
+            "description": "Total paid this month",
+            "default": "0"
+          },
+          "total_remaining_this_month": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Remaining This Month",
+            "description": "Total remaining this month",
+            "default": "0"
+          },
+          "total_all_cards_next_month": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total All Cards Next Month",
+            "description": "Total next month"
+          },
+          "unassigned_count": {
+            "type": "integer",
+            "title": "Unassigned Count",
+            "description": "Unassigned subscription count",
+            "default": 0
+          },
+          "unassigned_total": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Unassigned Total",
+            "description": "Unassigned total",
+            "default": "0"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cards",
+          "total_all_cards_this_month",
+          "total_all_cards_next_month"
+        ],
+        "title": "AllCardsBalanceSummary",
+        "description": "Summary of all cards with their required balances.\n\nAttributes:\n    cards: List of card balance summaries.\n    total_all_cards_this_month: Total across all cards this month.\n    total_paid_this_month: Total paid across all cards this month.\n    total_remaining_this_month: Total remaining across all cards this month.\n    total_all_cards_next_month: Total across all cards next month.\n    unassigned_count: Subscriptions without a card assigned.\n    unassigned_total: Total for unassigned subscriptions."
+      },
+      "Body_import_subscriptions_csv_api_subscriptions_import_csv_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "title": "File",
+            "description": "CSV file to import"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_import_subscriptions_csv_api_subscriptions_import_csv_post"
+      },
+      "Body_import_subscriptions_json_api_subscriptions_import_json_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "title": "File",
+            "description": "JSON file to import"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_import_subscriptions_json_api_subscriptions_import_json_post"
+      },
+      "CacheStatsResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "used_memory": {
+            "type": "string",
+            "title": "Used Memory",
+            "default": ""
+          },
+          "used_memory_peak": {
+            "type": "string",
+            "title": "Used Memory Peak",
+            "default": ""
+          },
+          "keyspace_hits": {
+            "type": "integer",
+            "title": "Keyspace Hits",
+            "default": 0
+          },
+          "keyspace_misses": {
+            "type": "integer",
+            "title": "Keyspace Misses",
+            "default": 0
+          },
+          "hit_rate": {
+            "type": "number",
+            "title": "Hit Rate",
+            "default": 0.0
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "CacheStatsResponse",
+        "description": "Response model for cache statistics."
+      },
+      "CalendarEvent": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Payment UUID"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Payment name"
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Amount",
+            "description": "Payment amount"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "description": "Currency code"
+          },
+          "payment_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Payment Date",
+            "description": "Payment date"
+          },
+          "payment_type": {
+            "$ref": "#/components/schemas/PaymentType",
+            "description": "Payment type",
+            "default": "subscription"
+          },
+          "color": {
+            "type": "string",
+            "title": "Color",
+            "description": "Brand color",
+            "default": "#3B82F6"
+          },
+          "icon_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon Url",
+            "description": "Service icon URL"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category",
+            "description": "Subcategory"
+          },
+          "is_installment": {
+            "type": "boolean",
+            "title": "Is Installment",
+            "description": "Is installment payment",
+            "default": false
+          },
+          "installment_number": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Installment Number",
+            "description": "Current installment"
+          },
+          "total_installments": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Installments",
+            "description": "Total installments"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Payment status",
+            "default": "upcoming"
+          },
+          "card_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Card Id",
+            "description": "Linked payment card ID"
+          },
+          "is_paid": {
+            "type": "boolean",
+            "title": "Is Paid",
+            "description": "Whether payment has been recorded",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "amount",
+          "currency",
+          "payment_date"
+        ],
+        "title": "CalendarEvent",
+        "description": "Schema for calendar view payment event (Money Flow).\n\nRepresents a payment event for calendar display.\nIncludes payment details for rich calendar UI.\n\nAttributes:\n    id: Payment UUID.\n    name: Payment name for display.\n    amount: Payment amount.\n    currency: ISO 4217 currency code.\n    payment_date: Date of this payment.\n    payment_type: Payment type classification.\n    color: Brand color for calendar styling.\n    icon_url: Service icon URL.\n    category: Payment subcategory.\n    is_installment: Whether this is an installment payment.\n    installment_number: Current installment number.\n    total_installments: Total installments in plan.\n    status: Payment status for this event.\n\nExample:\n    >>> event = CalendarEvent(\n    ...     id=\"uuid\",\n    ...     name=\"Netflix\",\n    ...     amount=Decimal(\"15.99\"),\n    ...     currency=\"GBP\",\n    ...     payment_type=PaymentType.SUBSCRIPTION,\n    ...     payment_date=date.today(),\n    ...     color=\"#E50914\"\n    ... )"
+      },
+      "CardBalanceSummary": {
+        "properties": {
+          "card_id": {
+            "type": "string",
+            "title": "Card Id",
+            "description": "Card UUID"
+          },
+          "card_name": {
+            "type": "string",
+            "title": "Card Name",
+            "description": "Card display name"
+          },
+          "bank_name": {
+            "type": "string",
+            "title": "Bank Name",
+            "description": "Bank name"
+          },
+          "color": {
+            "type": "string",
+            "title": "Color",
+            "description": "Card color"
+          },
+          "icon_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon Url",
+            "description": "Bank logo"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "description": "Card currency"
+          },
+          "total_this_month": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total This Month",
+            "description": "Due this month (direct)"
+          },
+          "funded_this_month": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Funded This Month",
+            "description": "Due this month (from funded cards)",
+            "default": "0"
+          },
+          "paid_this_month": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Paid This Month",
+            "description": "Paid this month",
+            "default": "0"
+          },
+          "remaining_this_month": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Remaining This Month",
+            "description": "Remaining this month",
+            "default": "0"
+          },
+          "total_next_month": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Next Month",
+            "description": "Due next month (direct)"
+          },
+          "funded_next_month": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Funded Next Month",
+            "description": "Due next month (from funded cards)",
+            "default": "0"
+          },
+          "subscription_count": {
+            "type": "integer",
+            "title": "Subscription Count",
+            "description": "Number of direct subscriptions"
+          },
+          "funded_subscription_count": {
+            "type": "integer",
+            "title": "Funded Subscription Count",
+            "description": "Number of subscriptions from funded cards",
+            "default": 0
+          },
+          "subscriptions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Subscriptions",
+            "description": "Subscription names"
+          },
+          "funded_subscriptions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Funded Subscriptions",
+            "description": "Subscriptions from funded cards"
+          }
+        },
+        "type": "object",
+        "required": [
+          "card_id",
+          "card_name",
+          "bank_name",
+          "color",
+          "currency",
+          "total_this_month",
+          "total_next_month",
+          "subscription_count",
+          "subscriptions"
+        ],
+        "title": "CardBalanceSummary",
+        "description": "Summary of required balance for a payment card.\n\nAttributes:\n    card_id: Card UUID.\n    card_name: Card display name.\n    bank_name: Bank/provider name.\n    color: Card color.\n    icon_url: Bank logo URL.\n    currency: Card currency.\n    total_this_month: Total payments due this month.\n    paid_this_month: Amount already paid this month.\n    remaining_this_month: Remaining amount to pay this month.\n    total_next_month: Total payments due next month.\n    subscription_count: Number of subscriptions using this card.\n    subscriptions: List of subscription names on this card."
+      },
+      "CardType": {
+        "type": "string",
+        "enum": [
+          "debit",
+          "credit",
+          "prepaid",
+          "bank_account"
+        ],
+        "title": "CardType",
+        "description": "Card type enumeration.\n\nAttributes:\n    DEBIT: Debit card linked to bank account.\n    CREDIT: Credit card with credit limit.\n    PREPAID: Prepaid/virtual card.\n    BANK_ACCOUNT: Direct bank account (for direct debits)."
+      },
+      "CategoryBreakdownResponse": {
+        "properties": {
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "total": {
+            "type": "number",
+            "title": "Total"
+          },
+          "percentage": {
+            "type": "number",
+            "title": "Percentage"
+          },
+          "subscription_count": {
+            "type": "integer",
+            "title": "Subscription Count"
+          },
+          "subscriptions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Subscriptions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "category",
+          "total",
+          "percentage",
+          "subscription_count",
+          "subscriptions"
+        ],
+        "title": "CategoryBreakdownResponse",
+        "description": "Category spending breakdown."
+      },
+      "ChatMessage": {
+        "properties": {
+          "role": {
+            "type": "string",
+            "title": "Role",
+            "description": "Role: 'user' or 'assistant'"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content",
+            "description": "Message content"
+          }
+        },
+        "type": "object",
+        "required": [
+          "role",
+          "content"
+        ],
+        "title": "ChatMessage",
+        "description": "A single message in the conversation history."
+      },
+      "ComponentHealth": {
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/HealthStatus"
+          },
+          "latency_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latency Ms"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "ComponentHealth",
+        "description": "Health status for a single component."
+      },
+      "ConversationSearchResult": {
+        "properties": {
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content"
+          },
+          "timestamp": {
+            "type": "number",
+            "title": "Timestamp"
+          },
+          "score": {
+            "type": "number",
+            "title": "Score"
+          }
+        },
+        "type": "object",
+        "required": [
+          "role",
+          "content",
+          "timestamp",
+          "score"
+        ],
+        "title": "ConversationSearchResult",
+        "description": "A single conversation search result.\n\nAttributes:\n    role: Message role (user or assistant).\n    content: Message content.\n    timestamp: When the message was sent.\n    score: Relevance score (0-1, higher is more relevant)."
+      },
+      "CostComparisonResponse": {
+        "properties": {
+          "daily": {
+            "type": "number",
+            "title": "Daily"
+          },
+          "weekly": {
+            "type": "number",
+            "title": "Weekly"
+          },
+          "monthly": {
+            "type": "number",
+            "title": "Monthly"
+          },
+          "quarterly": {
+            "type": "number",
+            "title": "Quarterly"
+          },
+          "yearly": {
+            "type": "number",
+            "title": "Yearly"
+          },
+          "subscription_count": {
+            "type": "integer",
+            "title": "Subscription Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "daily",
+          "weekly",
+          "monthly",
+          "quarterly",
+          "yearly",
+          "subscription_count"
+        ],
+        "title": "CostComparisonResponse",
+        "description": "Cost comparison across time periods."
+      },
+      "DailyReportResponse": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "metrics": {
+            "$ref": "#/components/schemas/MetricsResponse"
+          },
+          "breakdown": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Breakdown"
+          },
+          "trends": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Trends"
+          },
+          "health": {
+            "$ref": "#/components/schemas/src__api__analytics__HealthResponse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "metrics",
+          "breakdown",
+          "trends",
+          "health"
+        ],
+        "title": "DailyReportResponse",
+        "description": "Response model for daily report."
+      },
+      "ExportData": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "title": "Version",
+            "description": "Export format version (2.0 for Money Flow)",
+            "default": "2.0"
+          },
+          "exported_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Exported At",
+            "description": "Export timestamp"
+          },
+          "subscription_count": {
+            "type": "integer",
+            "title": "Subscription Count",
+            "description": "Number of payments"
+          },
+          "subscriptions": {
+            "items": {
+              "$ref": "#/components/schemas/SubscriptionExport"
+            },
+            "type": "array",
+            "title": "Subscriptions",
+            "description": "Payment data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "exported_at",
+          "subscription_count",
+          "subscriptions"
+        ],
+        "title": "ExportData",
+        "description": "Schema for full export data (Money Flow).\n\nContains metadata and all payments for backup/transfer.\n\nAttributes:\n    version: Export format version.\n    exported_at: Export timestamp.\n    subscription_count: Number of payments.\n    subscriptions: List of payment data."
+      },
+      "Frequency": {
+        "type": "string",
+        "enum": [
+          "daily",
+          "weekly",
+          "biweekly",
+          "monthly",
+          "quarterly",
+          "yearly",
+          "custom"
+        ],
+        "title": "Frequency",
+        "description": "Payment frequency enumeration.\n\nDefines the supported billing frequencies for subscriptions.\nInherits from str for JSON serialization compatibility.\n\nAttributes:\n    DAILY: Daily billing (every day).\n    WEEKLY: Weekly billing (every 7 days).\n    BIWEEKLY: Bi-weekly billing (every 14 days).\n    MONTHLY: Monthly billing (same day each month).\n    QUARTERLY: Quarterly billing (every 3 months).\n    YEARLY: Annual billing (once per year).\n    CUSTOM: Custom interval using frequency_interval field.\n\nExample:\n    >>> Frequency.MONTHLY.value\n    'monthly'\n    >>> Frequency(\"yearly\")\n    <Frequency.YEARLY: 'yearly'>"
+      },
+      "FundingCardInfo": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Card UUID"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Card name"
+          },
+          "color": {
+            "type": "string",
+            "title": "Color",
+            "description": "Card color"
+          },
+          "icon_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon Url",
+            "description": "Card icon URL"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "color"
+        ],
+        "title": "FundingCardInfo",
+        "description": "Brief info about a funding card."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HealthStatus": {
+        "type": "string",
+        "enum": [
+          "healthy",
+          "degraded",
+          "unhealthy"
+        ],
+        "title": "HealthStatus",
+        "description": "Health check status values."
+      },
+      "HistoricalQueryRequest": {
+        "properties": {
+          "query": {
+            "type": "string",
+            "title": "Query",
+            "description": "Natural language query with temporal expression",
+            "examples": [
+              "What did I add last month?",
+              "Show subscriptions from January",
+              "How much was I spending in 2024?"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "query"
+        ],
+        "title": "HistoricalQueryRequest",
+        "description": "Request for historical query."
+      },
+      "HistoricalQueryResponse": {
+        "properties": {
+          "query": {
+            "type": "string",
+            "title": "Query"
+          },
+          "date_range": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Date Range"
+          },
+          "subscriptions": {
+            "items": {
+              "$ref": "#/components/schemas/HistoricalSubscriptionResponse"
+            },
+            "type": "array",
+            "title": "Subscriptions"
+          },
+          "total_monthly": {
+            "type": "number",
+            "title": "Total Monthly"
+          },
+          "subscription_count": {
+            "type": "integer",
+            "title": "Subscription Count"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          }
+        },
+        "type": "object",
+        "required": [
+          "query",
+          "date_range",
+          "subscriptions",
+          "total_monthly",
+          "subscription_count",
+          "summary"
+        ],
+        "title": "HistoricalQueryResponse",
+        "description": "Response for historical query."
+      },
+      "HistoricalSubscriptionResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "amount": {
+            "type": "number",
+            "title": "Amount"
+          },
+          "frequency": {
+            "type": "string",
+            "title": "Frequency"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          },
+          "was_active": {
+            "type": "boolean",
+            "title": "Was Active"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "amount",
+          "frequency",
+          "category",
+          "created_at",
+          "was_active"
+        ],
+        "title": "HistoricalSubscriptionResponse",
+        "description": "Historical subscription data."
+      },
+      "HourlyDataPoint": {
+        "properties": {
+          "hour": {
+            "type": "integer",
+            "title": "Hour"
+          },
+          "queries": {
+            "type": "integer",
+            "title": "Queries"
+          },
+          "avg_latency_ms": {
+            "type": "number",
+            "title": "Avg Latency Ms"
+          },
+          "cache_hit_rate": {
+            "type": "number",
+            "title": "Cache Hit Rate"
+          }
+        },
+        "type": "object",
+        "required": [
+          "hour",
+          "queries",
+          "avg_latency_ms",
+          "cache_hit_rate"
+        ],
+        "title": "HourlyDataPoint",
+        "description": "Response model for hourly data point."
+      },
+      "ImportResult": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "Total in import file"
+          },
+          "imported": {
+            "type": "integer",
+            "title": "Imported",
+            "description": "Successfully imported"
+          },
+          "skipped": {
+            "type": "integer",
+            "title": "Skipped",
+            "description": "Skipped (duplicates)"
+          },
+          "failed": {
+            "type": "integer",
+            "title": "Failed",
+            "description": "Failed imports"
+          },
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Errors",
+            "description": "Error messages"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "imported",
+          "skipped",
+          "failed"
+        ],
+        "title": "ImportResult",
+        "description": "Schema for import operation result.\n\nReports success/failure counts and any errors encountered.\n\nAttributes:\n    total: Total subscriptions in import file.\n    imported: Successfully imported count.\n    skipped: Skipped (duplicate) count.\n    failed: Failed import count.\n    errors: List of error messages."
+      },
+      "InsightsResponse": {
+        "properties": {
+          "total_monthly": {
+            "type": "number",
+            "title": "Total Monthly"
+          },
+          "total_yearly": {
+            "type": "number",
+            "title": "Total Yearly"
+          },
+          "trends": {
+            "items": {
+              "$ref": "#/components/schemas/SpendingTrendResponse"
+            },
+            "type": "array",
+            "title": "Trends"
+          },
+          "category_breakdown": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryBreakdownResponse"
+            },
+            "type": "array",
+            "title": "Category Breakdown"
+          },
+          "renewal_predictions": {
+            "items": {
+              "$ref": "#/components/schemas/RenewalPredictionResponse"
+            },
+            "type": "array",
+            "title": "Renewal Predictions"
+          },
+          "recommendations": {
+            "items": {
+              "$ref": "#/components/schemas/RecommendationResponse"
+            },
+            "type": "array",
+            "title": "Recommendations"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_monthly",
+          "total_yearly",
+          "trends",
+          "category_breakdown",
+          "renewal_predictions",
+          "recommendations",
+          "summary"
+        ],
+        "title": "InsightsResponse",
+        "description": "Complete insights response."
+      },
+      "LoginResponse": {
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/UserResponse",
+            "description": "User profile"
+          },
+          "tokens": {
+            "$ref": "#/components/schemas/TokenResponse",
+            "description": "Authentication tokens"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user",
+          "tokens"
+        ],
+        "title": "LoginResponse",
+        "description": "Schema for login response with user info and tokens.\n\nCombines token response with user data for convenience.\n\nAttributes:\n    user: User profile data.\n    tokens: JWT tokens.\n\nExample:\n    >>> response = LoginResponse(\n    ...     user=UserResponse(...),\n    ...     tokens=TokenResponse(...)\n    ... )"
+      },
+      "MetricsResponse": {
+        "properties": {
+          "total_queries": {
+            "type": "integer",
+            "title": "Total Queries"
+          },
+          "avg_latency_ms": {
+            "type": "number",
+            "title": "Avg Latency Ms"
+          },
+          "p95_latency_ms": {
+            "type": "number",
+            "title": "P95 Latency Ms"
+          },
+          "cache_hit_rate": {
+            "type": "number",
+            "title": "Cache Hit Rate"
+          },
+          "avg_results_count": {
+            "type": "number",
+            "title": "Avg Results Count"
+          },
+          "avg_relevance_score": {
+            "type": "number",
+            "title": "Avg Relevance Score"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_queries",
+          "avg_latency_ms",
+          "p95_latency_ms",
+          "cache_hit_rate",
+          "avg_results_count",
+          "avg_relevance_score"
+        ],
+        "title": "MetricsResponse",
+        "description": "Response model for aggregated metrics."
+      },
+      "MonthlyPaymentsSummary": {
+        "properties": {
+          "current_month_total": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Current Month Total",
+            "description": "Total due this month"
+          },
+          "current_month_paid": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Current Month Paid",
+            "description": "Amount paid this month"
+          },
+          "current_month_remaining": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Current Month Remaining",
+            "description": "Remaining this month"
+          },
+          "next_month_total": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Next Month Total",
+            "description": "Total due next month"
+          },
+          "payment_count_this_month": {
+            "type": "integer",
+            "title": "Payment Count This Month",
+            "description": "Payment count this month"
+          },
+          "payment_count_next_month": {
+            "type": "integer",
+            "title": "Payment Count Next Month",
+            "description": "Payment count next month"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "description": "Currency code for totals",
+            "default": "GBP"
+          }
+        },
+        "type": "object",
+        "required": [
+          "current_month_total",
+          "current_month_paid",
+          "current_month_remaining",
+          "next_month_total",
+          "payment_count_this_month",
+          "payment_count_next_month"
+        ],
+        "title": "MonthlyPaymentsSummary",
+        "description": "Schema for monthly payments summary.\n\nUnified endpoint for calculating total payments due for current\nand next month. Used by both Calendar and Cards dashboard for\nconsistent totals.\n\nAttributes:\n    current_month_total: Total payments due this month.\n    current_month_paid: Amount already paid this month.\n    current_month_remaining: Remaining to pay this month.\n    next_month_total: Total payments due next month.\n    payment_count_this_month: Number of payments this month.\n    payment_count_next_month: Number of payments next month.\n    currency: Currency code for the totals.\n\nExample:\n    >>> summary.current_month_total\n    Decimal('8570.00')"
+      },
+      "MonthlySummaryResponse": {
+        "properties": {
+          "year": {
+            "type": "integer",
+            "title": "Year"
+          },
+          "month": {
+            "type": "integer",
+            "title": "Month"
+          },
+          "total_paid": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Paid"
+          },
+          "total_pending": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Pending"
+          },
+          "total_failed": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Failed"
+          },
+          "payment_count": {
+            "type": "integer",
+            "title": "Payment Count"
+          },
+          "completed_count": {
+            "type": "integer",
+            "title": "Completed Count"
+          },
+          "pending_count": {
+            "type": "integer",
+            "title": "Pending Count"
+          },
+          "failed_count": {
+            "type": "integer",
+            "title": "Failed Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "year",
+          "month",
+          "total_paid",
+          "total_pending",
+          "total_failed",
+          "payment_count",
+          "completed_count",
+          "pending_count",
+          "failed_count"
+        ],
+        "title": "MonthlySummaryResponse",
+        "description": "Response for monthly payment summary.\n\nAttributes:\n    year: Year of the summary.\n    month: Month of the summary.\n    total_paid: Total amount paid.\n    total_pending: Total pending amount.\n    total_failed: Total failed amount.\n    payment_count: Total number of payments.\n    completed_count: Number of completed payments.\n    pending_count: Number of pending payments.\n    failed_count: Number of failed payments."
+      },
+      "NoteSearchResult": {
+        "properties": {
+          "subscription_id": {
+            "type": "string",
+            "title": "Subscription Id"
+          },
+          "note": {
+            "type": "string",
+            "title": "Note"
+          },
+          "score": {
+            "type": "number",
+            "title": "Score"
+          }
+        },
+        "type": "object",
+        "required": [
+          "subscription_id",
+          "note",
+          "score"
+        ],
+        "title": "NoteSearchResult",
+        "description": "A single note search result.\n\nAttributes:\n    subscription_id: ID of the matching subscription.\n    note: The note content.\n    score: Relevance score (0-1, higher is more relevant)."
+      },
+      "PasswordChangeRequest": {
+        "properties": {
+          "current_password": {
+            "type": "string",
+            "title": "Current Password",
+            "description": "Current password"
+          },
+          "new_password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 8,
+            "title": "New Password",
+            "description": "New strong password (8-128 characters)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "current_password",
+          "new_password"
+        ],
+        "title": "PasswordChangeRequest",
+        "description": "Schema for password change requests.\n\nSecurity:\n    New password must meet strength requirements:\n    - At least 8 characters\n    - At least one uppercase letter\n    - At least one lowercase letter\n    - At least one digit\n    - At least one special character\n    - Cannot be a common password\n\nAttributes:\n    current_password: User's current password.\n    new_password: New strong password to set.\n\nExample:\n    >>> change = PasswordChangeRequest(\n    ...     current_password=\"OldP@ss123!\",\n    ...     new_password=\"NewP@ss456!\"\n    ... )"
+      },
+      "PaymentCardCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Card display name"
+          },
+          "card_type": {
+            "$ref": "#/components/schemas/CardType",
+            "description": "Card type",
+            "default": "debit"
+          },
+          "last_four": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 4,
+                "minLength": 4,
+                "pattern": "^\\d{4}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Four",
+            "description": "Last 4 digits"
+          },
+          "bank_name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Bank Name",
+            "description": "Bank/provider name"
+          },
+          "currency": {
+            "type": "string",
+            "maxLength": 3,
+            "minLength": 3,
+            "title": "Currency",
+            "description": "Default currency",
+            "default": "GBP"
+          },
+          "color": {
+            "type": "string",
+            "pattern": "^#[0-9A-Fa-f]{6}$",
+            "title": "Color",
+            "description": "Card color",
+            "default": "#3B82F6"
+          },
+          "icon_url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon Url",
+            "description": "Bank logo URL"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "Optional notes"
+          },
+          "sort_order": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Sort Order",
+            "description": "Display order",
+            "default": 0
+          },
+          "funding_card_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Funding Card Id",
+            "description": "ID of card that funds this card"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "bank_name"
+        ],
+        "title": "PaymentCardCreate",
+        "description": "Schema for creating a payment card."
+      },
+      "PaymentCardResponse": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Card display name"
+          },
+          "card_type": {
+            "$ref": "#/components/schemas/CardType",
+            "description": "Card type",
+            "default": "debit"
+          },
+          "last_four": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 4,
+                "minLength": 4,
+                "pattern": "^\\d{4}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Four",
+            "description": "Last 4 digits"
+          },
+          "bank_name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Bank Name",
+            "description": "Bank/provider name"
+          },
+          "currency": {
+            "type": "string",
+            "maxLength": 3,
+            "minLength": 3,
+            "title": "Currency",
+            "description": "Default currency",
+            "default": "GBP"
+          },
+          "color": {
+            "type": "string",
+            "pattern": "^#[0-9A-Fa-f]{6}$",
+            "title": "Color",
+            "description": "Card color",
+            "default": "#3B82F6"
+          },
+          "icon_url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon Url",
+            "description": "Bank logo URL"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "Optional notes"
+          },
+          "sort_order": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Sort Order",
+            "description": "Display order",
+            "default": 0
+          },
+          "funding_card_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Funding Card Id",
+            "description": "ID of card that funds this card"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Card UUID"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "Active status"
+          },
+          "funding_card": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FundingCardInfo"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Card that funds this one"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "bank_name",
+          "id",
+          "is_active",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "PaymentCardResponse",
+        "description": "Schema for payment card response."
+      },
+      "PaymentCardUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "card_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CardType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "last_four": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 4,
+                "minLength": 4,
+                "pattern": "^\\d{4}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Four"
+          },
+          "bank_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bank Name"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 3,
+                "minLength": 3
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          },
+          "icon_url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon Url"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "sort_order": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sort Order"
+          },
+          "funding_card_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Funding Card Id",
+            "description": "ID of card that funds this card"
+          }
+        },
+        "type": "object",
+        "title": "PaymentCardUpdate",
+        "description": "Schema for updating a payment card (all fields optional)."
+      },
+      "PaymentHistoryResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Payment history UUID"
+          },
+          "subscription_id": {
+            "type": "string",
+            "title": "Subscription Id",
+            "description": "Associated subscription UUID"
+          },
+          "payment_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Payment Date",
+            "description": "Payment date"
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Amount",
+            "description": "Payment amount"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "description": "Currency code"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PaymentStatus",
+            "description": "Payment status"
+          },
+          "payment_method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Method",
+            "description": "Payment method"
+          },
+          "installment_number": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Installment Number",
+            "description": "Installment number"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "Payment notes"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Record creation timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "subscription_id",
+          "payment_date",
+          "amount",
+          "currency",
+          "status",
+          "created_at"
+        ],
+        "title": "PaymentHistoryResponse",
+        "description": "Schema for payment history record response.\n\nRepresents a single payment event in the history log.\nUsed to display payment history and track installment progress.\n\nAttributes:\n    id: UUID string identifier.\n    subscription_id: UUID of associated subscription.\n    payment_date: When the payment was made.\n    amount: Payment amount.\n    currency: ISO 4217 currency code.\n    status: Payment status (completed, pending, failed, cancelled).\n    payment_method: Payment method used.\n    installment_number: For installments, which payment this is.\n    notes: Optional notes about this payment.\n    created_at: Record creation timestamp.\n\nExample:\n    >>> history = PaymentHistoryResponse.model_validate(payment_orm)\n    >>> history.status\n    'completed'"
+      },
+      "PaymentStatus": {
+        "type": "string",
+        "enum": [
+          "completed",
+          "pending",
+          "failed",
+          "cancelled"
+        ],
+        "title": "PaymentStatus",
+        "description": "Payment status enumeration.\n\nDefines the possible states for a payment record.\n\nAttributes:\n    COMPLETED: Payment was successful.\n    PENDING: Payment is scheduled but not yet processed.\n    FAILED: Payment attempt failed.\n    CANCELLED: Payment was cancelled."
+      },
+      "PaymentType": {
+        "type": "string",
+        "enum": [
+          "subscription",
+          "housing",
+          "utility",
+          "professional_service",
+          "insurance",
+          "debt",
+          "savings",
+          "transfer",
+          "one_time"
+        ],
+        "title": "PaymentType",
+        "description": "Payment type enumeration for Money Flow.\n\nTop-level classification of recurring payments to support different\nfinancial tracking needs beyond just subscriptions.\n\nAttributes:\n    SUBSCRIPTION: Digital services, streaming (Netflix, Spotify, etc.).\n    HOUSING: Rent, mortgage payments.\n    UTILITY: Electric, gas, water, internet, council tax.\n    PROFESSIONAL_SERVICE: Therapist, coach, trainer, tutor, barrister, lawyer.\n    INSURANCE: Health, device (AppleCare), vehicle, life.\n    DEBT: Credit cards, loans, personal debts to friends/family.\n    SAVINGS: Regular savings transfers, goals with targets.\n    TRANSFER: Family support, recurring gifts, partner transfers.\n    ONE_TIME: One-time payments that won't recur (legal fees, one-off services).\n\nExample:\n    >>> PaymentType.SUBSCRIPTION.value\n    'subscription'\n    >>> PaymentType(\"debt\")\n    <PaymentType.DEBT: 'debt'>"
+      },
+      "RecommendationResponse": {
+        "properties": {
+          "subscription_name": {
+            "type": "string",
+            "title": "Subscription Name"
+          },
+          "subscription_id": {
+            "type": "string",
+            "title": "Subscription Id"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "potential_savings": {
+            "type": "number",
+            "title": "Potential Savings"
+          },
+          "confidence": {
+            "type": "number",
+            "title": "Confidence"
+          }
+        },
+        "type": "object",
+        "required": [
+          "subscription_name",
+          "subscription_id",
+          "reason",
+          "potential_savings",
+          "confidence"
+        ],
+        "title": "RecommendationResponse",
+        "description": "Cancellation/optimization recommendation."
+      },
+      "RecordPaymentRequest": {
+        "properties": {
+          "payment_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Payment Date",
+            "description": "Date of the payment"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Amount",
+            "description": "Payment amount"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PaymentStatus",
+            "description": "Payment status",
+            "default": "completed"
+          },
+          "payment_method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Method",
+            "description": "Payment method"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "Payment notes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "payment_date",
+          "amount"
+        ],
+        "title": "RecordPaymentRequest",
+        "description": "Request body for recording a payment.\n\nAttributes:\n    payment_date: Date of the payment.\n    amount: Payment amount.\n    status: Payment status (default: completed).\n    payment_method: Optional payment method used.\n    notes: Optional notes about the payment."
+      },
+      "RenewalPredictionResponse": {
+        "properties": {
+          "subscription_name": {
+            "type": "string",
+            "title": "Subscription Name"
+          },
+          "subscription_id": {
+            "type": "string",
+            "title": "Subscription Id"
+          },
+          "renewal_date": {
+            "type": "string",
+            "title": "Renewal Date"
+          },
+          "amount": {
+            "type": "number",
+            "title": "Amount"
+          },
+          "days_until": {
+            "type": "integer",
+            "title": "Days Until"
+          },
+          "is_annual": {
+            "type": "boolean",
+            "title": "Is Annual"
+          }
+        },
+        "type": "object",
+        "required": [
+          "subscription_name",
+          "subscription_id",
+          "renewal_date",
+          "amount",
+          "days_until",
+          "is_annual"
+        ],
+        "title": "RenewalPredictionResponse",
+        "description": "Upcoming renewal prediction."
+      },
+      "SearchRequest": {
+        "properties": {
+          "query": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Query",
+            "description": "Search query",
+            "examples": [
+              "subscriptions for work",
+              "streaming services",
+              "renewal notes"
+            ]
+          },
+          "user_id": {
+            "type": "string",
+            "title": "User Id",
+            "description": "User ID for data isolation",
+            "default": "default"
+          },
+          "limit": {
+            "type": "integer",
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "description": "Maximum number of results (1-20)",
+            "default": 5
+          }
+        },
+        "type": "object",
+        "required": [
+          "query"
+        ],
+        "title": "SearchRequest",
+        "description": "Request schema for search endpoints.\n\nAttributes:\n    query: The search query string.\n    user_id: User ID for data isolation.\n    limit: Maximum number of results to return.\n\nExample:\n    >>> request = SearchRequest(query=\"renewal\", user_id=\"user-123\")"
+      },
+      "SearchResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "query": {
+            "type": "string",
+            "title": "Query"
+          },
+          "results": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/NoteSearchResult"
+                },
+                "type": "array"
+              },
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ConversationSearchResult"
+                },
+                "type": "array"
+              }
+            ],
+            "title": "Results"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "query",
+          "results",
+          "total"
+        ],
+        "title": "SearchResponse",
+        "description": "Response schema for search endpoints.\n\nAttributes:\n    success: Whether the search was successful.\n    query: The original search query.\n    results: List of search results.\n    total: Total number of results."
+      },
+      "SpendingTrendResponse": {
+        "properties": {
+          "period": {
+            "type": "string",
+            "title": "Period"
+          },
+          "total": {
+            "type": "number",
+            "title": "Total"
+          },
+          "change": {
+            "type": "number",
+            "title": "Change"
+          },
+          "change_percent": {
+            "type": "number",
+            "title": "Change Percent"
+          },
+          "subscription_count": {
+            "type": "integer",
+            "title": "Subscription Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "period",
+          "total",
+          "change",
+          "change_percent",
+          "subscription_count"
+        ],
+        "title": "SpendingTrendResponse",
+        "description": "Spending trend for a period."
+      },
+      "SubscriptionCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Payment name"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,2}0*$"
+              }
+            ],
+            "title": "Amount",
+            "description": "Payment amount"
+          },
+          "currency": {
+            "type": "string",
+            "maxLength": 3,
+            "minLength": 3,
+            "title": "Currency",
+            "description": "Currency code",
+            "default": "GBP"
+          },
+          "frequency": {
+            "$ref": "#/components/schemas/Frequency",
+            "description": "Payment frequency",
+            "default": "monthly"
+          },
+          "frequency_interval": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Frequency Interval",
+            "description": "Frequency multiplier",
+            "default": 1
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Start Date",
+            "description": "Payment start date"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date",
+            "description": "Payment end date (optional)"
+          },
+          "payment_type": {
+            "$ref": "#/components/schemas/PaymentType",
+            "description": "Payment type classification",
+            "default": "subscription"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category",
+            "description": "Subcategory name"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "Optional notes"
+          },
+          "payment_method": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Method",
+            "description": "Payment method"
+          },
+          "reminder_days": {
+            "type": "integer",
+            "maximum": 30.0,
+            "minimum": 0.0,
+            "title": "Reminder Days",
+            "description": "Reminder days before payment",
+            "default": 3
+          },
+          "icon_url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon Url",
+            "description": "Service icon URL"
+          },
+          "color": {
+            "type": "string",
+            "pattern": "^#[0-9A-Fa-f]{6}$",
+            "title": "Color",
+            "description": "Brand color",
+            "default": "#3B82F6"
+          },
+          "auto_renew": {
+            "type": "boolean",
+            "title": "Auto Renew",
+            "description": "Auto-renew status",
+            "default": true
+          },
+          "is_installment": {
+            "type": "boolean",
+            "title": "Is Installment",
+            "description": "Is installment plan",
+            "default": false
+          },
+          "total_installments": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Installments",
+            "description": "Total installments"
+          },
+          "total_owed": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Owed",
+            "description": "Original debt amount"
+          },
+          "remaining_balance": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remaining Balance",
+            "description": "Remaining balance"
+          },
+          "creditor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Creditor",
+            "description": "Who you owe"
+          },
+          "target_amount": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Amount",
+            "description": "Savings goal amount"
+          },
+          "current_saved": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Saved",
+            "description": "Current amount saved"
+          },
+          "recipient": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recipient",
+            "description": "Who receives transfer"
+          },
+          "card_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Card Id",
+            "description": "Payment card UUID"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "amount",
+          "start_date"
+        ],
+        "title": "SubscriptionCreate",
+        "description": "Schema for creating a subscription.\n\nInherits all fields from SubscriptionBase. Used for POST requests.\n\nExample:\n    >>> create_data = SubscriptionCreate(\n    ...     name=\"Spotify\",\n    ...     amount=Decimal(\"9.99\"),\n    ...     currency=\"GBP\",\n    ...     frequency=Frequency.MONTHLY,\n    ...     start_date=date(2025, 1, 1),\n    ... )"
+      },
+      "SubscriptionExport": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "frequency": {
+            "type": "string",
+            "title": "Frequency"
+          },
+          "frequency_interval": {
+            "type": "integer",
+            "title": "Frequency Interval"
+          },
+          "start_date": {
+            "type": "string",
+            "title": "Start Date"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "next_payment_date": {
+            "type": "string",
+            "title": "Next Payment Date"
+          },
+          "payment_type": {
+            "type": "string",
+            "title": "Payment Type",
+            "default": "subscription"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "default": true
+          },
+          "payment_method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Method"
+          },
+          "reminder_days": {
+            "type": "integer",
+            "title": "Reminder Days",
+            "default": 3
+          },
+          "icon_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon Url"
+          },
+          "color": {
+            "type": "string",
+            "title": "Color",
+            "default": "#3B82F6"
+          },
+          "auto_renew": {
+            "type": "boolean",
+            "title": "Auto Renew",
+            "default": true
+          },
+          "is_installment": {
+            "type": "boolean",
+            "title": "Is Installment",
+            "default": false
+          },
+          "total_installments": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Installments"
+          },
+          "completed_installments": {
+            "type": "integer",
+            "title": "Completed Installments",
+            "default": 0
+          },
+          "total_owed": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Owed"
+          },
+          "remaining_balance": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remaining Balance"
+          },
+          "creditor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Creditor"
+          },
+          "target_amount": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Amount"
+          },
+          "current_saved": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Saved"
+          },
+          "recipient": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recipient"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "amount",
+          "currency",
+          "frequency",
+          "frequency_interval",
+          "start_date",
+          "next_payment_date"
+        ],
+        "title": "SubscriptionExport",
+        "description": "Schema for exporting a subscription/payment (Money Flow).\n\nContains all data needed to recreate a payment on import.\nExcludes system-generated fields like id and timestamps.\n\nAttributes:\n    name: Payment name.\n    amount: Payment amount as string for precision.\n    currency: ISO 4217 currency code.\n    frequency: Payment frequency.\n    frequency_interval: Frequency multiplier.\n    start_date: Payment start date.\n    next_payment_date: Calculated next payment.\n    payment_type: Payment type classification.\n    category: Subcategory name.\n    notes: Optional notes.\n    is_active: Active status.\n    payment_method: Payment method.\n    reminder_days: Reminder days before payment.\n    icon_url: Service icon URL.\n    color: Brand color.\n    auto_renew: Auto-renew status.\n    is_installment: Installment plan flag.\n    total_installments: Total installments.\n    completed_installments: Completed installments.\n    total_owed: Original debt amount (for debt type).\n    remaining_balance: Remaining balance (for debt type).\n    creditor: Who you owe (for debt type).\n    target_amount: Savings goal (for savings type).\n    current_saved: Current savings (for savings type).\n    recipient: Who receives (for savings/transfer types)."
+      },
+      "SubscriptionResponse": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Payment name"
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,2}0*$",
+            "title": "Amount",
+            "description": "Payment amount"
+          },
+          "currency": {
+            "type": "string",
+            "maxLength": 3,
+            "minLength": 3,
+            "title": "Currency",
+            "description": "Currency code",
+            "default": "GBP"
+          },
+          "frequency": {
+            "$ref": "#/components/schemas/Frequency",
+            "description": "Payment frequency",
+            "default": "monthly"
+          },
+          "frequency_interval": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Frequency Interval",
+            "description": "Frequency multiplier",
+            "default": 1
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Start Date",
+            "description": "Payment start date"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date",
+            "description": "Payment end date"
+          },
+          "payment_type": {
+            "$ref": "#/components/schemas/PaymentType",
+            "description": "Payment type classification",
+            "default": "subscription"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category",
+            "description": "Subcategory name"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "Optional notes"
+          },
+          "payment_method": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Method",
+            "description": "Payment method"
+          },
+          "reminder_days": {
+            "type": "integer",
+            "maximum": 30.0,
+            "minimum": 0.0,
+            "title": "Reminder Days",
+            "description": "Reminder days before payment",
+            "default": 3
+          },
+          "icon_url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon Url",
+            "description": "Service icon URL"
+          },
+          "color": {
+            "type": "string",
+            "pattern": "^#[0-9A-Fa-f]{6}$",
+            "title": "Color",
+            "description": "Brand color",
+            "default": "#3B82F6"
+          },
+          "auto_renew": {
+            "type": "boolean",
+            "title": "Auto Renew",
+            "description": "Auto-renew status",
+            "default": true
+          },
+          "is_installment": {
+            "type": "boolean",
+            "title": "Is Installment",
+            "description": "Is installment plan",
+            "default": false
+          },
+          "total_installments": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Installments",
+            "description": "Total installments"
+          },
+          "total_owed": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Owed",
+            "description": "Original debt amount"
+          },
+          "remaining_balance": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remaining Balance",
+            "description": "Remaining balance"
+          },
+          "creditor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Creditor",
+            "description": "Who you owe"
+          },
+          "target_amount": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Amount",
+            "description": "Savings goal amount"
+          },
+          "current_saved": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Saved",
+            "description": "Current amount saved"
+          },
+          "recipient": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recipient",
+            "description": "Who receives transfer"
+          },
+          "card_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Card Id",
+            "description": "Payment card UUID"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Payment UUID"
+          },
+          "next_payment_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Next Payment Date",
+            "description": "Next payment date"
+          },
+          "last_payment_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Payment Date",
+            "description": "Last payment date"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "Active status"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp"
+          },
+          "completed_installments": {
+            "type": "integer",
+            "title": "Completed Installments",
+            "description": "Completed installments",
+            "default": 0
+          },
+          "installment_start_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Installment Start Date",
+            "description": "Installment start"
+          },
+          "installment_end_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Installment End Date",
+            "description": "Installment end"
+          },
+          "days_until_payment": {
+            "type": "integer",
+            "title": "Days Until Payment",
+            "description": "Days until next payment",
+            "default": 0
+          },
+          "payment_status_label": {
+            "type": "string",
+            "title": "Payment Status Label",
+            "description": "Payment status label",
+            "default": "upcoming"
+          },
+          "installments_remaining": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Installments Remaining",
+            "description": "Remaining installments"
+          },
+          "debt_paid_percentage": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Debt Paid Percentage",
+            "description": "Percentage of debt paid (for debt type)"
+          },
+          "savings_progress_percentage": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Savings Progress Percentage",
+            "description": "Percentage toward savings goal (for savings type)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "amount",
+          "start_date",
+          "id",
+          "next_payment_date",
+          "is_active",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "SubscriptionResponse",
+        "description": "Schema for subscription/payment response (Money Flow).\n\nIncludes all base fields plus computed and system fields.\nConfigured for ORM model compatibility.\n\nAttributes:\n    id: UUID string identifier.\n    next_payment_date: Calculated next payment date.\n    last_payment_date: Date of most recent payment.\n    is_active: Current active status.\n    created_at: Record creation timestamp.\n    updated_at: Last update timestamp.\n    completed_installments: Number of completed installment payments.\n    installment_start_date: When installment plan started.\n    installment_end_date: When installment plan ends.\n    days_until_payment: Days until next payment (computed).\n    payment_status_label: Status label: overdue, due_soon, upcoming (computed).\n    installments_remaining: Remaining installment payments (computed).\n    debt_paid_percentage: Percentage of debt paid off (computed for debts).\n    savings_progress_percentage: Percentage toward savings goal (computed for savings).\n\nExample:\n    >>> response = SubscriptionResponse.model_validate(subscription_orm)\n    >>> response.id\n    'uuid-string'"
+      },
+      "SubscriptionSummary": {
+        "properties": {
+          "total_monthly": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Monthly",
+            "description": "Total monthly spending"
+          },
+          "total_yearly": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Yearly",
+            "description": "Total yearly spending"
+          },
+          "active_count": {
+            "type": "integer",
+            "title": "Active Count",
+            "description": "Active payment count"
+          },
+          "by_category": {
+            "additionalProperties": {
+              "type": "string",
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+            },
+            "type": "object",
+            "title": "By Category",
+            "description": "Spending by subcategory"
+          },
+          "by_payment_type": {
+            "additionalProperties": {
+              "type": "string",
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+            },
+            "type": "object",
+            "title": "By Payment Type",
+            "description": "Spending by payment type"
+          },
+          "upcoming_week": {
+            "items": {
+              "$ref": "#/components/schemas/SubscriptionResponse"
+            },
+            "type": "array",
+            "title": "Upcoming Week",
+            "description": "Due in 7 days"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "description": "Currency code for totals",
+            "default": "GBP"
+          },
+          "total_debt": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Debt",
+            "description": "Total remaining debt",
+            "default": "0"
+          },
+          "total_savings_target": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Savings Target",
+            "description": "Total savings goals",
+            "default": "0"
+          },
+          "total_current_saved": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Current Saved",
+            "description": "Total current savings",
+            "default": "0"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_monthly",
+          "total_yearly",
+          "active_count",
+          "by_category",
+          "upcoming_week"
+        ],
+        "title": "SubscriptionSummary",
+        "description": "Schema for subscription/payment spending summary (Money Flow).\n\nAggregated analytics for dashboard display including totals,\ncategory/type breakdown, and upcoming payments.\n\nAttributes:\n    total_monthly: Sum of all monthly-normalized payment costs.\n    total_yearly: Projected annual spending (monthly * 12).\n    active_count: Number of active payments.\n    by_category: Monthly spending by subcategory name.\n    by_payment_type: Monthly spending by payment type.\n    upcoming_week: Payments due in next 7 days.\n    currency: Currency code for the totals (e.g., 'GBP').\n    total_debt: Sum of all remaining debt balances.\n    total_savings_target: Sum of all savings goals.\n    total_current_saved: Sum of all current savings.\n\nExample:\n    >>> summary.total_monthly\n    Decimal('125.99')\n    >>> summary.by_payment_type\n    {'subscription': Decimal('45.99'), 'utility': Decimal('80.00')}"
+      },
+      "SubscriptionUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,2}0*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 3,
+                "minLength": 3
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "frequency": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Frequency"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "frequency_interval": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Frequency Interval"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "payment_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PaymentType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "payment_method": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Method"
+          },
+          "reminder_days": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 30.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reminder Days"
+          },
+          "icon_url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon Url"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          },
+          "auto_renew": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Auto Renew"
+          },
+          "is_installment": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Installment"
+          },
+          "total_installments": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Installments"
+          },
+          "total_owed": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Owed"
+          },
+          "remaining_balance": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remaining Balance"
+          },
+          "creditor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Creditor"
+          },
+          "target_amount": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Amount"
+          },
+          "current_saved": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Saved"
+          },
+          "recipient": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recipient"
+          },
+          "card_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Card Id"
+          }
+        },
+        "type": "object",
+        "title": "SubscriptionUpdate",
+        "description": "Schema for updating a subscription/payment (all fields optional).\n\nUsed for PATCH/PUT requests where only specified fields are updated.\nUnset fields are excluded from the update.\n\nAttributes:\n    name: New payment name.\n    amount: New payment amount.\n    currency: New currency code.\n    frequency: New payment frequency.\n    frequency_interval: New frequency multiplier.\n    start_date: New start date.\n    payment_type: New payment type classification.\n    category: New subcategory.\n    is_active: Active status toggle.\n    notes: New notes.\n    payment_method: New payment method.\n    reminder_days: New reminder days setting.\n    icon_url: New icon URL.\n    color: New brand color.\n    auto_renew: New auto-renew status.\n    is_installment: Convert to/from installment plan.\n    total_installments: New total installments count.\n    total_owed: New total debt amount.\n    remaining_balance: Updated remaining balance.\n    creditor: New creditor name.\n    target_amount: New savings goal.\n    current_saved: Updated savings progress.\n    recipient: New recipient name.\n\nExample:\n    >>> update_data = SubscriptionUpdate(amount=Decimal(\"19.99\"))\n    >>> update_data.model_dump(exclude_unset=True)\n    {'amount': Decimal('19.99')}"
+      },
+      "SystemHealthResponse": {
+        "properties": {
+          "rag_enabled": {
+            "type": "boolean",
+            "title": "Rag Enabled"
+          },
+          "cache_status": {
+            "type": "string",
+            "title": "Cache Status"
+          },
+          "rag_health": {
+            "type": "string",
+            "title": "Rag Health"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rag_enabled",
+          "cache_status",
+          "rag_health",
+          "warnings"
+        ],
+        "title": "SystemHealthResponse",
+        "description": "Response model for overall system health."
+      },
+      "TokenRefreshRequest": {
+        "properties": {
+          "refresh_token": {
+            "type": "string",
+            "title": "Refresh Token",
+            "description": "Refresh token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "refresh_token"
+        ],
+        "title": "TokenRefreshRequest",
+        "description": "Schema for token refresh requests.\n\nAttributes:\n    refresh_token: Valid refresh token.\n\nExample:\n    >>> refresh = TokenRefreshRequest(refresh_token=\"eyJ...\")"
+      },
+      "TokenResponse": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token",
+            "description": "JWT access token"
+          },
+          "refresh_token": {
+            "type": "string",
+            "title": "Refresh Token",
+            "description": "JWT refresh token"
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type",
+            "description": "Token type",
+            "default": "bearer"
+          },
+          "expires_in": {
+            "type": "integer",
+            "title": "Expires In",
+            "description": "Access token expiration (seconds)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "refresh_token",
+          "expires_in"
+        ],
+        "title": "TokenResponse",
+        "description": "Schema for JWT token responses.\n\nReturned after successful login or token refresh.\n\nAttributes:\n    access_token: JWT access token for API requests.\n    refresh_token: JWT refresh token for obtaining new access tokens.\n    token_type: Token type (always \"bearer\").\n    expires_in: Access token expiration time in seconds.\n\nExample:\n    >>> tokens = TokenResponse(\n    ...     access_token=\"eyJ...\",\n    ...     refresh_token=\"eyJ...\",\n    ...     token_type=\"bearer\",\n    ...     expires_in=1800\n    ... )"
+      },
+      "UserCreate": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email",
+            "description": "User email address"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 8,
+            "title": "Password",
+            "description": "Strong password (8-128 characters)"
+          },
+          "full_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name",
+            "description": "User's full name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "UserCreate",
+        "description": "Schema for user registration.\n\nValidates registration data including email format and password strength.\n\nSecurity:\n    Password must contain:\n    - At least 8 characters\n    - At least one uppercase letter\n    - At least one lowercase letter\n    - At least one digit\n    - At least one special character\n    - Cannot be a common password\n\nAttributes:\n    email: Valid email address (unique).\n    password: Strong password (will be hashed).\n    full_name: Optional display name.\n\nExample:\n    >>> user = UserCreate(\n    ...     email=\"user@example.com\",\n    ...     password=\"SecureP@ss123!\",\n    ...     full_name=\"John Doe\"\n    ... )"
+      },
+      "UserLogin": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email",
+            "description": "User email address"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password",
+            "description": "User password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "UserLogin",
+        "description": "Schema for login requests.\n\nValidates login credentials.\n\nAttributes:\n    email: User's email address.\n    password: User's password.\n\nExample:\n    >>> login = UserLogin(\n    ...     email=\"user@example.com\",\n    ...     password=\"SecurePass123!\"\n    ... )"
+      },
+      "UserResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "User ID"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email",
+            "description": "User email"
+          },
+          "full_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name",
+            "description": "User's full name"
+          },
+          "role": {
+            "$ref": "#/components/schemas/UserRole",
+            "description": "User role"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "Account active status"
+          },
+          "is_verified": {
+            "type": "boolean",
+            "title": "Is Verified",
+            "description": "Email verification status"
+          },
+          "avatar_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar Url",
+            "description": "Avatar URL"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Account creation time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update time"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "email",
+          "role",
+          "is_active",
+          "is_verified",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "UserResponse",
+        "description": "Schema for user API responses.\n\nExcludes sensitive data like password hash.\n\nAttributes:\n    id: User's unique identifier.\n    email: User's email address.\n    full_name: User's display name.\n    role: User's role (user or admin).\n    is_active: Whether account is active.\n    is_verified: Whether email is verified.\n    avatar_url: User's avatar URL.\n    created_at: Account creation timestamp.\n    updated_at: Last update timestamp.\n\nExample:\n    >>> response = UserResponse(\n    ...     id=\"user-123\",\n    ...     email=\"user@example.com\",\n    ...     role=UserRole.USER,\n    ...     is_active=True,\n    ...     is_verified=False,\n    ...     created_at=datetime.now(),\n    ...     updated_at=datetime.now()\n    ... )"
+      },
+      "UserRole": {
+        "type": "string",
+        "enum": [
+          "user",
+          "admin"
+        ],
+        "title": "UserRole",
+        "description": "User role enumeration for access control.\n\nDefines the possible roles for users in the system.\nInherits from str for JSON serialization compatibility.\n\nAttributes:\n    USER: Standard user with access to own data only.\n    ADMIN: Administrator with full system access.\n\nExample:\n    >>> UserRole.USER.value\n    'user'\n    >>> UserRole(\"admin\")\n    <UserRole.ADMIN: 'admin'>"
+      },
+      "UserUpdate": {
+        "properties": {
+          "full_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name",
+            "description": "User's full name"
+          },
+          "avatar_url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar Url",
+            "description": "Avatar URL"
+          },
+          "preferences": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preferences",
+            "description": "User preferences (JSON)"
+          }
+        },
+        "type": "object",
+        "title": "UserUpdate",
+        "description": "Schema for updating user profile.\n\nAll fields are optional for partial updates.\n\nSecurity:\n    - Avatar URL is validated for safe schemes (no javascript:, data:)\n\nAttributes:\n    full_name: Updated display name.\n    avatar_url: Updated avatar URL (validated for safety).\n    preferences: JSON string of user preferences.\n\nExample:\n    >>> update = UserUpdate(full_name=\"Jane Doe\")"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "src__api__analytics__HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          },
+          "thresholds": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Thresholds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "warnings",
+          "thresholds"
+        ],
+        "title": "HealthResponse",
+        "description": "Response model for health assessment."
+      },
+      "src__api__health__HealthResponse": {
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/HealthStatus"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version",
+            "default": "0.1.0"
+          },
+          "checks": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ComponentHealth"
+            },
+            "type": "object",
+            "title": "Checks",
+            "default": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "HealthResponse",
+        "description": "Complete health check response."
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

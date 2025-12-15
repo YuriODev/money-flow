@@ -420,20 +420,20 @@ Comprehensive integration tests and API contract testing.
 
 | Task ID | Task Name | Priority | Hours | Dependencies | Deliverable |
 |---------|-----------|----------|-------|--------------|-------------|
-| **2.3.1** | **API Contract Testing** | 🟠 | 5h | None | Contract tests |
-| 2.3.1.1 | Generate OpenAPI spec from FastAPI | 🟠 | 0.5h | - | openapi.json |
-| 2.3.1.2 | Set up Schemathesis for fuzz testing | 🟠 | 1h | 2.3.1.1 | Fuzz testing |
-| 2.3.1.3 | Create contract tests for all endpoints | 🟠 | 2h | 2.3.1.2 | Contract tests |
-| 2.3.1.4 | Add contract tests to CI pipeline | 🟠 | 0.5h | 2.3.1.3 | CI integration |
-| 2.3.1.5 | Set up OpenAPI diff checking | 🟡 | 1h | 2.3.1.1 | Breaking change detection |
-| **2.3.2** | **Database Integration Tests** | 🔴 | 6h | None | DB tests |
-| 2.3.2.1 | Test subscription CRUD with real DB | 🔴 | 1h | - | Sub CRUD tests |
-| 2.3.2.2 | Test card-subscription relationships | 🟠 | 1h | 2.3.2.1 | Relationship tests |
-| 2.3.2.3 | Test cascade deletes | 🔴 | 0.5h | 2.3.2.1 | Cascade tests |
-| 2.3.2.4 | Test concurrent modifications | 🟠 | 1h | 2.3.2.1 | Concurrency tests |
-| 2.3.2.5 | Test transaction rollbacks | 🔴 | 0.5h | 2.3.2.1 | Rollback tests |
-| 2.3.2.6 | Test migration up/down | 🔴 | 1h | - | Migration tests |
-| 2.3.2.7 | Test data integrity constraints | 🟠 | 1h | 2.3.2.1 | Constraint tests |
+| **2.3.1** | **API Contract Testing** | ✅ | 5h | None | Contract tests |
+| 2.3.1.1 | Generate OpenAPI spec from FastAPI | ✅ | 0.5h | - | openapi.json |
+| 2.3.1.2 | Set up Schemathesis for fuzz testing | ✅ | 1h | 2.3.1.1 | Fuzz testing |
+| 2.3.1.3 | Create contract tests for all endpoints | ✅ | 2h | 2.3.1.2 | Contract tests |
+| 2.3.1.4 | Add contract tests to CI pipeline | ✅ | 0.5h | 2.3.1.3 | CI integration |
+| 2.3.1.5 | Set up OpenAPI diff checking | ✅ | 1h | 2.3.1.1 | Breaking change detection |
+| **2.3.2** | **Database Integration Tests** | ✅ | 6h | None | DB tests |
+| 2.3.2.1 | Test subscription CRUD with real DB | ✅ | 1h | - | Sub CRUD tests |
+| 2.3.2.2 | Test card-subscription relationships | ✅ | 1h | 2.3.2.1 | Relationship tests |
+| 2.3.2.3 | Test cascade deletes | ✅ | 0.5h | 2.3.2.1 | Cascade tests |
+| 2.3.2.4 | Test concurrent modifications | ✅ | 1h | 2.3.2.1 | Concurrency tests |
+| 2.3.2.5 | Test transaction rollbacks | ✅ | 0.5h | 2.3.2.1 | Rollback tests |
+| 2.3.2.6 | Test migration up/down | ✅ | 1h | - | Migration tests |
+| 2.3.2.7 | Test data integrity constraints | ✅ | 1h | 2.3.2.1 | Constraint tests |
 | **2.3.3** | **Redis Integration Tests** | 🟠 | 3h | None | Redis tests |
 | 2.3.3.1 | Test embedding cache operations | 🟠 | 0.75h | - | Cache tests |
 | 2.3.3.2 | Test rate limiter storage | 🟠 | 0.75h | - | Rate limit tests |
@@ -496,8 +496,11 @@ Performance benchmarking and load testing to ensure scalability.
 ✅ All endpoint bugs fixed (Sprint 2.2)
 ✅ User data isolation implemented (Sprint 2.2)
 ✅ Settings roadmap planned (Sprint 2.2)
-□ API contract tests in CI (Sprint 2.3)
-□ Integration tests for all services (Sprint 2.3)
+✅ API contract tests in CI (Sprint 2.3.1)
+✅ Database integration tests (Sprint 2.3.2) - 33 tests
+□ Redis integration tests (Sprint 2.3.3)
+□ Qdrant integration tests (Sprint 2.3.4)
+□ Claude API integration tests (Sprint 2.3.5)
 □ Performance baseline documented (Sprint 2.4)
 □ Load test results documented (Sprint 2.4)
 □ Database queries optimized (Sprint 2.4)

@@ -19,8 +19,41 @@
 | **Phase 1** | Sprint 1.4 | ✅ Complete | Logging & Observability |
 | **Phase 2** | Sprint 2.1 | ✅ Complete | E2E Testing Framework |
 | **Phase 2** | Sprint 2.2 | ✅ Complete | AI Agent E2E, Bug Fixes, Data Isolation |
-| **Phase 2** | Sprint 2.3 | ⬜ Next | Integration Tests & Contract Testing |
+| **Phase 2** | Sprint 2.3 | 🔄 In Progress | Integration Tests & Contract Testing |
 | **Phase 2** | Sprint 2.4 | ⬜ Planned | Performance & Load Testing |
+
+### Sprint 2.3 Tasks (Week 7) - Integration Tests & Contract Testing 🔄
+
+| Task | Status | Description |
+|------|--------|-------------|
+| 2.3.1 | ✅ DONE | API Contract Testing (Schemathesis, OpenAPI diff) |
+| 2.3.2 | ✅ DONE | Database Integration Tests (CRUD, relationships, transactions) |
+| 2.3.3 | ⬜ TODO | Redis Integration Tests (cache, rate limiter, blacklist) |
+| 2.3.4 | ⬜ TODO | Qdrant Integration Tests (vectors, search, filtering) |
+| 2.3.5 | ⬜ TODO | Claude API Integration Tests (classification, extraction) |
+
+**Sprint 2.3.1 Features Completed:**
+- OpenAPI spec generation script (`scripts/generate_openapi.py`)
+- Schemathesis fuzz testing setup (`tests/contract/test_api_contract.py`)
+- API contract tests for all endpoints (no 5xx errors, response schema validation)
+- Contract tests integrated into CI pipeline (`.github/workflows/ci.yml`)
+- OpenAPI diff checking for breaking changes (`scripts/check_openapi_diff.py`)
+- Fixed Pydantic/FastAPI body parameter detection issue in `src/api/auth.py`
+
+**Sprint 2.3.2 Features Completed:**
+- Database integration tests (`tests/integration/test_db_integration.py`) - 26 tests
+  - Subscription CRUD operations (create, read, update, delete)
+  - All payment types (subscription, debt, savings, etc.)
+  - Card-subscription relationships
+  - Cascade delete behavior (user→subscriptions, subscription→payments)
+  - Concurrent modification handling
+  - Transaction rollbacks on errors
+  - Foreign key constraints
+  - Data integrity constraints (unique email, NOT NULL)
+- Migration structure tests (`tests/integration/test_migrations.py`) - 7 tests
+  - Migration file validation (upgrade/downgrade functions, revision IDs)
+  - Alembic history and heads verification
+  - PostgreSQL migration tests (run in CI)
 
 ### Sprint 2.2 Tasks (Week 6) - AI Agent E2E & Bug Fixes ✅
 
@@ -168,9 +201,11 @@
 
 | Task | Priority | Sprint |
 |------|----------|--------|
-| API Contract Testing | 🟠 High | 2.3 |
-| Database Integration Tests | 🔴 Critical | 2.3 |
-| Redis/Qdrant Integration Tests | 🟠 High | 2.3 |
+| API Contract Testing | ✅ Done | 2.3.1 |
+| Database Integration Tests | ✅ Done | 2.3.2 |
+| Redis Integration Tests | 🟠 High | 2.3.3 |
+| Qdrant Integration Tests | 🟠 High | 2.3.4 |
+| Claude API Integration Tests | 🟠 High | 2.3.5 |
 | Performance Benchmarking | 🟠 High | 2.4 |
 | Load Testing (Locust) | 🟠 High | 2.4 |
 | Settings Page Implementation | 🟡 Medium | Future |
@@ -189,7 +224,7 @@
 
 ```
 Phase 1: Foundation & Security  [Weeks 1-4]   ██████████ 100% ✅ COMPLETE
-Phase 2: Quality & Testing      [Weeks 5-8]   █████░░░░░ 50%  🔄 IN PROGRESS
+Phase 2: Quality & Testing      [Weeks 5-8]   ███████░░░ 68%  🔄 IN PROGRESS (2.3.2 done)
 Phase 3: Architecture           [Weeks 9-12]  ░░░░░░░░░░ 0%
 Phase 4: Features & Polish      [Weeks 13-16] ░░░░░░░░░░ 0%
 ```
@@ -699,8 +734,8 @@ This ensures context is preserved for future development.
 ---
 
 **Last Updated**: 2025-12-15
-**Version**: 2.3 (Phase 2 In Progress)
-**Current Phase**: Phase 2 - Quality & Testing (50% complete)
-**Next Sprint**: 2.3 - Integration Tests & Contract Testing
+**Version**: 2.3.2 (Phase 2 In Progress)
+**Current Phase**: Phase 2 - Quality & Testing (68% complete)
+**Current Sprint**: 2.3 - Integration Tests & Contract Testing (2.3.1 ✅, 2.3.2 ✅, 2.3.3 next)
 **Upcoming Feature**: Settings Page - See [Settings Roadmap](docs/SETTINGS_ROADMAP.md)
 **For Questions**: Check [.claude/docs/MASTER_PLAN.md](.claude/docs/MASTER_PLAN.md) or [.claude/CHANGELOG.md](.claude/CHANGELOG.md)
