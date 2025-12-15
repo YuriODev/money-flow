@@ -17,9 +17,11 @@ from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, Upl
 from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.auth.dependencies import get_current_active_user
 from src.core.config import settings
 from src.core.dependencies import get_db
 from src.models.subscription import Frequency, PaymentType
+from src.models.user import User
 from src.schemas.subscription import (
     ExportData,
     ImportResult,
@@ -48,6 +50,7 @@ async def list_subscriptions(
         default=None, description="Filter by payment type (subscription, debt, savings, etc.)"
     ),
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
 ) -> list[SubscriptionResponse]:
     """List all subscriptions/payments with optional filters.
 
@@ -60,6 +63,7 @@ async def list_subscriptions(
         category: Filter by subcategory name. If not provided, returns all categories.
         payment_type: Filter by payment type (subscription, debt, savings, etc.).
         db: Database session (injected by dependency).
+        current_user: Authenticated user (injected by dependency).
 
     Returns:
         List of SubscriptionResponse objects matching the filters.
@@ -70,7 +74,7 @@ async def list_subscriptions(
         GET /api/subscriptions?payment_type=debt
         GET /api/subscriptions?category=entertainment
     """
-    service = SubscriptionService(db)
+    service = SubscriptionService(db, user_id=str(current_user.id))
     subscriptions = await service.get_all(
         is_active=is_active, category=category, payment_type=payment_type
     )
@@ -85,6 +89,7 @@ async def get_summary(
         default=None, description="Filter summary by payment type"
     ),
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
 ) -> SubscriptionSummary:
     """Get spending summary for all active subscriptions/payments.
 
@@ -100,6 +105,7 @@ async def get_summary(
     Args:
         payment_type: Optional filter for specific payment type.
         db: Database session (injected by dependency).
+        current_user: Authenticated user (injected by dependency).
 
     Returns:
         SubscriptionSummary with total costs, breakdowns, and upcoming payments.
@@ -108,7 +114,7 @@ async def get_summary(
         GET /api/subscriptions/summary
         GET /api/subscriptions/summary?payment_type=debt
     """
-    service = SubscriptionService(db)
+    service = SubscriptionService(db, user_id=str(current_user.id))
     currency_service = CurrencyService(api_key=settings.exchange_rate_api_key or None)
     return await service.get_summary(currency_service=currency_service, payment_type=payment_type)
 
@@ -119,6 +125,7 @@ async def get_subscription(
     request: Request,
     subscription_id: str,
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
 ) -> SubscriptionResponse:
     """Get a single subscription by ID.
 
@@ -137,7 +144,7 @@ async def get_subscription(
     Example:
         GET /api/subscriptions/123e4567-e89b-12d3-a456-426614174000
     """
-    service = SubscriptionService(db)
+    service = SubscriptionService(db, user_id=str(current_user.id))
     subscription = await service.get_by_id(subscription_id)
 
     if not subscription:
@@ -155,6 +162,7 @@ async def create_subscription(
     request: Request,
     data: SubscriptionCreate,
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
 ) -> SubscriptionResponse:
     """Create a new subscription.
 
@@ -182,7 +190,7 @@ async def create_subscription(
             "start_date": "2025-01-01"
         }
     """
-    service = SubscriptionService(db)
+    service = SubscriptionService(db, user_id=str(current_user.id))
     subscription = await service.create(data)
     return SubscriptionResponse.model_validate(subscription)
 
@@ -194,6 +202,7 @@ async def update_subscription(
     subscription_id: str,
     data: SubscriptionUpdate,
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
 ) -> SubscriptionResponse:
     """Update an existing subscription.
 
@@ -218,7 +227,7 @@ async def update_subscription(
             "amount": "19.99"
         }
     """
-    service = SubscriptionService(db)
+    service = SubscriptionService(db, user_id=str(current_user.id))
     subscription = await service.update(subscription_id, data)
 
     if not subscription:
@@ -236,6 +245,7 @@ async def delete_subscription(
     request: Request,
     subscription_id: str,
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
 ) -> None:
     """Delete a subscription.
 
@@ -251,7 +261,7 @@ async def delete_subscription(
     Example:
         DELETE /api/subscriptions/123e4567-e89b-12d3-a456-426614174000
     """
-    service = SubscriptionService(db)
+    service = SubscriptionService(db, user_id=str(current_user.id))
     deleted = await service.delete(subscription_id)
 
     if not deleted:
@@ -273,6 +283,7 @@ async def export_subscriptions_json(
     include_inactive: bool = Query(default=True, description="Include inactive payments"),
     payment_type: PaymentType | None = Query(default=None, description="Filter by payment type"),
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
 ) -> ExportData:
     """Export all subscriptions/payments as JSON.
 
@@ -293,7 +304,7 @@ async def export_subscriptions_json(
         GET /api/subscriptions/export/json?include_inactive=false
         GET /api/subscriptions/export/json?payment_type=debt
     """
-    service = SubscriptionService(db)
+    service = SubscriptionService(db, user_id=str(current_user.id))
     is_active = None if include_inactive else True
     subscriptions = await service.get_all(is_active=is_active, payment_type=payment_type)
 
@@ -353,6 +364,7 @@ async def export_subscriptions_csv(
     include_inactive: bool = Query(default=True, description="Include inactive payments"),
     payment_type: PaymentType | None = Query(default=None, description="Filter by payment type"),
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
 ) -> Response:
     """Export all subscriptions/payments as CSV.
 
@@ -371,7 +383,7 @@ async def export_subscriptions_csv(
         GET /api/subscriptions/export/csv
         GET /api/subscriptions/export/csv?payment_type=debt
     """
-    service = SubscriptionService(db)
+    service = SubscriptionService(db, user_id=str(current_user.id))
     is_active = None if include_inactive else True
     subscriptions = await service.get_all(is_active=is_active, payment_type=payment_type)
 
@@ -469,6 +481,7 @@ async def import_subscriptions_json(
     file: UploadFile = File(..., description="JSON file to import"),
     skip_duplicates: bool = Query(default=True, description="Skip subscriptions with same name"),
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
 ) -> ImportResult:
     """Import subscriptions from JSON file.
 
@@ -517,7 +530,9 @@ async def import_subscriptions_json(
             detail="Invalid export format: missing 'subscriptions' key",
         )
 
-    return await _import_subscriptions(data["subscriptions"], skip_duplicates, db)
+    return await _import_subscriptions(
+        data["subscriptions"], skip_duplicates, db, str(current_user.id)
+    )
 
 
 @router.post("/import/csv", response_model=ImportResult)
@@ -527,6 +542,7 @@ async def import_subscriptions_csv(
     file: UploadFile = File(..., description="CSV file to import"),
     skip_duplicates: bool = Query(default=True, description="Skip subscriptions with same name"),
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
 ) -> ImportResult:
     """Import subscriptions from CSV file.
 
@@ -572,13 +588,14 @@ async def import_subscriptions_csv(
             detail="CSV file is empty or has no data rows",
         )
 
-    return await _import_subscriptions(subscriptions, skip_duplicates, db)
+    return await _import_subscriptions(subscriptions, skip_duplicates, db, str(current_user.id))
 
 
 async def _import_subscriptions(
     subscriptions: list[dict],
     skip_duplicates: bool,
     db: AsyncSession,
+    user_id: str,
 ) -> ImportResult:
     """Import subscriptions/payments from parsed data.
 
@@ -588,11 +605,12 @@ async def _import_subscriptions(
         subscriptions: List of payment dictionaries.
         skip_duplicates: Whether to skip duplicates.
         db: Database session.
+        user_id: ID of the user to import subscriptions for.
 
     Returns:
         ImportResult with counts and errors.
     """
-    service = SubscriptionService(db)
+    service = SubscriptionService(db, user_id=user_id)
     existing = await service.get_all()
     existing_names = {s.name.lower() for s in existing}
 

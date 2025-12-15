@@ -154,8 +154,12 @@ class SubscriptionService:
             data.start_date, data.frequency, data.frequency_interval
         )
 
+        subscription_data = data.model_dump()
+        # Set user_id if not "default"
+        if self.user_id and self.user_id != "default":
+            subscription_data["user_id"] = self.user_id
         subscription = Subscription(
-            **data.model_dump(),
+            **subscription_data,
             next_payment_date=next_payment,
         )
         self.db.add(subscription)
@@ -183,9 +187,11 @@ class SubscriptionService:
             >>> if subscription:
             ...     print(subscription.name)
         """
-        result = await self.db.execute(
-            select(Subscription).where(Subscription.id == subscription_id)
-        )
+        query = select(Subscription).where(Subscription.id == subscription_id)
+        # Filter by user_id if not "default"
+        if self.user_id and self.user_id != "default":
+            query = query.where(Subscription.user_id == self.user_id)
+        result = await self.db.execute(query)
         return result.scalar_one_or_none()
 
     async def get_by_name(self, name: str) -> Subscription | None:
@@ -206,9 +212,11 @@ class SubscriptionService:
             >>> print(sub.name)
             'Netflix'
         """
-        result = await self.db.execute(
-            select(Subscription).where(Subscription.name.ilike(f"%{name}%"))
-        )
+        query = select(Subscription).where(Subscription.name.ilike(f"%{name}%"))
+        # Filter by user_id if not "default"
+        if self.user_id and self.user_id != "default":
+            query = query.where(Subscription.user_id == self.user_id)
+        result = await self.db.execute(query)
         return result.scalar_one_or_none()
 
     async def get_all(
@@ -251,6 +259,9 @@ class SubscriptionService:
         query = select(Subscription)
 
         conditions = []
+        # Always filter by user_id if not "default"
+        if self.user_id and self.user_id != "default":
+            conditions.append(Subscription.user_id == self.user_id)
         if is_active is not None:
             conditions.append(Subscription.is_active == is_active)
         if category:
