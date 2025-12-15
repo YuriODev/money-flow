@@ -17,6 +17,7 @@ from collections.abc import Sequence
 
 import sqlalchemy as sa
 from alembic import op
+from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision: str = "0001_initial_schema"
@@ -70,7 +71,7 @@ def upgrade() -> None:
         # Role and status
         sa.Column(
             "role",
-            sa.Enum("USER", "ADMIN", name="userrole", create_type=False),
+            postgresql.ENUM("USER", "ADMIN", name="userrole", create_type=False),
             nullable=False,
             server_default="USER",
         ),
@@ -98,7 +99,7 @@ def upgrade() -> None:
         sa.Column("name", sa.String(length=100), nullable=False),
         sa.Column(
             "card_type",
-            sa.Enum(
+            postgresql.ENUM(
                 "debit", "credit", "prepaid", "bank_account", name="cardtype", create_type=False
             ),
             nullable=False,
@@ -128,7 +129,7 @@ def upgrade() -> None:
         sa.Column("currency", sa.String(length=3), nullable=False, server_default="GBP"),
         sa.Column(
             "frequency",
-            sa.Enum(
+            postgresql.ENUM(
                 "daily",
                 "weekly",
                 "biweekly",
@@ -149,7 +150,7 @@ def upgrade() -> None:
         sa.Column("last_payment_date", sa.Date(), nullable=True),
         sa.Column(
             "payment_type",
-            sa.Enum(
+            postgresql.ENUM(
                 "subscription",
                 "housing",
                 "utility",
@@ -213,7 +214,7 @@ def upgrade() -> None:
         sa.Column("currency", sa.String(length=3), nullable=False, server_default="GBP"),
         sa.Column(
             "status",
-            sa.Enum(
+            postgresql.ENUM(
                 "completed",
                 "pending",
                 "failed",
