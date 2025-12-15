@@ -27,8 +27,14 @@ depends_on: str | Sequence[str] | None = None
 
 def upgrade() -> None:
     """Create initial database schema."""
+    # Create userrole enum type if it doesn't exist
+    # This handles cases where the database has been partially initialized
+    bind = op.get_bind()
+    result = bind.execute(sa.text("SELECT 1 FROM pg_type WHERE typname = 'userrole'"))
+    if not result.fetchone():
+        op.execute("CREATE TYPE userrole AS ENUM ('USER', 'ADMIN')")
+
     # Create users table first (subscriptions references it)
-    # Note: sa.Enum will auto-create the userrole type
     op.create_table(
         "users",
         sa.Column("id", sa.String(length=36), nullable=False),
@@ -39,9 +45,10 @@ def upgrade() -> None:
         sa.Column("avatar_url", sa.String(length=500), nullable=True),
         # Role and status
         # Note: SQLAlchemy uses enum NAMES (uppercase) by default, not values
+        # create_type=False because we created it manually above
         sa.Column(
             "role",
-            sa.Enum("USER", "ADMIN", name="userrole", create_type=True),
+            sa.Enum("USER", "ADMIN", name="userrole", create_type=False),
             nullable=False,
             server_default="USER",
         ),
