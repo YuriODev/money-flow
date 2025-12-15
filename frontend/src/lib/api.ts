@@ -1,14 +1,18 @@
 import axios, { AxiosError } from "axios";
 
+// API Version - update this when migrating to new versions
+const API_VERSION = "v1";
+
 // Use relative path for API calls - Next.js will proxy to backend
 const API_URL = typeof window === 'undefined'
   ? process.env.BACKEND_URL || "http://backend:8000"
   : "";  // Empty string means relative path from browser
 
 export const api = axios.create({
-  baseURL: `${API_URL}/api`,
+  baseURL: `${API_URL}/api/${API_VERSION}`,
   headers: {
     "Content-Type": "application/json",
+    "X-API-Version": "1",
   },
 });
 

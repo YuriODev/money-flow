@@ -4,15 +4,17 @@ This module configures and creates the FastAPI application instance,
 including middleware, routers, and lifecycle management.
 
 The application provides:
-- REST API for subscription CRUD operations
+- REST API for subscription CRUD operations (versioned at /api/v1/)
 - Natural language agent interface using Claude Haiku 4.5
 - Health check endpoint for container orchestration
 - Rate limiting for API protection
 - Security headers (XSS, clickjacking, HSTS, CSP)
 - Structured logging with request tracing
+- API versioning with deprecation support
 
 Access URLs (default):
-- API: http://localhost:8001
+- API v1: http://localhost:8001/api/v1
+- Legacy API: http://localhost:8001/api (deprecated)
 - Docs: http://localhost:8001/docs
 - Health: http://localhost:8001/health
 """
@@ -24,11 +26,13 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.api import agent, analytics, auth, calendar, cards, health, insights, search, subscriptions
+from src.api.v1 import v1_router
 from src.core.config import settings
 from src.core.logging import configure_logging, get_logger
 from src.core.metrics import setup_metrics
 from src.core.sentry import init_sentry
 from src.db.database import init_db
+from src.middleware.deprecation import APIVersionMiddleware, DeprecationMiddleware
 from src.middleware.exception_handler import setup_exception_handlers
 from src.middleware.logging_middleware import RequestLoggingMiddleware
 from src.security.headers import SecurityHeadersMiddleware
@@ -90,10 +94,31 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 
 app = FastAPI(
-    title="Subscription Tracker",
-    description="Track subscriptions and recurring payments with an agentic interface",
-    version="0.1.0",
+    title="Money Flow API",
+    description=(
+        "Track subscriptions and recurring payments with an agentic interface.\n\n"
+        "## API Versioning\n"
+        "The API is versioned. Current version: **v1**\n\n"
+        "- Use `/api/v1/` prefix for all endpoints\n"
+        "- Legacy `/api/` endpoints are deprecated and will be removed in v2\n"
+        "- Set `X-API-Version: 1` header for explicit version selection\n\n"
+        "## Authentication\n"
+        "Most endpoints require JWT authentication. Include token in header:\n"
+        "`Authorization: Bearer <token>`"
+    ),
+    version="1.0.0",
     lifespan=lifespan,
+    openapi_tags=[
+        {"name": "health", "description": "Health check endpoints"},
+        {"name": "auth", "description": "Authentication and authorization"},
+        {"name": "subscriptions", "description": "Subscription CRUD operations"},
+        {"name": "calendar", "description": "Calendar and scheduling"},
+        {"name": "agent", "description": "AI agent natural language interface"},
+        {"name": "search", "description": "Search functionality"},
+        {"name": "insights", "description": "Analytics insights"},
+        {"name": "analytics", "description": "Usage analytics"},
+        {"name": "cards", "description": "Payment card management"},
+    ],
 )
 
 # Rate limiting - attach limiter to app state
@@ -140,16 +165,40 @@ app.add_middleware(
 # Provides request ID generation, timing, and structured logging
 app.add_middleware(RequestLoggingMiddleware)
 
+# API Version middleware - adds version headers to all responses
+app.add_middleware(
+    APIVersionMiddleware,
+    default_version="1",
+    supported_versions=["1"],
+)
+
+# Deprecation middleware - warns about deprecated /api/* paths
+app.add_middleware(
+    DeprecationMiddleware,
+    sunset_date="2025-06-01",
+    deprecated_prefix="/api/",
+    new_prefix="/api/v1/",
+)
+
 # Include API routers
-app.include_router(health.router, tags=["health"])  # Health checks at root level
-app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
-app.include_router(subscriptions.router, prefix="/api/subscriptions", tags=["subscriptions"])
-app.include_router(calendar.router, prefix="/api/calendar", tags=["calendar"])
-app.include_router(agent.router, prefix="/api/agent", tags=["agent"])
-app.include_router(search.router, prefix="/api/search", tags=["search"])
-app.include_router(insights.router, prefix="/api/insights", tags=["insights"])
-app.include_router(analytics.router, prefix="/api/analytics", tags=["analytics"])
-app.include_router(cards.router, prefix="/api", tags=["cards"])
+# Health checks at root level (not versioned)
+app.include_router(health.router, tags=["health"])
+
+# Versioned API routes (v1)
+app.include_router(v1_router, prefix="/api/v1")
+
+# Legacy routes (deprecated, will be removed in v2)
+# These are kept for backward compatibility during migration period
+app.include_router(auth.router, prefix="/api/auth", tags=["auth"], deprecated=True)
+app.include_router(
+    subscriptions.router, prefix="/api/subscriptions", tags=["subscriptions"], deprecated=True
+)
+app.include_router(calendar.router, prefix="/api/calendar", tags=["calendar"], deprecated=True)
+app.include_router(agent.router, prefix="/api/agent", tags=["agent"], deprecated=True)
+app.include_router(search.router, prefix="/api/search", tags=["search"], deprecated=True)
+app.include_router(insights.router, prefix="/api/insights", tags=["insights"], deprecated=True)
+app.include_router(analytics.router, prefix="/api/analytics", tags=["analytics"], deprecated=True)
+app.include_router(cards.router, prefix="/api", tags=["cards"], deprecated=True)
 
 # Set up Prometheus metrics (must be after all routers are added)
 setup_metrics(app)

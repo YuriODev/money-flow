@@ -21,6 +21,36 @@
 | **Phase 2** | Sprint 2.2 | ✅ Complete | AI Agent E2E, Bug Fixes, Data Isolation |
 | **Phase 2** | Sprint 2.3 | ✅ Complete | Integration Tests & Contract Testing |
 | **Phase 2** | Sprint 2.4 | ✅ Complete | Performance & Load Testing |
+| **Phase 3** | Sprint 3.1 | ✅ Complete | API Versioning & Documentation |
+
+### Sprint 3.1 Tasks (Week 9) - API Versioning & Documentation ✅
+
+| Task | Status | Description |
+|------|--------|-------------|
+| 3.1.1 | ✅ DONE | API Versioning (/api/v1/ prefix, header support) |
+| 3.1.2 | ✅ DONE | OpenAPI Enhancement (tags, descriptions) |
+
+**Sprint 3.1.1 Features Completed:**
+- API versioning with v1 prefix (`src/api/v1/__init__.py`)
+  - All routes available at /api/v1/* endpoints
+  - Legacy /api/* endpoints maintained for backward compatibility
+- Version header support (`src/middleware/deprecation.py`)
+  - X-API-Version header for explicit version selection
+  - X-API-Supported-Versions response header
+  - Accept header parsing (application/vnd.moneyflow.v1+json)
+- Deprecation middleware for legacy endpoints
+  - Deprecation: true header on old API calls
+  - Sunset header with removal date (2025-06-01)
+  - Link header pointing to new versioned endpoint
+  - X-API-Deprecation-Info with migration instructions
+- Frontend updated to use v1 API (`frontend/src/lib/api.ts`)
+- API versioning tests (`tests/unit/test_api_versioning.py`) - 19 tests
+
+**Sprint 3.1.2 Features Completed:**
+- OpenAPI tags for endpoint grouping
+- Enhanced API description with versioning docs
+- App version updated to 1.0.0
+- Title changed to "Money Flow API"
 
 ### Sprint 2.4 Tasks (Week 8) - Performance & Load Testing ✅
 
