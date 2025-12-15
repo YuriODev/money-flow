@@ -50,6 +50,9 @@ data/
 .env.local
 .env.*.local
 
+# Development credentials (local only)
+.dev-credentials.md
+
 # Logs
 *.log
 logs/
