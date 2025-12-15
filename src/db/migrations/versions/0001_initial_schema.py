@@ -28,18 +28,38 @@ depends_on: str | Sequence[str] | None = None
 def upgrade() -> None:
     """Create initial database schema."""
     # Create users table first (subscriptions references it)
+    # Note: sa.Enum will auto-create the userrole type
     op.create_table(
         "users",
         sa.Column("id", sa.String(length=36), nullable=False),
         sa.Column("email", sa.String(length=255), nullable=False),
         sa.Column("hashed_password", sa.String(length=255), nullable=False),
+        # Profile fields
+        sa.Column("full_name", sa.String(length=255), nullable=True),
+        sa.Column("avatar_url", sa.String(length=500), nullable=True),
+        # Role and status
+        sa.Column(
+            "role",
+            sa.Enum("user", "admin", name="userrole", create_type=True),
+            nullable=False,
+            server_default="user",
+        ),
         sa.Column("is_active", sa.Boolean(), nullable=False, server_default="true"),
         sa.Column("is_verified", sa.Boolean(), nullable=False, server_default="false"),
+        # User preferences
+        sa.Column("preferences", sa.Text(), nullable=True),
+        # Security tracking
+        sa.Column("last_login_at", sa.DateTime(), nullable=True),
+        sa.Column("failed_login_attempts", sa.Integer(), nullable=False, server_default="0"),
+        sa.Column("locked_until", sa.DateTime(), nullable=True),
+        # Timestamps
         sa.Column("created_at", sa.DateTime(), nullable=False, server_default=sa.func.now()),
         sa.Column("updated_at", sa.DateTime(), nullable=False, server_default=sa.func.now()),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index("ix_users_email", "users", ["email"], unique=True)
+    op.create_index("ix_users_is_active", "users", ["is_active"])
+    op.create_index("ix_users_role", "users", ["role"])
 
     # Create payment_cards table (subscriptions references it)
     op.create_table(
@@ -187,3 +207,4 @@ def downgrade() -> None:
     op.execute("DROP TYPE IF EXISTS paymenttype")
     op.execute("DROP TYPE IF EXISTS frequency")
     op.execute("DROP TYPE IF EXISTS cardtype")
+    op.execute("DROP TYPE IF EXISTS userrole")
