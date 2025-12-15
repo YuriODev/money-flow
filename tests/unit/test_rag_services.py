@@ -367,30 +367,32 @@ class TestRAGServiceSessionManagement:
         """Test that session maintains sliding window."""
         with patch("src.services.rag_service.settings") as mock_settings:
             mock_settings.rag_enabled = False
-            mock_settings.rag_context_window = 2
+            mock_settings.rag_context_window = 4
 
-            # Add more turns than the window size (2*2=4 max)
+            # Add more turns than the window size (now just rag_context_window)
             for i in range(6):
                 await self.rag.add_turn("user-1", "session-1", "user", f"Message {i}")
 
             session_key = self.rag._get_session_key("user-1", "session-1")
-            # Should only keep last 4 turns (rag_context_window * 2)
+            # Should only keep last 4 turns (rag_context_window)
             assert len(self.rag._sessions[session_key]) == 4
             assert self.rag._sessions[session_key][0].content == "Message 2"
 
-    def test_clear_session(self):
+    @pytest.mark.asyncio
+    async def test_clear_session(self):
         """Test session clearing."""
         session_key = self.rag._get_session_key("user-1", "session-1")
         self.rag._sessions[session_key] = [ConversationTurn(role="user", content="test")]
 
-        self.rag.clear_session("user-1", "session-1")
+        await self.rag.clear_session("user-1", "session-1")
 
         assert session_key not in self.rag._sessions
 
-    def test_clear_session_nonexistent(self):
+    @pytest.mark.asyncio
+    async def test_clear_session_nonexistent(self):
         """Test clearing nonexistent session doesn't raise."""
         # Should not raise
-        self.rag.clear_session("user-1", "nonexistent-session")
+        await self.rag.clear_session("user-1", "nonexistent-session")
 
 
 class TestRAGServiceReferenceResolution:

@@ -35,7 +35,10 @@ class TestNoteSearchEndpoint:
             )
 
             assert response.status_code == 503
-            assert "RAG search is not enabled" in response.json()["detail"]
+            data = response.json()
+            # Support both old format (detail) and new format (error.message)
+            message = data.get("detail") or data.get("error", {}).get("message", "")
+            assert "RAG search is not enabled" in message
 
     def test_note_search_success(self, client):
         """Test successful note search."""

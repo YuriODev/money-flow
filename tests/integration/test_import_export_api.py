@@ -278,7 +278,10 @@ class TestImportJsonEndpoint:
         response = client.post("/api/subscriptions/import/json", files=files)
 
         assert response.status_code == 400
-        assert "JSON file" in response.json()["detail"]
+        data = response.json()
+        # Support both old format (detail) and new format (error.message)
+        message = data.get("detail") or data.get("error", {}).get("message", "")
+        assert "JSON file" in message
 
     def test_import_json_invalid_json(self, client):
         """Test JSON import rejects invalid JSON."""
@@ -286,7 +289,10 @@ class TestImportJsonEndpoint:
         response = client.post("/api/subscriptions/import/json", files=files)
 
         assert response.status_code == 400
-        assert "Invalid JSON" in response.json()["detail"]
+        data = response.json()
+        # Support both old format (detail) and new format (error.message)
+        message = data.get("detail") or data.get("error", {}).get("message", "")
+        assert "Invalid JSON" in message
 
     def test_import_json_missing_subscriptions_key(self, client):
         """Test JSON import rejects missing subscriptions key."""
@@ -295,7 +301,10 @@ class TestImportJsonEndpoint:
         response = client.post("/api/subscriptions/import/json", files=files)
 
         assert response.status_code == 400
-        assert "subscriptions" in response.json()["detail"]
+        data = response.json()
+        # Support both old format (detail) and new format (error.message)
+        message = data.get("detail") or data.get("error", {}).get("message", "")
+        assert "subscriptions" in message
 
 
 class TestImportCsvEndpoint:
@@ -326,7 +335,10 @@ New Service,19.99,GBP,MONTHLY,1,2025-01-01,2025-02-01"""
         response = client.post("/api/subscriptions/import/csv", files=files)
 
         assert response.status_code == 400
-        assert "CSV file" in response.json()["detail"]
+        data = response.json()
+        # Support both old format (detail) and new format (error.message)
+        message = data.get("detail") or data.get("error", {}).get("message", "")
+        assert "CSV file" in message
 
     def test_import_csv_empty(self, client):
         """Test CSV import rejects empty file."""
@@ -335,7 +347,10 @@ New Service,19.99,GBP,MONTHLY,1,2025-01-01,2025-02-01"""
         response = client.post("/api/subscriptions/import/csv", files=files)
 
         assert response.status_code == 400
-        assert "empty" in response.json()["detail"]
+        data = response.json()
+        # Support both old format (detail) and new format (error.message)
+        message = data.get("detail") or data.get("error", {}).get("message", "")
+        assert "empty" in message
 
     def test_import_csv_invalid_amount(self, client):
         """Test CSV import handles invalid amount."""
