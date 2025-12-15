@@ -20,10 +20,8 @@ Access URLs (default):
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from slowapi.errors import RateLimitExceeded
 
 from src.api import agent, analytics, auth, calendar, cards, health, insights, search, subscriptions
 from src.core.config import settings
@@ -31,11 +29,13 @@ from src.core.logging import configure_logging, get_logger
 from src.core.metrics import setup_metrics
 from src.core.sentry import init_sentry
 from src.db.database import init_db
+from src.middleware.exception_handler import setup_exception_handlers
 from src.middleware.logging_middleware import RequestLoggingMiddleware
 from src.security.headers import SecurityHeadersMiddleware
 from src.security.rate_limit import limiter
 from src.security.secrets_validator import validate_secrets
 from src.services.cache_service import close_cache_service, get_cache_service
+from src.services.rag_service import get_rag_service
 
 # Configure structured logging before anything else
 configure_logging()
@@ -73,7 +73,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     await init_db()
     # Initialize cache service (Redis)
-    await get_cache_service()
+    cache = await get_cache_service()
+
+    # Inject cache into RAG service for session persistence and embedding caching
+    if settings.rag_enabled:
+        rag_service = get_rag_service()
+        rag_service.set_cache(cache)
+        logger.info("RAG service configured with cache")
 
     logger.info("Application startup complete")
     yield
@@ -94,19 +100,8 @@ app = FastAPI(
 app.state.limiter = limiter
 
 
-async def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
-    """Custom handler for rate limit exceeded errors.
-
-    Replaces slowapi._rate_limit_exceeded_handler which has compatibility
-    issues with newer Starlette versions.
-    """
-    return JSONResponse(
-        status_code=429,
-        content={"detail": f"Rate limit exceeded: {exc.detail}"},
-    )
-
-
-app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
+# Set up standardized exception handlers for consistent error responses
+setup_exception_handlers(app)
 
 # Security headers middleware (XSS, clickjacking, HSTS, CSP)
 # Note: Must be added before CORS middleware to ensure headers are applied

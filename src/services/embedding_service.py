@@ -71,6 +71,10 @@ class EmbeddingService:
             - Alternative: all-mpnet-base-v2 (better quality, slower, 768 dims)
         """
         if getattr(self, "_initialized", False):
+            # Allow updating cache even if already initialized
+            if cache is not None and self.cache is None:
+                self.cache = cache
+                logger.info("EmbeddingService: Cache service injected")
             return
 
         self.model_name = settings.embedding_model
@@ -78,6 +82,23 @@ class EmbeddingService:
         self.cache = cache
         self._initialized = True
         logger.info(f"EmbeddingService initialized with model: {self.model_name}")
+
+    def set_cache(self, cache: Any) -> None:
+        """Set the cache service for embedding caching.
+
+        This allows injecting the cache service after initialization,
+        which is needed since the cache service requires async initialization.
+
+        Args:
+            cache: The cache service instance (CacheService).
+
+        Example:
+            >>> service = get_embedding_service()
+            >>> cache = await get_cache_service()
+            >>> service.set_cache(cache)
+        """
+        self.cache = cache
+        logger.info("EmbeddingService: Cache service configured")
 
     def _ensure_model_loaded(self) -> None:
         """Lazily load the model if not already loaded.
