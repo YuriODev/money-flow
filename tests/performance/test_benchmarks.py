@@ -97,9 +97,9 @@ def run_benchmark(
 
 def print_benchmark_result(result: BenchmarkResult):
     """Pretty print benchmark results."""
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"Benchmark: {result.name}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     print(f"Iterations: {result.iterations}")
     print(f"Min:     {result.min_ms:8.2f} ms")
     print(f"Max:     {result.max_ms:8.2f} ms")
@@ -109,7 +109,7 @@ def print_benchmark_result(result: BenchmarkResult):
     print(f"P99:     {result.p99_ms:8.2f} ms")
     print(f"Std Dev: {result.std_dev_ms:8.2f} ms")
     print(f"RPS:     {result.requests_per_second:8.2f} req/s")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
 
 @pytest.fixture(scope="module")

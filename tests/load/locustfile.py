@@ -298,9 +298,7 @@ class MixedWorkloadUser(AuthenticatedUser):
             "amount": round(random.uniform(5.0, 100.0), 2),
             "currency": "GBP",
             "frequency": "monthly",
-            "payment_type": random.choice(
-                ["subscription", "utility", "housing", "insurance"]
-            ),
+            "payment_type": random.choice(["subscription", "utility", "housing", "insurance"]),
             "start_date": str(date.today()),
             "next_payment_date": str(date.today() + timedelta(days=30)),
         }
