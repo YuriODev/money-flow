@@ -10,12 +10,14 @@ Endpoints:
     GET /auth/me - Get current user profile
     PUT /auth/me - Update current user profile
     POST /auth/change-password - Change password
+
+Note:
+    This module intentionally does NOT use `from __future__ import annotations`
+    because it causes FastAPI to misidentify Pydantic body parameters as query
+    parameters during OpenAPI schema generation.
 """
 
-from __future__ import annotations
-
 import logging
-from typing import TYPE_CHECKING
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -45,9 +47,6 @@ from src.services.user_service import (
     UserNotFoundError,
     UserService,
 )
-
-if TYPE_CHECKING:
-    pass
 
 logger = logging.getLogger(__name__)
 

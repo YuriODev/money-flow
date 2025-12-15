@@ -24,7 +24,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 # Classification rules based on name patterns and categories
 RECLASSIFICATION_RULES = {
@@ -128,8 +128,7 @@ async def migrate_payment_types(dry_run: bool = True) -> None:
 
     # Connect to database - use environment variable or default to Docker internal network
     database_url = os.getenv(
-        "DATABASE_URL",
-        "postgresql+asyncpg://subscriptions:localdev@db:5432/subscriptions"
+        "DATABASE_URL", "postgresql+asyncpg://subscriptions:localdev@db:5432/subscriptions"
     )
     engine = create_async_engine(database_url, echo=False)
     session_maker = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
@@ -141,12 +140,12 @@ async def migrate_payment_types(dry_run: bool = True) -> None:
         )
         subscriptions = result.fetchall()
 
-        print(f"\n{'='*70}")
-        print(f"Money Flow Payment Type Migration")
-        print(f"{'='*70}")
+        print(f"\n{'=' * 70}")
+        print("Money Flow Payment Type Migration")
+        print(f"{'=' * 70}")
         print(f"Mode: {'DRY RUN (preview only)' if dry_run else 'LIVE (applying changes)'}")
         print(f"Total subscriptions: {len(subscriptions)}")
-        print(f"{'='*70}\n")
+        print(f"{'=' * 70}\n")
 
         changes = []
         no_changes = []
@@ -155,13 +154,15 @@ async def migrate_payment_types(dry_run: bool = True) -> None:
             new_type = classify_subscription(name, category)
 
             if new_type and new_type != current_type:
-                changes.append({
-                    "id": sub_id,
-                    "name": name,
-                    "from": current_type,
-                    "to": new_type,
-                    "category": category,
-                })
+                changes.append(
+                    {
+                        "id": sub_id,
+                        "name": name,
+                        "from": current_type,
+                        "to": new_type,
+                        "category": category,
+                    }
+                )
             else:
                 no_changes.append(name)
 
@@ -191,15 +192,15 @@ async def migrate_payment_types(dry_run: bool = True) -> None:
             print("✅ No changes needed - all subscriptions are correctly classified.")
 
         # Summary
-        print(f"\n{'='*70}")
+        print(f"\n{'=' * 70}")
         print("SUMMARY")
-        print(f"{'='*70}")
+        print(f"{'=' * 70}")
         print(f"  Total subscriptions: {len(subscriptions)}")
         print(f"  To be reclassified:  {len(changes)}")
         print(f"  Already correct:     {len(no_changes)}")
 
         if changes:
-            print(f"\nReclassification breakdown:")
+            print("\nReclassification breakdown:")
             by_type = {}
             for change in changes:
                 to_type = change["to"]
