@@ -55,6 +55,8 @@ dev = [
     # Contract testing (Sprint 2.3)
     "schemathesis>=3.25.0",
     "openapi-spec-validator>=0.7.0",
+    # Load testing (Sprint 2.4)
+    "locust>=2.20.0",
 ]
 
 [project.scripts]
