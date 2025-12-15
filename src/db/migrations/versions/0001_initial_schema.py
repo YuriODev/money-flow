@@ -38,11 +38,12 @@ def upgrade() -> None:
         sa.Column("full_name", sa.String(length=255), nullable=True),
         sa.Column("avatar_url", sa.String(length=500), nullable=True),
         # Role and status
+        # Note: SQLAlchemy uses enum NAMES (uppercase) by default, not values
         sa.Column(
             "role",
-            sa.Enum("user", "admin", name="userrole", create_type=True),
+            sa.Enum("USER", "ADMIN", name="userrole", create_type=True),
             nullable=False,
-            server_default="user",
+            server_default="USER",
         ),
         sa.Column("is_active", sa.Boolean(), nullable=False, server_default="true"),
         sa.Column("is_verified", sa.Boolean(), nullable=False, server_default="false"),
