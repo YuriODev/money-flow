@@ -1,13 +1,34 @@
 "use client";
 
-import { useState } from "react";
-import { motion } from "framer-motion";
-import { Wallet, Sparkles, Download } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Wallet, Sparkles, Download, User, LogOut, ChevronDown } from "lucide-react";
 import { CurrencySelector } from "./CurrencySelector";
 import ImportExportModal from "./ImportExportModal";
+import { useAuth } from "@/lib/auth-context";
 
 export function Header() {
   const [isImportExportOpen, setIsImportExportOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+  const { user, logout, isAuthenticated } = useAuth();
+
+  // Close user menu when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setIsUserMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleLogout = async () => {
+    setIsUserMenuOpen(false);
+    await logout();
+  };
+
   return (
     <header className="relative z-20">
       <div className="glass-card border-b border-white/20">
@@ -87,6 +108,61 @@ export function Header() {
                   })}
                 </p>
               </div>
+
+              {/* User Menu */}
+              {isAuthenticated && user && (
+                <>
+                  <div className="h-8 w-px bg-gray-200" />
+                  <div ref={userMenuRef} className="relative">
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium transition-colors"
+                    >
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                        <User className="w-4 h-4 text-white" />
+                      </div>
+                      <span className="hidden sm:inline max-w-[120px] truncate">
+                        {user.full_name || user.email.split("@")[0]}
+                      </span>
+                      <ChevronDown className={`w-4 h-4 transition-transform ${isUserMenuOpen ? "rotate-180" : ""}`} />
+                    </motion.button>
+
+                    {/* Dropdown Menu */}
+                    <AnimatePresence>
+                      {isUserMenuOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                          transition={{ duration: 0.15 }}
+                          className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50"
+                        >
+                          {/* User Info */}
+                          <div className="px-4 py-3 border-b border-gray-100">
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                              {user.full_name || "User"}
+                            </p>
+                            <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                          </div>
+
+                          {/* Menu Items */}
+                          <div className="py-1">
+                            <button
+                              onClick={handleLogout}
+                              className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                            >
+                              <LogOut className="w-4 h-4" />
+                              Sign out
+                            </button>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </>
+              )}
             </motion.div>
           </div>
         </div>

@@ -3,6 +3,8 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 import { CurrencyProvider } from "@/lib/currency-context";
+import { AuthProvider } from "@/lib/auth-context";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -19,7 +21,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <CurrencyProvider>{children}</CurrencyProvider>
+      <AuthProvider>
+        <ProtectedRoute>
+          <CurrencyProvider>{children}</CurrencyProvider>
+        </ProtectedRoute>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
