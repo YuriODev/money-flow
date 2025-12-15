@@ -297,6 +297,13 @@ async def export_subscriptions_json(
     is_active = None if include_inactive else True
     subscriptions = await service.get_all(is_active=is_active, payment_type=payment_type)
 
+    # Helper to format Decimal for JSON - distinguishes null from zero
+    def format_decimal_json(value: Decimal | None) -> str | None:
+        """Format Decimal for JSON export, preserving null vs zero distinction."""
+        if value is None:
+            return None
+        return str(value)
+
     export_subs = []
     for sub in subscriptions:
         export_subs.append(
@@ -320,13 +327,13 @@ async def export_subscriptions_json(
                 is_installment=sub.is_installment,
                 total_installments=sub.total_installments,
                 completed_installments=sub.completed_installments,
-                # Debt-specific fields
-                total_owed=str(sub.total_owed) if sub.total_owed else None,
-                remaining_balance=str(sub.remaining_balance) if sub.remaining_balance else None,
+                # Debt-specific fields - use format_decimal_json to preserve 0 vs null
+                total_owed=format_decimal_json(sub.total_owed),
+                remaining_balance=format_decimal_json(sub.remaining_balance),
                 creditor=sub.creditor,
-                # Savings-specific fields
-                target_amount=str(sub.target_amount) if sub.target_amount else None,
-                current_saved=str(sub.current_saved) if sub.current_saved else None,
+                # Savings-specific fields - use format_decimal_json to preserve 0 vs null
+                target_amount=format_decimal_json(sub.target_amount),
+                current_saved=format_decimal_json(sub.current_saved),
                 recipient=sub.recipient,
             )
         )
@@ -404,6 +411,13 @@ async def export_subscriptions_csv(
         ]
     )
 
+    # Helper to format Decimal for CSV - distinguishes null from zero
+    def format_decimal(value: Decimal | None) -> str:
+        """Format Decimal for CSV export, preserving null vs zero distinction."""
+        if value is None:
+            return ""
+        return str(value)
+
     # Write data rows
     for sub in subscriptions:
         writer.writerow(
@@ -425,15 +439,15 @@ async def export_subscriptions_csv(
                 sub.color,
                 str(sub.auto_renew).lower(),
                 str(sub.is_installment).lower(),
-                sub.total_installments or "",
+                sub.total_installments if sub.total_installments is not None else "",
                 sub.completed_installments,
-                # Debt-specific fields
-                str(sub.total_owed) if sub.total_owed else "",
-                str(sub.remaining_balance) if sub.remaining_balance else "",
+                # Debt-specific fields - use format_decimal to preserve 0 vs null
+                format_decimal(sub.total_owed),
+                format_decimal(sub.remaining_balance),
                 sub.creditor or "",
-                # Savings-specific fields
-                str(sub.target_amount) if sub.target_amount else "",
-                str(sub.current_saved) if sub.current_saved else "",
+                # Savings-specific fields - use format_decimal to preserve 0 vs null
+                format_decimal(sub.target_amount),
+                format_decimal(sub.current_saved),
                 sub.recipient or "",
             ]
         )

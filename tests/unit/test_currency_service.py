@@ -303,11 +303,28 @@ class TestCurrencyServiceWithMockedAPI:
 
     @pytest.mark.asyncio
     async def test_api_error_falls_back_to_static(self, service_with_key):
-        """Test that API errors fall back to static rates."""
+        """Test that generic API errors fall back to static rates.
+
+        Note: CurrencyConversionError and UnsupportedCurrencyError are
+        explicitly re-raised. Only generic exceptions trigger fallback.
+        """
         with patch.object(
-            service_with_key, "_fetch_live_rates", side_effect=CurrencyConversionError("API Error")
+            service_with_key, "_fetch_live_rates", side_effect=RuntimeError("API timeout")
         ):
             # Should not raise, should use static rates
             rate = await service_with_key.get_rate("USD", "GBP")
 
             assert rate == Decimal("0.790000")
+
+    @pytest.mark.asyncio
+    async def test_currency_conversion_error_propagates(self, service_with_key):
+        """Test that CurrencyConversionError is re-raised, not caught."""
+        with patch.object(
+            service_with_key,
+            "_fetch_live_rates",
+            side_effect=CurrencyConversionError("Invalid rate data"),
+        ):
+            with pytest.raises(CurrencyConversionError) as exc_info:
+                await service_with_key.get_rate("USD", "GBP")
+
+            assert "Invalid rate data" in str(exc_info.value)

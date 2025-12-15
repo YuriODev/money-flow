@@ -81,3 +81,60 @@ jobs:
         uses: github/codeql-action/analyze@v3
         with:
           category: "/language:javascript-typescript"
+
+  # ============================================================================
+  # Notify on CodeQL Completion
+  # ============================================================================
+  notify-codeql:
+    name: Notify CodeQL Results
+    runs-on: ubuntu-latest
+    needs: [analyze-python, analyze-javascript]
+    if: always() && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Notify CodeQL Success (Telegram - Security Topic)
+        if: needs.analyze-python.result == 'success' && needs.analyze-javascript.result == 'success'
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_THREAD_SECURITY: ${{ secrets.TELEGRAM_THREAD_SECURITY }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "Telegram secrets not configured, skipping notification"
+            exit 0
+          fi
+
+          if [ -n "$TELEGRAM_THREAD_SECURITY" ]; then
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              -H "Content-Type: application/json" \
+              -d "{\"chat_id\": \"${TELEGRAM_CHAT_ID}\", \"message_thread_id\": ${TELEGRAM_THREAD_SECURITY}, \"parse_mode\": \"HTML\", \"text\": \"✅ <b>Money Flow - CodeQL Analysis Passed</b>\n\n🔍 <b>Python:</b> ✓ No issues found\n🔍 <b>TypeScript:</b> ✓ No issues found\n\n📋 <a href=\\\"https://github.com/${{ github.repository }}/security/code-scanning\\\">View Security Dashboard</a>\"}"
+          else
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              -H "Content-Type: application/json" \
+              -d "{\"chat_id\": \"${TELEGRAM_CHAT_ID}\", \"parse_mode\": \"HTML\", \"text\": \"✅ <b>Money Flow - CodeQL Analysis Passed</b>\n\n🔍 <b>Python:</b> ✓ No issues found\n🔍 <b>TypeScript:</b> ✓ No issues found\n\n📋 <a href=\\\"https://github.com/${{ github.repository }}/security/code-scanning\\\">View Security Dashboard</a>\"}"
+          fi
+
+      - name: Notify CodeQL Failure (Telegram - Security Topic)
+        if: needs.analyze-python.result == 'failure' || needs.analyze-javascript.result == 'failure'
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_THREAD_SECURITY: ${{ secrets.TELEGRAM_THREAD_SECURITY }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "Telegram secrets not configured, skipping notification"
+            exit 0
+          fi
+
+          PYTHON_STATUS="${{ needs.analyze-python.result == 'success' && '✓' || '✗' }}"
+          TS_STATUS="${{ needs.analyze-javascript.result == 'success' && '✓' || '✗' }}"
+
+          if [ -n "$TELEGRAM_THREAD_SECURITY" ]; then
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              -H "Content-Type: application/json" \
+              -d "{\"chat_id\": \"${TELEGRAM_CHAT_ID}\", \"message_thread_id\": ${TELEGRAM_THREAD_SECURITY}, \"parse_mode\": \"HTML\", \"text\": \"⚠️ <b>Money Flow - CodeQL Analysis Issues</b>\n\n🔍 <b>Python:</b> ${PYTHON_STATUS}\n🔍 <b>TypeScript:</b> ${TS_STATUS}\n\n📋 <a href=\\\"https://github.com/${{ github.repository }}/security/code-scanning\\\">View Security Alerts</a>\"}"
+          else
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              -H "Content-Type: application/json" \
+              -d "{\"chat_id\": \"${TELEGRAM_CHAT_ID}\", \"parse_mode\": \"HTML\", \"text\": \"⚠️ <b>Money Flow - CodeQL Analysis Issues</b>\n\n🔍 <b>Python:</b> ${PYTHON_STATUS}\n🔍 <b>TypeScript:</b> ${TS_STATUS}\n\n📋 <a href=\\\"https://github.com/${{ github.repository }}/security/code-scanning\\\">View Security Alerts</a>\"}"
+          fi

@@ -220,13 +220,46 @@ class CurrencyService:
             rates = await self._get_rates()
 
             # Calculate cross rate through USD (API uses USD as base)
-            from_rate = rates.get(from_currency, Decimal("1.00"))
-            to_rate = rates.get(to_currency, Decimal("1.00"))
+            from_rate = rates.get(from_currency)
+            to_rate = rates.get(to_currency)
+
+            # Check for missing rates - fall back to static if not found in API response
+            if from_rate is None:
+                logger.warning(f"Rate for {from_currency} not found in live rates, using static")
+                from_rate = self.STATIC_RATES_USD_BASE.get(from_currency)
+                if from_rate is None:
+                    raise UnsupportedCurrencyError(
+                        f"No rate available for currency '{from_currency}'",
+                        from_currency=from_currency,
+                        to_currency=to_currency,
+                    )
+
+            if to_rate is None:
+                logger.warning(f"Rate for {to_currency} not found in live rates, using static")
+                to_rate = self.STATIC_RATES_USD_BASE.get(to_currency)
+                if to_rate is None:
+                    raise UnsupportedCurrencyError(
+                        f"No rate available for currency '{to_currency}'",
+                        from_currency=from_currency,
+                        to_currency=to_currency,
+                    )
+
+            # Guard against zero rates (corrupted data)
+            if from_rate == Decimal("0"):
+                logger.error(f"Zero rate found for {from_currency}, using fallback")
+                raise CurrencyConversionError(
+                    f"Invalid zero rate for currency '{from_currency}'",
+                    from_currency=from_currency,
+                    to_currency=to_currency,
+                )
 
             # from_currency -> USD -> to_currency
             rate = to_rate / from_rate
             return rate.quantize(Decimal("0.000001"))
 
+        except (UnsupportedCurrencyError, CurrencyConversionError):
+            # Re-raise our own exceptions
+            raise
         except Exception as e:
             logger.warning(f"Failed to get live rate, using static: {e}")
             return self._get_static_rate(from_currency, to_currency)
@@ -504,10 +537,38 @@ class CurrencyService:
 
         Returns:
             Exchange rate from static rates.
+
+        Raises:
+            UnsupportedCurrencyError: If currency not in static rates.
+            CurrencyConversionError: If from_rate is zero.
         """
         # Static rates are USD-based, calculate cross rate
-        from_rate = self.STATIC_RATES_USD_BASE.get(from_currency, Decimal("1.00"))
-        to_rate = self.STATIC_RATES_USD_BASE.get(to_currency, Decimal("1.00"))
+        from_rate = self.STATIC_RATES_USD_BASE.get(from_currency)
+        to_rate = self.STATIC_RATES_USD_BASE.get(to_currency)
+
+        # Validate rates exist
+        if from_rate is None:
+            raise UnsupportedCurrencyError(
+                f"Currency '{from_currency}' not available in static rates. "
+                f"Available: {', '.join(self.STATIC_RATES_USD_BASE.keys())}",
+                from_currency=from_currency,
+                to_currency=to_currency,
+            )
+        if to_rate is None:
+            raise UnsupportedCurrencyError(
+                f"Currency '{to_currency}' not available in static rates. "
+                f"Available: {', '.join(self.STATIC_RATES_USD_BASE.keys())}",
+                from_currency=from_currency,
+                to_currency=to_currency,
+            )
+
+        # Guard against zero rate (should never happen with static data, but safety first)
+        if from_rate == Decimal("0"):
+            raise CurrencyConversionError(
+                f"Invalid zero rate for currency '{from_currency}'",
+                from_currency=from_currency,
+                to_currency=to_currency,
+            )
 
         rate = to_rate / from_rate
         return rate.quantize(Decimal("0.000001"))

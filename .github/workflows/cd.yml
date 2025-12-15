@@ -160,21 +160,27 @@ jobs:
         run: |
           echo "url=https://money-flow-frontend-staging-${{ env.GCP_REGION }}.run.app" >> $GITHUB_OUTPUT
 
-      - name: Notify Staging Deployment (Telegram)
-        if: success() && secrets.TELEGRAM_BOT_TOKEN != ''
+      - name: Notify Staging Deployment (Telegram - Deploy Topic)
+        if: success()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_THREAD_DEPLOY: ${{ secrets.TELEGRAM_THREAD_DEPLOY }}
         run: |
-          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-            -d chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
-            -d parse_mode="HTML" \
-            -d text="🚀 <b>Money Flow - Staging Deployed</b>
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "Telegram secrets not configured, skipping notification"
+            exit 0
+          fi
 
-📦 <b>Version:</b> <code>${{ needs.build-and-push.outputs.version }}</code>
-🔗 <b>Commit:</b> <a href=\"https://github.com/${{ github.repository }}/commit/${{ github.sha }}\">${{ github.sha }}</a>
-👤 <b>Author:</b> ${{ github.actor }}
-
-🌐 <b>URLs:</b>
-• Backend: https://money-flow-backend-staging-${{ env.GCP_REGION }}.run.app
-• Frontend: https://money-flow-frontend-staging-${{ env.GCP_REGION }}.run.app"
+          if [ -n "$TELEGRAM_THREAD_DEPLOY" ]; then
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              -H "Content-Type: application/json" \
+              -d "{\"chat_id\": \"${TELEGRAM_CHAT_ID}\", \"message_thread_id\": ${TELEGRAM_THREAD_DEPLOY}, \"parse_mode\": \"HTML\", \"text\": \"🚀 <b>Money Flow - Staging Deployed</b>\n\n📦 <b>Version:</b> <code>${{ needs.build-and-push.outputs.version }}</code>\n🔗 <b>Commit:</b> <a href=\\\"https://github.com/${{ github.repository }}/commit/${{ github.sha }}\\\">${{ github.sha }}</a>\n👤 <b>Author:</b> ${{ github.actor }}\n\n🌐 <b>URLs:</b>\n• Backend: https://money-flow-backend-staging-${{ env.GCP_REGION }}.run.app\n• Frontend: https://money-flow-frontend-staging-${{ env.GCP_REGION }}.run.app\"}"
+          else
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              -H "Content-Type: application/json" \
+              -d "{\"chat_id\": \"${TELEGRAM_CHAT_ID}\", \"parse_mode\": \"HTML\", \"text\": \"🚀 <b>Money Flow - Staging Deployed</b>\n\n📦 <b>Version:</b> <code>${{ needs.build-and-push.outputs.version }}</code>\n🔗 <b>Commit:</b> <a href=\\\"https://github.com/${{ github.repository }}/commit/${{ github.sha }}\\\">${{ github.sha }}</a>\n👤 <b>Author:</b> ${{ github.actor }}\n\n🌐 <b>URLs:</b>\n• Backend: https://money-flow-backend-staging-${{ env.GCP_REGION }}.run.app\n• Frontend: https://money-flow-frontend-staging-${{ env.GCP_REGION }}.run.app\"}"
+          fi
 
       - name: Log Staging Deployment
         if: success()
@@ -249,23 +255,27 @@ jobs:
         run: |
           echo "url=https://money-flow-frontend-${{ env.GCP_REGION }}.run.app" >> $GITHUB_OUTPUT
 
-      - name: Notify Production Deployment (Telegram)
-        if: success() && secrets.TELEGRAM_BOT_TOKEN != ''
+      - name: Notify Production Deployment (Telegram - Deploy Topic)
+        if: success()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_THREAD_DEPLOY: ${{ secrets.TELEGRAM_THREAD_DEPLOY }}
         run: |
-          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-            -d chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
-            -d parse_mode="HTML" \
-            -d text="🎉 <b>Money Flow - Production Deployed</b>
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "Telegram secrets not configured, skipping notification"
+            exit 0
+          fi
 
-📦 <b>Version:</b> <code>${{ github.event.release.tag_name }}</code>
-📝 <b>Release:</b> <a href=\"https://github.com/${{ github.repository }}/releases/tag/${{ github.event.release.tag_name }}\">${{ github.event.release.name }}</a>
-👤 <b>Author:</b> ${{ github.actor }}
-
-🌐 <b>URLs:</b>
-• Backend: https://money-flow-backend-${{ env.GCP_REGION }}.run.app
-• Frontend: https://money-flow-frontend-${{ env.GCP_REGION }}.run.app
-
-✅ Production is now live!"
+          if [ -n "$TELEGRAM_THREAD_DEPLOY" ]; then
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              -H "Content-Type: application/json" \
+              -d "{\"chat_id\": \"${TELEGRAM_CHAT_ID}\", \"message_thread_id\": ${TELEGRAM_THREAD_DEPLOY}, \"parse_mode\": \"HTML\", \"text\": \"🎉 <b>Money Flow - Production Deployed</b>\n\n📦 <b>Version:</b> <code>${{ github.event.release.tag_name }}</code>\n📝 <b>Release:</b> <a href=\\\"https://github.com/${{ github.repository }}/releases/tag/${{ github.event.release.tag_name }}\\\">${{ github.event.release.name }}</a>\n👤 <b>Author:</b> ${{ github.actor }}\n\n🌐 <b>URLs:</b>\n• Backend: https://money-flow-backend-${{ env.GCP_REGION }}.run.app\n• Frontend: https://money-flow-frontend-${{ env.GCP_REGION }}.run.app\n\n✅ Production is now live!\"}"
+          else
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              -H "Content-Type: application/json" \
+              -d "{\"chat_id\": \"${TELEGRAM_CHAT_ID}\", \"parse_mode\": \"HTML\", \"text\": \"🎉 <b>Money Flow - Production Deployed</b>\n\n📦 <b>Version:</b> <code>${{ github.event.release.tag_name }}</code>\n📝 <b>Release:</b> <a href=\\\"https://github.com/${{ github.repository }}/releases/tag/${{ github.event.release.tag_name }}\\\">${{ github.event.release.name }}</a>\n👤 <b>Author:</b> ${{ github.actor }}\n\n🌐 <b>URLs:</b>\n• Backend: https://money-flow-backend-${{ env.GCP_REGION }}.run.app\n• Frontend: https://money-flow-frontend-${{ env.GCP_REGION }}.run.app\n\n✅ Production is now live!\"}"
+          fi
 
       - name: Log Production Deployment
         run: |
@@ -347,18 +357,27 @@ jobs:
             --to-revisions LATEST=0 \
             --quiet || echo "Rollback skipped (GCP not configured)"
 
-      - name: Notify Rollback (Telegram)
-        if: success() && secrets.TELEGRAM_BOT_TOKEN != ''
+      - name: Notify Rollback (Telegram - Deploy Topic)
+        if: success()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_THREAD_DEPLOY: ${{ secrets.TELEGRAM_THREAD_DEPLOY }}
         run: |
-          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-            -d chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
-            -d parse_mode="HTML" \
-            -d text="⚠️ <b>Money Flow - Production Rollback</b>
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "Telegram secrets not configured, skipping notification"
+            exit 0
+          fi
 
-🔄 Production has been rolled back to the previous version.
-👤 <b>Initiated by:</b> ${{ github.actor }}
-
-⚡ Please verify the application is working correctly."
+          if [ -n "$TELEGRAM_THREAD_DEPLOY" ]; then
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              -H "Content-Type: application/json" \
+              -d "{\"chat_id\": \"${TELEGRAM_CHAT_ID}\", \"message_thread_id\": ${TELEGRAM_THREAD_DEPLOY}, \"parse_mode\": \"HTML\", \"text\": \"⚠️ <b>Money Flow - Production Rollback</b>\n\n🔄 Production has been rolled back to the previous version.\n👤 <b>Initiated by:</b> ${{ github.actor }}\n\n⚡ Please verify the application is working correctly.\"}"
+          else
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              -H "Content-Type: application/json" \
+              -d "{\"chat_id\": \"${TELEGRAM_CHAT_ID}\", \"parse_mode\": \"HTML\", \"text\": \"⚠️ <b>Money Flow - Production Rollback</b>\n\n🔄 Production has been rolled back to the previous version.\n👤 <b>Initiated by:</b> ${{ github.actor }}\n\n⚡ Please verify the application is working correctly.\"}"
+          fi
 
       - name: Log Rollback
         run: |
@@ -375,17 +394,25 @@ jobs:
     if: always() && (needs.deploy-staging.result == 'failure' || needs.deploy-production.result == 'failure')
 
     steps:
-      - name: Notify Failure (Telegram)
-        if: secrets.TELEGRAM_BOT_TOKEN != ''
+      - name: Notify Failure (Telegram - Deploy Topic)
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_THREAD_DEPLOY: ${{ secrets.TELEGRAM_THREAD_DEPLOY }}
         run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "Telegram secrets not configured, skipping notification"
+            exit 0
+          fi
+
           ENVIRONMENT="${{ needs.deploy-staging.result == 'failure' && 'Staging' || 'Production' }}"
-          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-            -d chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
-            -d parse_mode="HTML" \
-            -d text="❌ <b>Money Flow - Deployment Failed</b>
 
-🔴 <b>Environment:</b> ${ENVIRONMENT}
-🔗 <b>Commit:</b> <a href=\"https://github.com/${{ github.repository }}/commit/${{ github.sha }}\">${{ github.sha }}</a>
-👤 <b>Author:</b> ${{ github.actor }}
-
-📋 <a href=\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\">View workflow run</a>"
+          if [ -n "$TELEGRAM_THREAD_DEPLOY" ]; then
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              -H "Content-Type: application/json" \
+              -d "{\"chat_id\": \"${TELEGRAM_CHAT_ID}\", \"message_thread_id\": ${TELEGRAM_THREAD_DEPLOY}, \"parse_mode\": \"HTML\", \"text\": \"❌ <b>Money Flow - Deployment Failed</b>\n\n🔴 <b>Environment:</b> ${ENVIRONMENT}\n🔗 <b>Commit:</b> <a href=\\\"https://github.com/${{ github.repository }}/commit/${{ github.sha }}\\\">${{ github.sha }}</a>\n👤 <b>Author:</b> ${{ github.actor }}\n\n📋 <a href=\\\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\\\">View workflow run</a>\"}"
+          else
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              -H "Content-Type: application/json" \
+              -d "{\"chat_id\": \"${TELEGRAM_CHAT_ID}\", \"parse_mode\": \"HTML\", \"text\": \"❌ <b>Money Flow - Deployment Failed</b>\n\n🔴 <b>Environment:</b> ${ENVIRONMENT}\n🔗 <b>Commit:</b> <a href=\\\"https://github.com/${{ github.repository }}/commit/${{ github.sha }}\\\">${{ github.sha }}</a>\n👤 <b>Author:</b> ${{ github.actor }}\n\n📋 <a href=\\\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\\\">View workflow run</a>\"}"
+          fi

@@ -453,21 +453,28 @@ class SubscriptionService:
             else:
                 by_payment_type[ptype] = by_payment_type.get(ptype, Decimal("0")) + monthly
 
-            # Track debt totals
-            if sub.payment_type == PaymentType.DEBT and sub.remaining_balance:
-                debt_balance = sub.remaining_balance
-                if currency_service and sub.currency != target_currency:
-                    try:
-                        debt_balance = await currency_service.convert(
-                            debt_balance, sub.currency, target_currency
-                        )
-                    except Exception:
-                        pass  # Use unconverted
-                total_debt += debt_balance
+            # Track debt totals - fall back to total_owed if remaining_balance not set
+            if sub.payment_type == PaymentType.DEBT:
+                # Prefer remaining_balance, fall back to total_owed
+                debt_balance = sub.remaining_balance or sub.total_owed
+                if debt_balance:
+                    if currency_service and sub.currency != target_currency:
+                        try:
+                            debt_balance = await currency_service.convert(
+                                debt_balance, sub.currency, target_currency
+                            )
+                        except Exception:
+                            pass  # Use unconverted
+                    total_debt += debt_balance
+                elif sub.total_owed is None and sub.remaining_balance is None:
+                    logger.warning(f"Debt '{sub.name}' ({sub.id}) has no balance information set")
 
-            # Track savings totals
+            # Track savings totals with validation
             if sub.payment_type == PaymentType.SAVINGS:
-                if sub.target_amount:
+                # Warn if savings goal has no target
+                if not sub.target_amount:
+                    logger.warning(f"Savings goal '{sub.name}' ({sub.id}) has no target_amount set")
+                else:
                     target = sub.target_amount
                     if currency_service and sub.currency != target_currency:
                         try:
@@ -478,21 +485,43 @@ class SubscriptionService:
                             pass
                     total_savings_target += target
 
-                if sub.current_saved:
-                    saved = sub.current_saved
-                    if currency_service and sub.currency != target_currency:
-                        try:
-                            saved = await currency_service.convert(
-                                saved, sub.currency, target_currency
-                            )
-                        except Exception:
-                            pass
-                    total_current_saved += saved
+                # Handle current_saved - default to 0 if not set
+                saved = sub.current_saved or Decimal("0")
+                if currency_service and sub.currency != target_currency:
+                    try:
+                        saved = await currency_service.convert(saved, sub.currency, target_currency)
+                    except Exception:
+                        pass
+                total_current_saved += saved
 
-        # Get upcoming week
+                # Warn if current_saved exceeds target_amount (over-saved)
+                if (
+                    sub.target_amount
+                    and sub.current_saved
+                    and sub.current_saved > sub.target_amount
+                ):
+                    logger.info(
+                        f"Savings goal '{sub.name}' ({sub.id}) has exceeded target: "
+                        f"{sub.current_saved} > {sub.target_amount}"
+                    )
+
+        # Get upcoming week - payments due from today through next 7 days
+        # Note: today's date uses local timezone; consider UTC for consistency
         today = date.today()
         week_later = today + timedelta(days=7)
-        upcoming = [s for s in subscriptions if today <= s.next_payment_date <= week_later]
+        # Include payments due from today (inclusive) through week_later (inclusive)
+        # Filter to only recurring payments - exclude one-time and fully completed installments
+        upcoming = [
+            s
+            for s in subscriptions
+            if today <= s.next_payment_date <= week_later
+            and s.payment_type != PaymentType.ONE_TIME
+            and not (
+                s.is_installment
+                and s.total_installments
+                and s.completed_installments >= s.total_installments
+            )
+        ]
 
         return SubscriptionSummary(
             total_monthly=round(total_monthly, 2),
@@ -618,7 +647,10 @@ class SubscriptionService:
         """Convert a subscription amount to its monthly equivalent.
 
         Normalizes amounts from different frequencies to monthly for
-        comparison and summation.
+        comparison and summation. Uses accurate conversion factors:
+        - Daily: 365.25/12 = 30.4375 days per month (accounts for leap years)
+        - Weekly: 52.1775/12 = 4.348125 weeks per month
+        - Biweekly: 26.08875/12 = 2.174 biweeks per month
 
         Args:
             amount: The subscription amount per payment.
@@ -638,13 +670,19 @@ class SubscriptionService:
             >>> print(monthly)
             Decimal('10')
         """
+        # Use more accurate conversion factors based on average days per year (365.25)
+        # This accounts for leap years and provides consistent calculations
+        days_per_month = Decimal("30.4375")  # 365.25 / 12
+        weeks_per_month = Decimal("4.348125")  # 52.1775 / 12
+        biweeks_per_month = Decimal("2.174063")  # 26.08875 / 12
+
         match frequency:
             case Frequency.DAILY:
-                return amount * Decimal("30") / interval
+                return amount * days_per_month / interval
             case Frequency.WEEKLY:
-                return amount * Decimal("4.33") / interval
+                return amount * weeks_per_month / interval
             case Frequency.BIWEEKLY:
-                return amount * Decimal("2.17") / interval
+                return amount * biweeks_per_month / interval
             case Frequency.MONTHLY:
                 return amount / interval
             case Frequency.QUARTERLY:

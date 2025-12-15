@@ -18,6 +18,8 @@
 | **Phase 1** | Sprint 1.3 | ✅ Complete | CI/CD Pipeline |
 | **Phase 1** | Sprint 1.4 | ✅ Complete | Logging & Observability |
 | **Phase 2** | Sprint 2.1 | ✅ Complete | E2E Testing Framework |
+| **Phase 2** | Sprint 2.2.1 | ✅ Complete | AI Agent E2E Tests |
+| **Phase 2** | Sprint 2.2.2 | ✅ Complete | Endpoint Bug Fixes |
 
 ### Sprint 2.1 Tasks (Week 5) - E2E Testing Framework ✅
 
@@ -118,15 +120,15 @@
 
 | Issue | Priority | Status |
 |-------|----------|--------|
-| Subscription summary calculation bugs | 🔴 Critical | ⬜ TODO |
-| Upcoming payments date filtering | 🔴 Critical | ⬜ TODO |
-| Currency conversion edge cases | 🟠 High | ⬜ TODO |
-| Debt balance calculation | 🔴 Critical | ⬜ TODO |
-| Savings progress calculation | 🔴 Critical | ⬜ TODO |
-| Card balance aggregation | 🟠 High | ⬜ TODO |
-| Export format inconsistencies | 🟠 High | ⬜ TODO |
-| Frontend Sentry integration | 🟠 High | ⬜ TODO (from 1.4) |
-| Frontend error logging to backend | 🟡 Medium | ⬜ TODO (from 1.4) |
+| Subscription summary calculation bugs | 🔴 Critical | ✅ DONE (Sprint 2.2.2) |
+| Upcoming payments date filtering | 🔴 Critical | ✅ DONE (Sprint 2.2.2) |
+| Currency conversion edge cases | 🟠 High | ✅ DONE (Sprint 2.2.2) |
+| Debt balance calculation | 🔴 Critical | ✅ DONE (Sprint 2.2.2) |
+| Savings progress calculation | 🔴 Critical | ✅ DONE (Sprint 2.2.2) |
+| Card balance aggregation | 🟠 High | ✅ DONE (Sprint 2.2.2) |
+| Export format inconsistencies | 🟠 High | ✅ DONE (Sprint 2.2.2) |
+| Frontend Sentry integration | 🟠 High | ⬜ TODO (Sprint 2.2.3+) |
+| Frontend error logging to backend | 🟡 Medium | ⬜ TODO (Sprint 2.2.3+) |
 
 ### Security Gaps (Sprint 1.2) ✅ ALL RESOLVED
 
@@ -142,7 +144,7 @@
 
 ```
 Phase 1: Foundation & Security  [Weeks 1-4]   ██████████ 100% ✅ COMPLETE
-Phase 2: Quality & Testing      [Weeks 5-8]   ██░░░░░░░░ 25%  🔄 IN PROGRESS
+Phase 2: Quality & Testing      [Weeks 5-8]   █████░░░░░ 50%  🔄 IN PROGRESS
 Phase 3: Architecture           [Weeks 9-12]  ░░░░░░░░░░ 0%
 Phase 4: Features & Polish      [Weeks 13-16] ░░░░░░░░░░ 0%
 ```

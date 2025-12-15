@@ -58,33 +58,33 @@ Implement complete user authentication with JWT tokens, secure password handling
 
 | Task ID | Task Name | Priority | Hours | Dependencies | Deliverable |
 |---------|-----------|----------|-------|--------------|-------------|
-| **1.1.1** | **Database Schema for Users** | 🔴 | 4h | None | `users` table migration |
-| 1.1.1.1 | Create User model with SQLAlchemy | 🔴 | 1h | - | `src/models/user.py` |
-| 1.1.1.2 | Add fields: id, email, hashed_password, created_at, updated_at, is_active, is_verified | 🔴 | 1h | 1.1.1.1 | Model complete |
-| 1.1.1.3 | Create Alembic migration | 🔴 | 1h | 1.1.1.2 | Migration file |
-| 1.1.1.4 | Add user_id foreign key to subscriptions table | 🔴 | 1h | 1.1.1.3 | Updated schema |
-| **1.1.2** | **Password Security** | 🔴 | 3h | 1.1.1 | Secure auth utils |
-| 1.1.2.1 | Install passlib[bcrypt] and python-jose | 🔴 | 0.5h | - | Updated requirements.txt |
-| 1.1.2.2 | Create password hashing utilities | 🔴 | 1h | 1.1.2.1 | `src/auth/security.py` |
-| 1.1.2.3 | Implement password strength validation | 🟠 | 1h | 1.1.2.2 | Validation rules |
-| 1.1.2.4 | Add password reset token generation | 🟠 | 0.5h | 1.1.2.2 | Token utils |
-| **1.1.3** | **JWT Token System** | 🔴 | 4h | 1.1.2 | Token auth |
-| 1.1.3.1 | Create JWT token creation/validation | 🔴 | 1.5h | - | `src/auth/jwt.py` |
-| 1.1.3.2 | Implement access token (15min expiry) | 🔴 | 1h | 1.1.3.1 | Access tokens |
-| 1.1.3.3 | Implement refresh token (7 day expiry) | 🔴 | 1h | 1.1.3.1 | Refresh tokens |
-| 1.1.3.4 | Add token blacklist in Redis | 🟠 | 0.5h | 1.1.3.1 | Logout support |
-| **1.1.4** | **Auth API Endpoints** | 🔴 | 6h | 1.1.3 | Auth router |
-| 1.1.4.1 | POST /api/auth/register | 🔴 | 1h | - | Registration endpoint |
-| 1.1.4.2 | POST /api/auth/login | 🔴 | 1h | 1.1.4.1 | Login endpoint |
-| 1.1.4.3 | POST /api/auth/refresh | 🔴 | 1h | 1.1.4.2 | Token refresh |
-| 1.1.4.4 | POST /api/auth/logout | 🔴 | 0.5h | 1.1.4.3 | Logout endpoint |
-| 1.1.4.5 | GET /api/auth/me | 🔴 | 0.5h | 1.1.4.2 | Current user info |
-| 1.1.4.6 | POST /api/auth/forgot-password | 🟠 | 1h | 1.1.4.1 | Password reset request |
-| 1.1.4.7 | POST /api/auth/reset-password | 🟠 | 1h | 1.1.4.6 | Password reset confirm |
-| **1.1.5** | **Auth Middleware** | 🔴 | 3h | 1.1.4 | Protected routes |
-| 1.1.5.1 | Create FastAPI dependency for auth | 🔴 | 1h | - | `get_current_user` |
-| 1.1.5.2 | Apply to all subscription endpoints | 🔴 | 1h | 1.1.5.1 | Protected routes |
-| 1.1.5.3 | Add user_id filtering to all queries | 🔴 | 1h | 1.1.5.2 | Data isolation |
+| **1.1.1** | **Database Schema for Users** | ✅ | 4h | None | `users` table migration |
+| 1.1.1.1 | Create User model with SQLAlchemy | ✅ | 1h | - | `src/models/user.py` |
+| 1.1.1.2 | Add fields: id, email, hashed_password, created_at, updated_at, is_active, is_verified | ✅ | 1h | 1.1.1.1 | Model complete |
+| 1.1.1.3 | Create Alembic migration | ✅ | 1h | 1.1.1.2 | Migration file |
+| 1.1.1.4 | Add user_id foreign key to subscriptions table | ✅ | 1h | 1.1.1.3 | Updated schema |
+| **1.1.2** | **Password Security** | ✅ | 3h | 1.1.1 | Secure auth utils |
+| 1.1.2.1 | Install passlib[bcrypt] and python-jose | ✅ | 0.5h | - | Updated requirements.txt |
+| 1.1.2.2 | Create password hashing utilities | ✅ | 1h | 1.1.2.1 | `src/auth/security.py` |
+| 1.1.2.3 | Implement password strength validation | ✅ | 1h | 1.1.2.2 | Validation rules |
+| 1.1.2.4 | Add password reset token generation | ✅ | 0.5h | 1.1.2.2 | Token utils |
+| **1.1.3** | **JWT Token System** | ✅ | 4h | 1.1.2 | Token auth |
+| 1.1.3.1 | Create JWT token creation/validation | ✅ | 1.5h | - | `src/auth/jwt.py` |
+| 1.1.3.2 | Implement access token (15min expiry) | ✅ | 1h | 1.1.3.1 | Access tokens |
+| 1.1.3.3 | Implement refresh token (7 day expiry) | ✅ | 1h | 1.1.3.1 | Refresh tokens |
+| 1.1.3.4 | Add token blacklist in Redis | ✅ | 0.5h | 1.1.3.1 | Logout support |
+| **1.1.4** | **Auth API Endpoints** | ✅ | 6h | 1.1.3 | Auth router |
+| 1.1.4.1 | POST /api/auth/register | ✅ | 1h | - | Registration endpoint |
+| 1.1.4.2 | POST /api/auth/login | ✅ | 1h | 1.1.4.1 | Login endpoint |
+| 1.1.4.3 | POST /api/auth/refresh | ✅ | 1h | 1.1.4.2 | Token refresh |
+| 1.1.4.4 | POST /api/auth/logout | ✅ | 0.5h | 1.1.4.3 | Logout endpoint |
+| 1.1.4.5 | GET /api/auth/me | ✅ | 0.5h | 1.1.4.2 | Current user info |
+| 1.1.4.6 | POST /api/auth/forgot-password | ✅ | 1h | 1.1.4.1 | Password reset request |
+| 1.1.4.7 | POST /api/auth/reset-password | ✅ | 1h | 1.1.4.6 | Password reset confirm |
+| **1.1.5** | **Auth Middleware** | ✅ | 3h | 1.1.4 | Protected routes |
+| 1.1.5.1 | Create FastAPI dependency for auth | ✅ | 1h | - | `get_current_user` |
+| 1.1.5.2 | Apply to all subscription endpoints | ✅ | 1h | 1.1.5.1 | Protected routes |
+| 1.1.5.3 | Add user_id filtering to all queries | ✅ | 1h | 1.1.5.2 | Data isolation |
 
 **Sprint 1.1 Deliverables:**
 - 📦 Complete user authentication system
@@ -115,39 +115,39 @@ Implement comprehensive security measures including rate limiting, input validat
 
 | Task ID | Task Name | Priority | Hours | Dependencies | Deliverable |
 |---------|-----------|----------|-------|--------------|-------------|
-| **1.2.1** | **Rate Limiting** | 🔴 | 4h | Sprint 1.1 | Rate limiter |
-| 1.2.1.1 | Install slowapi | 🔴 | 0.5h | - | Updated requirements |
-| 1.2.1.2 | Configure Redis-backed rate limiter | 🔴 | 1h | 1.2.1.1 | Limiter config |
-| 1.2.1.3 | Apply 100/min limit to GET endpoints | 🔴 | 1h | 1.2.1.2 | GET protection |
-| 1.2.1.4 | Apply 20/min limit to POST/PUT/DELETE | 🔴 | 1h | 1.2.1.2 | Write protection |
-| 1.2.1.5 | Apply 10/min limit to /api/agent/execute | 🔴 | 0.5h | 1.2.1.2 | AI protection |
-| **1.2.2** | **Prompt Injection Protection** | 🔴 | 5h | None | Safe NL parsing |
-| 1.2.2.1 | Create input sanitizer module | 🔴 | 1h | - | `src/security/sanitizer.py` |
-| 1.2.2.2 | Define dangerous pattern blocklist | 🔴 | 1h | 1.2.2.1 | Pattern list |
-| 1.2.2.3 | Implement context boundary enforcement | 🔴 | 1.5h | 1.2.2.2 | Boundary checks |
-| 1.2.2.4 | Add output validation for AI responses | 🟠 | 1h | 1.2.2.3 | Output validation |
-| 1.2.2.5 | Create prompt injection test suite | 🔴 | 0.5h | 1.2.2.4 | Security tests |
-| **1.2.3** | **Input Validation Enhancement** | 🟠 | 4h | None | Strict validation |
-| 1.2.3.1 | Add Pydantic validators for all string fields | 🟠 | 1h | - | String validation |
-| 1.2.3.2 | Implement max length constraints | 🟠 | 0.5h | 1.2.3.1 | Length limits |
-| 1.2.3.3 | Add regex validation for service_name | 🟠 | 0.5h | 1.2.3.1 | Name validation |
-| 1.2.3.4 | Validate currency codes against enum | 🟠 | 0.5h | - | Currency validation |
-| 1.2.3.5 | Add amount range validation (0.01 - 1,000,000) | 🟠 | 0.5h | - | Amount validation |
-| 1.2.3.6 | Sanitize notes field for XSS | 🟠 | 1h | - | XSS protection |
-| **1.2.4** | **Security Headers** | 🟠 | 2h | None | Secure headers |
-| 1.2.4.1 | Add secure-headers middleware | 🟠 | 0.5h | - | Middleware setup |
-| 1.2.4.2 | Configure CSP, X-Frame-Options, etc. | 🟠 | 1h | 1.2.4.1 | Header config |
-| 1.2.4.3 | Add HSTS for HTTPS enforcement | 🟠 | 0.5h | 1.2.4.2 | HSTS header |
-| **1.2.5** | **CORS Hardening** | 🔴 | 2h | None | Secure CORS |
-| 1.2.5.1 | Remove wildcard CORS in production | 🔴 | 0.5h | - | Specific origins |
-| 1.2.5.2 | Configure allowed methods explicitly | 🟠 | 0.5h | 1.2.5.1 | Method whitelist |
-| 1.2.5.3 | Set appropriate max_age | 🟡 | 0.5h | 1.2.5.1 | Cache config |
-| 1.2.5.4 | Add environment-based CORS config | 🔴 | 0.5h | 1.2.5.1 | Env-aware CORS |
-| **1.2.6** | **Secrets Management** | 🔴 | 3h | None | Secure secrets |
-| 1.2.6.1 | Create .env.example with all variables | 🔴 | 0.5h | - | Template file |
-| 1.2.6.2 | Add .env to .gitignore verification | 🔴 | 0.25h | - | Git security |
-| 1.2.6.3 | Implement secrets validation on startup | 🟠 | 1h | - | Startup checks |
-| 1.2.6.4 | Add GCP Secret Manager integration | 🟡 | 1.25h | - | Cloud secrets |
+| **1.2.1** | **Rate Limiting** | ✅ | 4h | Sprint 1.1 | Rate limiter |
+| 1.2.1.1 | Install slowapi | ✅ | 0.5h | - | Updated requirements |
+| 1.2.1.2 | Configure Redis-backed rate limiter | ✅ | 1h | 1.2.1.1 | Limiter config |
+| 1.2.1.3 | Apply 100/min limit to GET endpoints | ✅ | 1h | 1.2.1.2 | GET protection |
+| 1.2.1.4 | Apply 20/min limit to POST/PUT/DELETE | ✅ | 1h | 1.2.1.2 | Write protection |
+| 1.2.1.5 | Apply 10/min limit to /api/agent/execute | ✅ | 0.5h | 1.2.1.2 | AI protection |
+| **1.2.2** | **Prompt Injection Protection** | ✅ | 5h | None | Safe NL parsing |
+| 1.2.2.1 | Create input sanitizer module | ✅ | 1h | - | `src/security/sanitizer.py` |
+| 1.2.2.2 | Define dangerous pattern blocklist | ✅ | 1h | 1.2.2.1 | Pattern list |
+| 1.2.2.3 | Implement context boundary enforcement | ✅ | 1.5h | 1.2.2.2 | Boundary checks |
+| 1.2.2.4 | Add output validation for AI responses | ✅ | 1h | 1.2.2.3 | Output validation |
+| 1.2.2.5 | Create prompt injection test suite | ✅ | 0.5h | 1.2.2.4 | Security tests |
+| **1.2.3** | **Input Validation Enhancement** | ✅ | 4h | None | Strict validation |
+| 1.2.3.1 | Add Pydantic validators for all string fields | ✅ | 1h | - | String validation |
+| 1.2.3.2 | Implement max length constraints | ✅ | 0.5h | 1.2.3.1 | Length limits |
+| 1.2.3.3 | Add regex validation for service_name | ✅ | 0.5h | 1.2.3.1 | Name validation |
+| 1.2.3.4 | Validate currency codes against enum | ✅ | 0.5h | - | Currency validation |
+| 1.2.3.5 | Add amount range validation (0.01 - 1,000,000) | ✅ | 0.5h | - | Amount validation |
+| 1.2.3.6 | Sanitize notes field for XSS | ✅ | 1h | - | XSS protection |
+| **1.2.4** | **Security Headers** | ✅ | 2h | None | Secure headers |
+| 1.2.4.1 | Add secure-headers middleware | ✅ | 0.5h | - | Middleware setup |
+| 1.2.4.2 | Configure CSP, X-Frame-Options, etc. | ✅ | 1h | 1.2.4.1 | Header config |
+| 1.2.4.3 | Add HSTS for HTTPS enforcement | ✅ | 0.5h | 1.2.4.2 | HSTS header |
+| **1.2.5** | **CORS Hardening** | ✅ | 2h | None | Secure CORS |
+| 1.2.5.1 | Remove wildcard CORS in production | ✅ | 0.5h | - | Specific origins |
+| 1.2.5.2 | Configure allowed methods explicitly | ✅ | 0.5h | 1.2.5.1 | Method whitelist |
+| 1.2.5.3 | Set appropriate max_age | ✅ | 0.5h | 1.2.5.1 | Cache config |
+| 1.2.5.4 | Add environment-based CORS config | ✅ | 0.5h | 1.2.5.1 | Env-aware CORS |
+| **1.2.6** | **Secrets Management** | ✅ | 3h | None | Secure secrets |
+| 1.2.6.1 | Create .env.example with all variables | ✅ | 0.5h | - | Template file |
+| 1.2.6.2 | Add .env to .gitignore verification | ✅ | 0.25h | - | Git security |
+| 1.2.6.3 | Implement secrets validation on startup | ✅ | 1h | - | Startup checks |
+| 1.2.6.4 | Add GCP Secret Manager integration | ✅ | 1.25h | - | Cloud secrets |
 
 **Sprint 1.2 Security Checklist:**
 ```
@@ -237,42 +237,42 @@ Implement structured logging, error tracking, and basic monitoring infrastructur
 
 | Task ID | Task Name | Priority | Hours | Dependencies | Deliverable |
 |---------|-----------|----------|-------|--------------|-------------|
-| **1.4.1** | **Structured Logging** | 🔴 | 5h | None | JSON logs |
-| 1.4.1.1 | Install structlog | 🔴 | 0.5h | - | Updated requirements |
-| 1.4.1.2 | Configure JSON log format | 🔴 | 1h | 1.4.1.1 | Log config |
-| 1.4.1.3 | Add request_id to all logs | 🔴 | 1h | 1.4.1.2 | Request tracing |
-| 1.4.1.4 | Add user_id to authenticated request logs | 🟠 | 0.5h | 1.4.1.3 | User context |
-| 1.4.1.5 | Configure log levels per environment | 🟠 | 0.5h | 1.4.1.2 | Env-aware logging |
-| 1.4.1.6 | Add sensitive data redaction | 🔴 | 1h | 1.4.1.2 | PII protection |
-| 1.4.1.7 | Frontend error logging to backend | 🟠 | 0.5h | - | Frontend errors |
-| **1.4.2** | **Request/Response Logging** | 🟠 | 3h | 1.4.1 | API logging |
-| 1.4.2.1 | Create logging middleware | 🟠 | 1h | - | Middleware |
-| 1.4.2.2 | Log request method, path, duration | 🟠 | 0.5h | 1.4.2.1 | Request logs |
-| 1.4.2.3 | Log response status, size | 🟠 | 0.5h | 1.4.2.1 | Response logs |
-| 1.4.2.4 | Exclude health check from logs | 🟡 | 0.25h | 1.4.2.2 | Clean logs |
-| 1.4.2.5 | Add slow query logging (>1s) | 🟠 | 0.75h | 1.4.2.2 | Performance logs |
-| **1.4.3** | **Error Tracking (Sentry)** | 🔴 | 4h | None | Error tracking |
-| 1.4.3.1 | Create Sentry account/project | 🔴 | 0.5h | - | Sentry setup |
-| 1.4.3.2 | Install sentry-sdk[fastapi] | 🔴 | 0.25h | 1.4.3.1 | SDK install |
-| 1.4.3.3 | Configure Sentry for backend | 🔴 | 1h | 1.4.3.2 | Backend Sentry |
-| 1.4.3.4 | Install @sentry/nextjs | 🔴 | 0.25h | 1.4.3.1 | Frontend SDK |
-| 1.4.3.5 | Configure Sentry for frontend | 🔴 | 1h | 1.4.3.4 | Frontend Sentry |
-| 1.4.3.6 | Add user context to Sentry | 🟠 | 0.5h | 1.4.3.3 | User tracking |
-| 1.4.3.7 | Configure release tracking | 🟡 | 0.5h | 1.4.3.3 | Release context |
-| **1.4.4** | **Health Check Enhancement** | 🟠 | 3h | None | Better health checks |
-| 1.4.4.1 | Add database connection check | 🟠 | 0.5h | - | DB health |
-| 1.4.4.2 | Add Redis connection check | 🟠 | 0.5h | - | Redis health |
-| 1.4.4.3 | Add Qdrant connection check | 🟠 | 0.5h | - | Qdrant health |
-| 1.4.4.4 | Add Claude API connectivity check | 🟡 | 0.5h | - | AI health |
-| 1.4.4.5 | Create /health/ready endpoint | 🟠 | 0.5h | 1.4.4.1 | Readiness probe |
-| 1.4.4.6 | Create /health/live endpoint | 🟠 | 0.5h | - | Liveness probe |
-| **1.4.5** | **Metrics Collection** | 🟡 | 4h | None | Prometheus metrics |
-| 1.4.5.1 | Install prometheus-fastapi-instrumentator | 🟡 | 0.5h | - | Metrics lib |
-| 1.4.5.2 | Expose /metrics endpoint | 🟡 | 0.5h | 1.4.5.1 | Metrics endpoint |
-| 1.4.5.3 | Add custom business metrics | 🟡 | 1.5h | 1.4.5.2 | Custom metrics |
-| 1.4.5.4 | Add database query metrics | 🟡 | 0.5h | 1.4.5.2 | DB metrics |
-| 1.4.5.5 | Add AI agent latency metrics | 🟡 | 0.5h | 1.4.5.2 | AI metrics |
-| 1.4.5.6 | Add RAG query performance metrics | 🟡 | 0.5h | 1.4.5.2 | RAG metrics |
+| **1.4.1** | **Structured Logging** | ✅ | 5h | None | JSON logs |
+| 1.4.1.1 | Install structlog | ✅ | 0.5h | - | Updated requirements |
+| 1.4.1.2 | Configure JSON log format | ✅ | 1h | 1.4.1.1 | Log config |
+| 1.4.1.3 | Add request_id to all logs | ✅ | 1h | 1.4.1.2 | Request tracing |
+| 1.4.1.4 | Add user_id to authenticated request logs | ✅ | 0.5h | 1.4.1.3 | User context |
+| 1.4.1.5 | Configure log levels per environment | ✅ | 0.5h | 1.4.1.2 | Env-aware logging |
+| 1.4.1.6 | Add sensitive data redaction | ✅ | 1h | 1.4.1.2 | PII protection |
+| 1.4.1.7 | Frontend error logging to backend | ✅ | 0.5h | - | Frontend errors |
+| **1.4.2** | **Request/Response Logging** | ✅ | 3h | 1.4.1 | API logging |
+| 1.4.2.1 | Create logging middleware | ✅ | 1h | - | Middleware |
+| 1.4.2.2 | Log request method, path, duration | ✅ | 0.5h | 1.4.2.1 | Request logs |
+| 1.4.2.3 | Log response status, size | ✅ | 0.5h | 1.4.2.1 | Response logs |
+| 1.4.2.4 | Exclude health check from logs | ✅ | 0.25h | 1.4.2.2 | Clean logs |
+| 1.4.2.5 | Add slow query logging (>1s) | ✅ | 0.75h | 1.4.2.2 | Performance logs |
+| **1.4.3** | **Error Tracking (Sentry)** | ✅ | 4h | None | Error tracking |
+| 1.4.3.1 | Create Sentry account/project | ✅ | 0.5h | - | Sentry setup |
+| 1.4.3.2 | Install sentry-sdk[fastapi] | ✅ | 0.25h | 1.4.3.1 | SDK install |
+| 1.4.3.3 | Configure Sentry for backend | ✅ | 1h | 1.4.3.2 | Backend Sentry |
+| 1.4.3.4 | Install @sentry/nextjs | ✅ | 0.25h | 1.4.3.1 | Frontend SDK |
+| 1.4.3.5 | Configure Sentry for frontend | ✅ | 1h | 1.4.3.4 | Frontend Sentry |
+| 1.4.3.6 | Add user context to Sentry | ✅ | 0.5h | 1.4.3.3 | User tracking |
+| 1.4.3.7 | Configure release tracking | ✅ | 0.5h | 1.4.3.3 | Release context |
+| **1.4.4** | **Health Check Enhancement** | ✅ | 3h | None | Better health checks |
+| 1.4.4.1 | Add database connection check | ✅ | 0.5h | - | DB health |
+| 1.4.4.2 | Add Redis connection check | ✅ | 0.5h | - | Redis health |
+| 1.4.4.3 | Add Qdrant connection check | ✅ | 0.5h | - | Qdrant health |
+| 1.4.4.4 | Add Claude API connectivity check | ✅ | 0.5h | - | AI health |
+| 1.4.4.5 | Create /health/ready endpoint | ✅ | 0.5h | 1.4.4.1 | Readiness probe |
+| 1.4.4.6 | Create /health/live endpoint | ✅ | 0.5h | - | Liveness probe |
+| **1.4.5** | **Metrics Collection** | ✅ | 4h | None | Prometheus metrics |
+| 1.4.5.1 | Install prometheus-fastapi-instrumentator | ✅ | 0.5h | - | Metrics lib |
+| 1.4.5.2 | Expose /metrics endpoint | ✅ | 0.5h | 1.4.5.1 | Metrics endpoint |
+| 1.4.5.3 | Add custom business metrics | ✅ | 1.5h | 1.4.5.2 | Custom metrics |
+| 1.4.5.4 | Add database query metrics | ✅ | 0.5h | 1.4.5.2 | DB metrics |
+| 1.4.5.5 | Add AI agent latency metrics | ✅ | 0.5h | 1.4.5.2 | AI metrics |
+| 1.4.5.6 | Add RAG query performance metrics | ✅ | 0.5h | 1.4.5.2 | RAG metrics |
 
 **Phase 1 Completion Checklist:**
 ```
@@ -312,38 +312,38 @@ Set up comprehensive E2E testing with Playwright, covering all user workflows.
 
 | Task ID | Task Name | Priority | Hours | Dependencies | Deliverable |
 |---------|-----------|----------|-------|--------------|-------------|
-| **2.1.1** | **Playwright Setup** | 🔴 | 3h | None | E2E framework |
-| 2.1.1.1 | Install @playwright/test | 🔴 | 0.5h | - | Playwright install |
-| 2.1.1.2 | Configure playwright.config.ts | 🔴 | 1h | 2.1.1.1 | Config file |
-| 2.1.1.3 | Set up test fixtures for auth | 🔴 | 1h | 2.1.1.2 | Auth fixtures |
-| 2.1.1.4 | Configure Docker Compose for E2E | 🟠 | 0.5h | 2.1.1.2 | Test environment |
-| **2.1.2** | **Authentication E2E Tests** | 🔴 | 4h | 2.1.1 | Auth tests |
-| 2.1.2.1 | Test user registration flow | 🔴 | 0.75h | - | Register test |
-| 2.1.2.2 | Test login flow | 🔴 | 0.75h | 2.1.2.1 | Login test |
-| 2.1.2.3 | Test logout flow | 🔴 | 0.5h | 2.1.2.2 | Logout test |
-| 2.1.2.4 | Test password reset flow | 🟠 | 1h | 2.1.2.1 | Reset test |
-| 2.1.2.5 | Test session persistence | 🟠 | 0.5h | 2.1.2.2 | Session test |
-| 2.1.2.6 | Test invalid credentials handling | 🔴 | 0.5h | 2.1.2.2 | Error handling |
-| **2.1.3** | **Subscription CRUD E2E Tests** | 🔴 | 6h | 2.1.1 | CRUD tests |
-| 2.1.3.1 | Test add subscription (all 9 types) | 🔴 | 2h | - | Add tests |
-| 2.1.3.2 | Test edit subscription | 🔴 | 1h | 2.1.3.1 | Edit tests |
-| 2.1.3.3 | Test delete subscription | 🔴 | 0.5h | 2.1.3.1 | Delete tests |
-| 2.1.3.4 | Test subscription list filtering | 🟠 | 1h | 2.1.3.1 | Filter tests |
-| 2.1.3.5 | Test subscription search | 🟠 | 0.5h | 2.1.3.1 | Search tests |
-| 2.1.3.6 | Test pagination | 🟠 | 0.5h | 2.1.3.1 | Pagination tests |
-| 2.1.3.7 | Test sorting | 🟡 | 0.5h | 2.1.3.1 | Sort tests |
-| **2.1.4** | **Payment Cards E2E Tests** | 🟠 | 3h | 2.1.1 | Card tests |
-| 2.1.4.1 | Test add payment card | 🟠 | 0.75h | - | Add card test |
-| 2.1.4.2 | Test edit payment card | 🟠 | 0.5h | 2.1.4.1 | Edit card test |
-| 2.1.4.3 | Test delete payment card | 🟠 | 0.5h | 2.1.4.1 | Delete card test |
-| 2.1.4.4 | Test assign subscription to card | 🟠 | 0.75h | 2.1.4.1 | Assignment test |
-| 2.1.4.5 | Test card balance calculation | 🟠 | 0.5h | 2.1.4.4 | Balance test |
-| **2.1.5** | **Import/Export E2E Tests** | 🟠 | 3h | 2.1.1 | I/O tests |
-| 2.1.5.1 | Test JSON export | 🟠 | 0.5h | - | JSON export test |
-| 2.1.5.2 | Test JSON import | 🟠 | 0.75h | 2.1.5.1 | JSON import test |
-| 2.1.5.3 | Test CSV export | 🟠 | 0.5h | - | CSV export test |
-| 2.1.5.4 | Test CSV import | 🟠 | 0.75h | 2.1.5.3 | CSV import test |
-| 2.1.5.5 | Test import validation errors | 🟠 | 0.5h | 2.1.5.2 | Validation test |
+| **2.1.1** | **Playwright Setup** | ✅ | 3h | None | E2E framework |
+| 2.1.1.1 | Install @playwright/test | ✅ | 0.5h | - | Playwright install |
+| 2.1.1.2 | Configure playwright.config.ts | ✅ | 1h | 2.1.1.1 | Config file |
+| 2.1.1.3 | Set up test fixtures for auth | ✅ | 1h | 2.1.1.2 | Auth fixtures |
+| 2.1.1.4 | Configure Docker Compose for E2E | ✅ | 0.5h | 2.1.1.2 | Test environment |
+| **2.1.2** | **Authentication E2E Tests** | ✅ | 4h | 2.1.1 | Auth tests |
+| 2.1.2.1 | Test user registration flow | ✅ | 0.75h | - | Register test |
+| 2.1.2.2 | Test login flow | ✅ | 0.75h | 2.1.2.1 | Login test |
+| 2.1.2.3 | Test logout flow | ✅ | 0.5h | 2.1.2.2 | Logout test |
+| 2.1.2.4 | Test password reset flow | ✅ | 1h | 2.1.2.1 | Reset test |
+| 2.1.2.5 | Test session persistence | ✅ | 0.5h | 2.1.2.2 | Session test |
+| 2.1.2.6 | Test invalid credentials handling | ✅ | 0.5h | 2.1.2.2 | Error handling |
+| **2.1.3** | **Subscription CRUD E2E Tests** | ✅ | 6h | 2.1.1 | CRUD tests |
+| 2.1.3.1 | Test add subscription (all 9 types) | ✅ | 2h | - | Add tests |
+| 2.1.3.2 | Test edit subscription | ✅ | 1h | 2.1.3.1 | Edit tests |
+| 2.1.3.3 | Test delete subscription | ✅ | 0.5h | 2.1.3.1 | Delete tests |
+| 2.1.3.4 | Test subscription list filtering | ✅ | 1h | 2.1.3.1 | Filter tests |
+| 2.1.3.5 | Test subscription search | ✅ | 0.5h | 2.1.3.1 | Search tests |
+| 2.1.3.6 | Test pagination | ✅ | 0.5h | 2.1.3.1 | Pagination tests |
+| 2.1.3.7 | Test sorting | ✅ | 0.5h | 2.1.3.1 | Sort tests |
+| **2.1.4** | **Payment Cards E2E Tests** | ✅ | 3h | 2.1.1 | Card tests |
+| 2.1.4.1 | Test add payment card | ✅ | 0.75h | - | Add card test |
+| 2.1.4.2 | Test edit payment card | ✅ | 0.5h | 2.1.4.1 | Edit card test |
+| 2.1.4.3 | Test delete payment card | ✅ | 0.5h | 2.1.4.1 | Delete card test |
+| 2.1.4.4 | Test assign subscription to card | ✅ | 0.75h | 2.1.4.1 | Assignment test |
+| 2.1.4.5 | Test card balance calculation | ✅ | 0.5h | 2.1.4.4 | Balance test |
+| **2.1.5** | **Import/Export E2E Tests** | ✅ | 3h | 2.1.1 | I/O tests |
+| 2.1.5.1 | Test JSON export | ✅ | 0.5h | - | JSON export test |
+| 2.1.5.2 | Test JSON import | ✅ | 0.75h | 2.1.5.1 | JSON import test |
+| 2.1.5.3 | Test CSV export | ✅ | 0.5h | - | CSV export test |
+| 2.1.5.4 | Test CSV import | ✅ | 0.75h | 2.1.5.3 | CSV import test |
+| 2.1.5.5 | Test import validation errors | ✅ | 0.5h | 2.1.5.2 | Validation test |
 
 ---
 
@@ -378,15 +378,15 @@ E2E tests for AI agent functionality and fixing identified endpoint issues.
 | 2.2.1.6 | Test savings goal commands | ✅ | 0.75h | 2.2.1.1 | Savings test |
 | 2.2.1.7 | Test reference resolution ("cancel it") | ✅ | 0.75h | 2.2.1.1 | Context test |
 | 2.2.1.8 | Test multi-turn conversations | ✅ | 0.75h | 2.2.1.7 | Multi-turn test |
-| **2.2.2** | **Endpoint Bug Fixes** | 🔴 | 8h | None | Bug fixes |
-| 2.2.2.1 | Audit all GET endpoints for edge cases | 🔴 | 1h | - | Audit report |
-| 2.2.2.2 | Fix subscription summary calculation bugs | 🔴 | 1.5h | 2.2.2.1 | Summary fix |
-| 2.2.2.3 | Fix upcoming payments date filtering | 🔴 | 1h | 2.2.2.1 | Date filter fix |
-| 2.2.2.4 | Fix currency conversion edge cases | 🟠 | 1h | 2.2.2.1 | Currency fix |
-| 2.2.2.5 | Fix debt balance calculation | 🔴 | 1h | 2.2.2.1 | Debt calc fix |
-| 2.2.2.6 | Fix savings progress calculation | 🔴 | 1h | 2.2.2.1 | Savings calc fix |
-| 2.2.2.7 | Fix card balance aggregation | 🟠 | 0.75h | 2.2.2.1 | Card balance fix |
-| 2.2.2.8 | Fix export format inconsistencies | 🟠 | 0.75h | 2.2.2.1 | Export fix |
+| **2.2.2** | **Endpoint Bug Fixes** | ✅ | 8h | None | Bug fixes |
+| 2.2.2.1 | Audit all GET endpoints for edge cases | ✅ | 1h | - | Audit report |
+| 2.2.2.2 | Fix subscription summary calculation bugs | ✅ | 1.5h | 2.2.2.1 | Summary fix |
+| 2.2.2.3 | Fix upcoming payments date filtering | ✅ | 1h | 2.2.2.1 | Date filter fix |
+| 2.2.2.4 | Fix currency conversion edge cases | ✅ | 1h | 2.2.2.1 | Currency fix |
+| 2.2.2.5 | Fix debt balance calculation | ✅ | 1h | 2.2.2.1 | Debt calc fix |
+| 2.2.2.6 | Fix savings progress calculation | ✅ | 1h | 2.2.2.1 | Savings calc fix |
+| 2.2.2.7 | Fix card balance aggregation | ✅ | 0.75h | 2.2.2.1 | Card balance fix |
+| 2.2.2.8 | Fix export format inconsistencies | ✅ | 0.75h | 2.2.2.1 | Export fix |
 | **2.2.3** | **API Response Consistency** | 🟠 | 4h | 2.2.2 | Consistent API |
 | 2.2.3.1 | Standardize error response format | 🟠 | 1h | - | Error format |
 | 2.2.3.2 | Standardize success response format | 🟠 | 0.5h | 2.2.3.1 | Success format |

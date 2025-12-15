@@ -225,6 +225,12 @@ class PaymentCardService:
                 funding_card["funded_next_month"] += funded_card["next_month"]
                 funding_card["funded_sub_names"].extend(funded_card["sub_names"])
                 funding_card["funded_sub_count"] += funded_card["sub_count"]
+            else:
+                # Funding card reference is invalid (deleted or non-existent)
+                logger.warning(
+                    f"Card '{card_id}' references non-existent funding card '{funding_card_id}'. "
+                    "Payments will not be aggregated correctly."
+                )
 
         # Build summaries (exclude cards with funding_card_id from top-level totals)
         card_summaries: list[CardBalanceSummary] = []
@@ -309,11 +315,35 @@ class PaymentCardService:
         start_date: date,
         end_date: date,
     ) -> Decimal:
-        """Calculate total payment amount for a subscription within a date range."""
+        """Calculate total payment amount for a subscription within a date range.
 
+        Args:
+            subscription: The subscription to calculate payments for.
+            start_date: Start of the date range (inclusive).
+            end_date: End of the date range (inclusive).
+
+        Returns:
+            Total payment amount for the subscription in the date range.
+        """
         # Check if subscription has ended
         if subscription.end_date and subscription.end_date < start_date:
             return Decimal("0")
+
+        # Check if installment is already complete
+        if subscription.is_installment and subscription.total_installments:
+            if subscription.completed_installments >= subscription.total_installments:
+                logger.debug(
+                    f"Installment '{subscription.name}' ({subscription.id}) is complete: "
+                    f"{subscription.completed_installments}/{subscription.total_installments}"
+                )
+                return Decimal("0")
+            # Validate data consistency
+            if subscription.completed_installments > subscription.total_installments:
+                logger.warning(
+                    f"Installment '{subscription.name}' ({subscription.id}) has invalid count: "
+                    f"completed={subscription.completed_installments} > total={subscription.total_installments}"
+                )
+                return Decimal("0")
 
         delta = self._get_delta(subscription.frequency, subscription.frequency_interval)
         current = subscription.start_date
@@ -333,9 +363,11 @@ class PaymentCardService:
             count += 1
             current += delta
 
-            # Safety limit for installments
+            # Safety limit for installments - only count remaining payments
             if subscription.is_installment and subscription.total_installments:
-                remaining = subscription.total_installments - subscription.completed_installments
+                remaining = max(
+                    0, subscription.total_installments - subscription.completed_installments
+                )
                 if count >= remaining:
                     break
 

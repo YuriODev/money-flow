@@ -494,18 +494,18 @@ class TestMonthlyAmountConversion:
     @pytest.mark.asyncio
     async def test_to_monthly_daily(self, service_instance):
         """Test daily to monthly conversion."""
-        # $1/day ≈ $30/month
+        # $1/day = $30.4375/month (using accurate 365.25/12 days per month)
         monthly = service_instance._to_monthly_amount(Decimal("1.00"), Frequency.DAILY, 1)
 
-        assert monthly == Decimal("30.00")
+        assert monthly == Decimal("30.4375")
 
     @pytest.mark.asyncio
     async def test_to_monthly_weekly(self, service_instance):
         """Test weekly to monthly conversion."""
-        # $10/week ≈ $43.30/month
+        # $10/week = $43.48125/month (using accurate 52.1775/12 weeks per month)
         monthly = service_instance._to_monthly_amount(Decimal("10.00"), Frequency.WEEKLY, 1)
 
-        assert monthly == Decimal("43.30")
+        assert monthly == Decimal("43.48125")
 
     @pytest.mark.asyncio
     async def test_to_monthly_monthly(self, service_instance):
