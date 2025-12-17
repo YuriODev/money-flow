@@ -359,9 +359,15 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                                   <ExternalLink className="w-4 h-4" />
                                 </a>
 
-                                <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
-                                  Send the code above to the bot to complete linking
-                                </p>
+                                <div className="text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3 space-y-1">
+                                  <p className="font-medium text-gray-700 dark:text-gray-300">Instructions:</p>
+                                  <ol className="list-decimal list-inside space-y-0.5 text-xs">
+                                    <li>Copy the code above (or click the copy button)</li>
+                                    <li>Click the blue button to open Telegram</li>
+                                    <li>Send the code to the bot</li>
+                                    <li>Come back and click &quot;Check connection status&quot;</li>
+                                  </ol>
+                                </div>
 
                                 <button
                                   onClick={() => queryClient.invalidateQueries({ queryKey: ["notification-preferences"] })}
@@ -373,7 +379,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                               </div>
                             </div>
                           ) : (
-                            <div className="glass-card-subtle rounded-xl p-4">
+                            <div className="glass-card-subtle rounded-xl p-4 space-y-4">
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                   <div className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800">
@@ -384,7 +390,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                                       Not Connected
                                     </p>
                                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                                      Receive reminders via Telegram
+                                      Receive payment reminders via Telegram
                                     </p>
                                   </div>
                                 </div>
@@ -400,6 +406,15 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                                   )}
                                   Connect
                                 </button>
+                              </div>
+                              <div className="text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3 space-y-2">
+                                <p className="font-medium text-gray-700 dark:text-gray-300">How it works:</p>
+                                <ol className="list-decimal list-inside space-y-1 text-xs">
+                                  <li>Click &quot;Connect&quot; to generate a verification code</li>
+                                  <li>Open the Money Flow bot in Telegram</li>
+                                  <li>Send the code to the bot to link your account</li>
+                                  <li>You&apos;ll receive payment reminders automatically!</li>
+                                </ol>
                               </div>
                             </div>
                           )}
