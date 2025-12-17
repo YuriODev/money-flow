@@ -145,9 +145,13 @@ export function StatsPanel() {
         : "sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5";
 
   return (
-    <div className={cn("grid grid-cols-2 gap-3 sm:gap-4 md:gap-6 mb-6 sm:mb-8", gridCols)}>
+    <section
+      className={cn("grid grid-cols-2 gap-3 sm:gap-4 md:gap-6 mb-6 sm:mb-8", gridCols)}
+      role="region"
+      aria-label="Financial Summary Statistics"
+    >
       {stats.map((stat, index) => (
-        <motion.div
+        <motion.article
           key={stat.label}
           custom={index}
           variants={cardVariants}
@@ -158,6 +162,7 @@ export function StatsPanel() {
             "relative overflow-hidden glass-card rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 border",
             stat.borderColor
           )}
+          aria-label={`${stat.label}: ${stat.value}`}
         >
           {/* Background gradient decoration */}
           <div
@@ -165,6 +170,7 @@ export function StatsPanel() {
               "absolute -right-8 -top-8 w-24 sm:w-32 h-24 sm:h-32 rounded-full opacity-20 blur-2xl",
               `bg-gradient-to-br ${stat.gradient}`
             )}
+            aria-hidden="true"
           />
 
           <div className="relative">
@@ -191,6 +197,7 @@ export function StatsPanel() {
                   "w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg shrink-0",
                   `bg-gradient-to-br ${stat.gradient}`
                 )}
+                aria-hidden="true"
               >
                 <stat.icon className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white" />
               </motion.div>
@@ -208,18 +215,19 @@ export function StatsPanel() {
                     ? "bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-400"
                     : "bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-400"
                 )}
+                aria-label={`Trend: ${stat.trend.isUp ? "up" : "down"} ${stat.trend.value}${(stat.trend as any).label || "% vs last month"}`}
               >
                 {stat.trend.isUp ? (
-                  <ArrowUpRight className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                  <ArrowUpRight className="w-2.5 h-2.5 sm:w-3 sm:h-3" aria-hidden="true" />
                 ) : (
-                  <ArrowDownRight className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                  <ArrowDownRight className="w-2.5 h-2.5 sm:w-3 sm:h-3" aria-hidden="true" />
                 )}
                 {stat.trend.value}{(stat.trend as any).label || "% vs last month"}
               </motion.div>
             )}
           </div>
-        </motion.div>
+        </motion.article>
       ))}
-    </div>
+    </section>
   );
 }

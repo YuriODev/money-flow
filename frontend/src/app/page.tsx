@@ -116,7 +116,7 @@ export default function Home() {
 
       <Header />
 
-      <main className="container mx-auto px-4 py-8 max-w-7xl relative z-10" role="main">
+      <main id="main-content" className="container mx-auto px-4 py-8 max-w-7xl relative z-10" role="main" tabIndex={-1}>
         {/* Stats Panel with entrance animation */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

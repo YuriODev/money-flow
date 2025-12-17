@@ -33,7 +33,7 @@ import {
   CircleDot,
   type LucideIcon,
 } from "lucide-react";
-import React, { useState, useMemo, useEffect, useCallback } from "react";
+import React, { useState, useMemo, useEffect, useCallback, useRef, KeyboardEvent } from "react";
 
 // All payment types for filter tabs (including special "no_card" filter)
 const ALL_PAYMENT_TYPES: (PaymentType | "all" | "no_card")[] = [
@@ -517,6 +517,7 @@ export function SubscriptionList({ initialFilter }: SubscriptionListProps) {
   const [selectedPaymentType, setSelectedPaymentType] = useState<PaymentType | "all" | "no_card">(
     initialFilter === "no_card" ? "no_card" : "all"
   );
+  const filterTabsRef = useRef<HTMLDivElement>(null);
 
   // Update filter when initialFilter changes (from URL)
   useEffect(() => {
@@ -551,6 +552,44 @@ export function SubscriptionList({ initialFilter }: SubscriptionListProps) {
     counts["no_card"] = active.filter((s: Subscription) => !s.card_id).length;
     return counts;
   }, [subscriptions]);
+
+  // Get visible tabs for keyboard navigation
+  const visibleTabs = useMemo(() => {
+    return ALL_PAYMENT_TYPES.filter(
+      (type) => type === "all" || (paymentTypeCounts[type] || 0) > 0
+    );
+  }, [paymentTypeCounts]);
+
+  // Keyboard navigation for filter tabs
+  const handleFilterKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLButtonElement>, currentType: PaymentType | "all" | "no_card") => {
+      const currentIndex = visibleTabs.indexOf(currentType);
+      let nextIndex = currentIndex;
+
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        e.preventDefault();
+        nextIndex = (currentIndex + 1) % visibleTabs.length;
+      } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        e.preventDefault();
+        nextIndex = (currentIndex - 1 + visibleTabs.length) % visibleTabs.length;
+      } else if (e.key === "Home") {
+        e.preventDefault();
+        nextIndex = 0;
+      } else if (e.key === "End") {
+        e.preventDefault();
+        nextIndex = visibleTabs.length - 1;
+      }
+
+      if (nextIndex !== currentIndex) {
+        const nextType = visibleTabs[nextIndex];
+        setSelectedPaymentType(nextType);
+        // Focus the new tab
+        const buttons = filterTabsRef.current?.querySelectorAll<HTMLButtonElement>('[role="tab"]');
+        buttons?.[nextIndex]?.focus();
+      }
+    },
+    [visibleTabs]
+  );
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => subscriptionApi.delete(id),
@@ -620,10 +659,13 @@ export function SubscriptionList({ initialFilter }: SubscriptionListProps) {
 
         {/* Payment Type Filter Tabs - horizontally scrollable on mobile */}
         <motion.div
+          ref={filterTabsRef}
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
           className="flex gap-2 pb-2 overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap"
+          role="tablist"
+          aria-label="Filter payments by type"
         >
           {ALL_PAYMENT_TYPES.map((type) => {
             const count = paymentTypeCounts[type] || 0;
@@ -638,6 +680,7 @@ export function SubscriptionList({ initialFilter }: SubscriptionListProps) {
               <motion.button
                 key={type}
                 onClick={() => setSelectedPaymentType(type)}
+                onKeyDown={(e) => handleFilterKeyDown(e, type)}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 className={cn(
@@ -650,8 +693,12 @@ export function SubscriptionList({ initialFilter }: SubscriptionListProps) {
                       ? "glass-card-subtle text-amber-600 dark:text-amber-400 hover:shadow-md border border-amber-200 dark:border-amber-800"
                       : "glass-card-subtle text-gray-600 dark:text-gray-400 hover:shadow-md"
                 )}
+                role="tab"
+                aria-selected={isSelected}
+                aria-controls="payments-list"
+                tabIndex={isSelected ? 0 : -1}
               >
-                <IconComponent className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <IconComponent className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />
                 <span>{label}</span>
                 <span
                   className={cn(
@@ -660,6 +707,7 @@ export function SubscriptionList({ initialFilter }: SubscriptionListProps) {
                       ? "bg-white/20 text-white"
                       : "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
                   )}
+                  aria-label={`${count} ${label === "All" ? "total" : label} payments`}
                 >
                   {count}
                 </span>
@@ -669,6 +717,7 @@ export function SubscriptionList({ initialFilter }: SubscriptionListProps) {
         </motion.div>
 
         {/* Content */}
+        <div id="payments-list" role="tabpanel" aria-label={`${selectedPaymentType === "all" ? "All" : selectedPaymentType === "no_card" ? "No Card Assigned" : PAYMENT_TYPE_LABELS[selectedPaymentType]} payments`}>
         {filteredSubscriptions.length === 0 ? (
           <EmptyState onAdd={() => setIsAddModalOpen(true)} />
         ) : (
@@ -691,6 +740,7 @@ export function SubscriptionList({ initialFilter }: SubscriptionListProps) {
             </AnimatePresence>
           </motion.div>
         )}
+        </div>
       </div>
 
       <AddSubscriptionModal

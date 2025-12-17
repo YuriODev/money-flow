@@ -36,7 +36,21 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className="font-sans antialiased">
+        {/* Skip link for keyboard navigation */}
+        <a
+          href="#main-content"
+          className="skip-link"
+        >
+          Skip to main content
+        </a>
         <Providers>{children}</Providers>
+        {/* Live region for screen reader announcements */}
+        <div
+          id="announcer"
+          aria-live="polite"
+          aria-atomic="true"
+          className="sr-only"
+        />
       </body>
     </html>
   );
