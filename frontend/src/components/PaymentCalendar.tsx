@@ -239,48 +239,48 @@ export function PaymentCalendar({ onDateClick }: PaymentCalendarProps) {
   };
 
   return (
-    <div className="glass-card rounded-3xl p-8" role="region" aria-label="Payment Calendar">
+    <div className="glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8" role="region" aria-label="Payment Calendar">
       {/* Header */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
+        <div className="flex items-center gap-3 sm:gap-4">
           <motion.div
             whileHover={{ scale: 1.05, rotate: 5 }}
-            className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg"
+            className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg"
             aria-hidden="true"
           >
-            <Calendar className="w-7 h-7 text-white" />
+            <Calendar className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-white" />
           </motion.div>
           <div>
             <motion.h2
               key={formatDate(currentMonth, "MMMM yyyy")}
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-2xl font-bold text-gray-900 dark:text-gray-100"
+              className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100"
               aria-live="polite"
             >
               {formatDate(currentMonth, "MMMM yyyy")}
             </motion.h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400" aria-live="polite">
+            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400" aria-live="polite">
               {events.length} payment{events.length !== 1 ? "s" : ""} scheduled
             </p>
           </div>
         </div>
 
-        <nav className="flex items-center gap-2" aria-label="Calendar navigation">
+        <nav className="flex items-center gap-1.5 sm:gap-2" aria-label="Calendar navigation">
           <motion.button
             onClick={handlePrevMonth}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            className="p-2.5 rounded-xl glass-card-subtle hover:bg-white/80 transition-colors"
+            className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl glass-card-subtle hover:bg-white/80 dark:hover:bg-gray-700/80 transition-colors"
             aria-label="Previous month"
           >
-            <ChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" aria-hidden="true" />
+            <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 dark:text-gray-400" aria-hidden="true" />
           </motion.button>
           <motion.button
             onClick={handleToday}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="px-4 py-2 text-sm font-semibold rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-md hover:shadow-lg transition-shadow"
+            className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold rounded-lg sm:rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-md hover:shadow-lg transition-shadow"
             aria-label="Go to today"
           >
             Today
@@ -289,31 +289,32 @@ export function PaymentCalendar({ onDateClick }: PaymentCalendarProps) {
             onClick={handleNextMonth}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            className="p-2.5 rounded-xl glass-card-subtle hover:bg-white/80 transition-colors"
+            className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl glass-card-subtle hover:bg-white/80 dark:hover:bg-gray-700/80 transition-colors"
             aria-label="Next month"
           >
-            <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400" aria-hidden="true" />
+            <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 dark:text-gray-400" aria-hidden="true" />
           </motion.button>
         </nav>
       </div>
 
       {/* Monthly Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-6 md:mb-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="p-4 rounded-2xl bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/30 dark:to-indigo-900/30 border border-purple-100 dark:border-purple-800"
+          className="p-2 sm:p-3 md:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/30 dark:to-indigo-900/30 border border-purple-100 dark:border-purple-800"
         >
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-500">
-              <Coins className="w-5 h-5 text-white" />
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1.5 sm:gap-3">
+            <div className="hidden sm:flex p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-gradient-to-br from-purple-500 to-indigo-500">
+              <Coins className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
-            <div>
-              <p className="text-xs text-purple-600 dark:text-purple-400 font-medium">
-                Total for {formatDate(currentMonth, "MMMM")}
+            <div className="min-w-0 w-full">
+              <p className="text-[10px] sm:text-xs text-purple-600 dark:text-purple-400 font-medium truncate">
+                <span className="sm:hidden">Total</span>
+                <span className="hidden sm:inline">Total for {formatDate(currentMonth, "MMMM")}</span>
               </p>
-              <p className="text-xl font-bold text-purple-700 dark:text-purple-300">
+              <p className="text-sm sm:text-lg md:text-xl font-bold text-purple-700 dark:text-purple-300 truncate">
                 {formatCurrency(monthlyTotal, displayCurrency)}
               </p>
             </div>
@@ -324,17 +325,18 @@ export function PaymentCalendar({ onDateClick }: PaymentCalendarProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className="p-4 rounded-2xl bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/30 border border-blue-100 dark:border-blue-800"
+          className="p-2 sm:p-3 md:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/30 border border-blue-100 dark:border-blue-800"
         >
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500">
-              <TrendingUp className="w-5 h-5 text-white" />
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1.5 sm:gap-3">
+            <div className="hidden sm:flex p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500">
+              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
-            <div>
-              <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">
-                Due in {formatDate(addMonths(currentMonth, 1), "MMMM")}
+            <div className="min-w-0 w-full">
+              <p className="text-[10px] sm:text-xs text-blue-600 dark:text-blue-400 font-medium truncate">
+                <span className="sm:hidden">Next</span>
+                <span className="hidden sm:inline">Due in {formatDate(addMonths(currentMonth, 1), "MMMM")}</span>
               </p>
-              <p className="text-xl font-bold text-blue-700 dark:text-blue-300">
+              <p className="text-sm sm:text-lg md:text-xl font-bold text-blue-700 dark:text-blue-300 truncate">
                 {formatCurrency(nextMonthTotal, displayCurrency)}
               </p>
             </div>
@@ -345,16 +347,16 @@ export function PaymentCalendar({ onDateClick }: PaymentCalendarProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="p-4 rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-orange-900/30 border border-amber-100 dark:border-amber-800"
+          className="p-2 sm:p-3 md:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-orange-900/30 border border-amber-100 dark:border-amber-800"
         >
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500">
-              <Sparkles className="w-5 h-5 text-white" />
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1.5 sm:gap-3">
+            <div className="hidden sm:flex p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-gradient-to-br from-amber-500 to-orange-500">
+              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
-            <div>
-              <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">Due Soon</p>
-              <p className="text-xl font-bold text-amber-700 dark:text-amber-300">
-                {statusCounts.due_soon || 0} payments
+            <div className="min-w-0 w-full">
+              <p className="text-[10px] sm:text-xs text-amber-600 dark:text-amber-400 font-medium">Due Soon</p>
+              <p className="text-sm sm:text-lg md:text-xl font-bold text-amber-700 dark:text-amber-300">
+                {statusCounts.due_soon || 0} <span className="hidden sm:inline">payments</span>
               </p>
             </div>
           </div>
@@ -362,30 +364,35 @@ export function PaymentCalendar({ onDateClick }: PaymentCalendarProps) {
       </div>
 
       {/* Day Labels */}
-      <div className="grid grid-cols-7 gap-2 mb-3" role="row" aria-label="Days of the week">
-        {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day, index) => (
-          <motion.div
-            key={day}
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.03 }}
-            className={cn(
-              "text-center text-xs font-semibold py-2 rounded-lg",
-              index >= 5 ? "text-purple-400 bg-purple-50/50 dark:bg-purple-900/30" : "text-gray-400 dark:text-gray-500"
-            )}
-            role="columnheader"
-            aria-label={["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][index]}
-          >
-            {day}
-          </motion.div>
-        ))}
+      <div className="grid grid-cols-7 gap-1 sm:gap-2 mb-2 sm:mb-3" role="row" aria-label="Days of the week">
+        {["M", "T", "W", "T", "F", "S", "S"].map((shortDay, index) => {
+          const fullDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+          const ariaLabels = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+          return (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.03 }}
+              className={cn(
+                "text-center text-[10px] sm:text-xs font-semibold py-1 sm:py-2 rounded-md sm:rounded-lg",
+                index >= 5 ? "text-purple-400 bg-purple-50/50 dark:bg-purple-900/30" : "text-gray-400 dark:text-gray-500"
+              )}
+              role="columnheader"
+              aria-label={ariaLabels[index]}
+            >
+              <span className="sm:hidden">{shortDay}</span>
+              <span className="hidden sm:inline">{fullDays[index]}</span>
+            </motion.div>
+          );
+        })}
       </div>
 
       {/* Calendar Grid */}
       {isLoadingEvents ? (
-        <div className="grid grid-cols-7 gap-2">
+        <div className="grid grid-cols-7 gap-1 sm:gap-2">
           {Array.from({ length: 35 }).map((_, i) => (
-            <div key={i} className="aspect-square rounded-2xl shimmer" />
+            <div key={i} className="aspect-square rounded-xl sm:rounded-2xl shimmer" />
           ))}
         </div>
       ) : (
@@ -393,7 +400,7 @@ export function PaymentCalendar({ onDateClick }: PaymentCalendarProps) {
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="grid grid-cols-7 gap-2"
+          className="grid grid-cols-7 gap-1 sm:gap-2"
           role="grid"
           aria-label={`Calendar for ${formatDate(currentMonth, "MMMM yyyy")}`}
         >
@@ -427,7 +434,7 @@ export function PaymentCalendar({ onDateClick }: PaymentCalendarProps) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
-        className="mt-8 flex flex-wrap gap-6 justify-center"
+        className="mt-4 sm:mt-6 md:mt-8 flex flex-wrap gap-3 sm:gap-4 md:gap-6 justify-center"
         role="list"
         aria-label="Payment status legend"
       >
@@ -694,11 +701,11 @@ function CalendarDay({ date, events, isToday, isCurrentMonth, onClick }: Calenda
       variants={dayVariants}
       onClick={onClick}
       className={cn(
-        "relative aspect-square p-2 rounded-2xl cursor-pointer transition-all duration-300",
+        "relative aspect-square p-1 sm:p-2 rounded-xl sm:rounded-2xl cursor-pointer transition-all duration-300",
         !isCurrentMonth && "opacity-30",
         isCurrentMonth && !isToday && "hover:shadow-lg hover:bg-gray-100 dark:hover:bg-gray-700",
-        hasPayments && isCurrentMonth && "hover:scale-105",
-        isToday && "ring-2 ring-purple-500 ring-offset-2 ring-offset-white dark:ring-offset-gray-900 shadow-lg bg-gradient-to-br from-purple-500/10 to-indigo-500/10 dark:from-purple-500/20 dark:to-indigo-500/20",
+        hasPayments && isCurrentMonth && "sm:hover:scale-105",
+        isToday && "ring-1 sm:ring-2 ring-purple-500 ring-offset-1 sm:ring-offset-2 ring-offset-white dark:ring-offset-gray-900 shadow-lg bg-gradient-to-br from-purple-500/10 to-indigo-500/10 dark:from-purple-500/20 dark:to-indigo-500/20",
         !isToday && isCurrentMonth && hasPayments && "bg-white dark:bg-gray-800",
         !isToday && isCurrentMonth && !hasPayments && "bg-gray-50 dark:bg-gray-800/80",
         !isCurrentMonth && "bg-gray-100/50 dark:bg-gray-800/30"
@@ -707,7 +714,7 @@ function CalendarDay({ date, events, isToday, isCurrentMonth, onClick }: Calenda
       {/* Today indicator glow */}
       {isToday && (
         <motion.div
-          className="absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-400/20 to-indigo-400/20"
+          className="absolute inset-0 rounded-xl sm:rounded-2xl bg-gradient-to-br from-purple-400/20 to-indigo-400/20"
           animate={{ opacity: [0.5, 0.8, 0.5] }}
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
         />
@@ -716,13 +723,13 @@ function CalendarDay({ date, events, isToday, isCurrentMonth, onClick }: Calenda
       {/* Date number */}
       <div className="relative z-10">
         {isToday ? (
-          <div className="flex items-center justify-center w-7 h-7 -ml-0.5 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 text-white text-sm font-bold shadow-md">
+          <div className="flex items-center justify-center w-5 h-5 sm:w-7 sm:h-7 -ml-0.5 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 text-white text-[10px] sm:text-sm font-bold shadow-md">
             {formatDate(date, "d")}
           </div>
         ) : (
           <div
             className={cn(
-              "text-sm font-semibold mb-1",
+              "text-[10px] sm:text-sm font-semibold mb-0.5 sm:mb-1",
               isCurrentMonth ? "text-gray-700 dark:text-gray-300" : "text-gray-400 dark:text-gray-600"
             )}
           >
@@ -738,7 +745,7 @@ function CalendarDay({ date, events, isToday, isCurrentMonth, onClick }: Calenda
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
-            className={cn("space-y-1 relative z-10", isToday && "mt-1")}
+            className={cn("space-y-0.5 sm:space-y-1 relative z-10", isToday && "mt-0.5 sm:mt-1")}
           >
             {/* Event dots */}
             <div className="flex gap-0.5 flex-wrap">
@@ -749,20 +756,20 @@ function CalendarDay({ date, events, isToday, isCurrentMonth, onClick }: Calenda
                   animate={{ scale: 1 }}
                   transition={{ delay: index * 0.05 }}
                   className={cn(
-                    "w-2 h-2 rounded-full bg-gradient-to-r shadow-sm",
+                    "w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-gradient-to-r shadow-sm",
                     event.is_paid ? statusColors.completed : statusColors[event.status]
                   )}
                 />
               ))}
               {events.length > 3 && (
-                <span className="text-[10px] text-gray-500 ml-1">+{events.length - 3}</span>
+                <span className="text-[8px] sm:text-[10px] text-gray-500 ml-0.5 sm:ml-1">+{events.length - 3}</span>
               )}
             </div>
 
-            {/* Total amount badge */}
+            {/* Total amount badge - hidden on very small screens */}
             <div
               className={cn(
-                "text-[10px] font-bold px-1.5 py-0.5 rounded-md",
+                "hidden min-[375px]:block text-[8px] sm:text-[10px] font-bold px-1 sm:px-1.5 py-0.5 rounded-md",
                 "bg-gradient-to-r text-white truncate shadow-sm",
                 statusColors[dominantStatus]
               )}
@@ -778,9 +785,9 @@ function CalendarDay({ date, events, isToday, isCurrentMonth, onClick }: Calenda
 
 function LegendItem({ color, label }: { color: string; label: string }) {
   return (
-    <div className="flex items-center gap-2" role="listitem">
-      <div className={cn("w-3 h-3 rounded-full bg-gradient-to-r", color)} aria-hidden="true" />
-      <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">{label}</span>
+    <div className="flex items-center gap-1.5 sm:gap-2" role="listitem">
+      <div className={cn("w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-gradient-to-r", color)} aria-hidden="true" />
+      <span className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 font-medium">{label}</span>
     </div>
   );
 }

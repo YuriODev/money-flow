@@ -277,8 +277,8 @@ export function AgentChat() {
     <div
       className="flex flex-col w-full bg-white dark:bg-gray-900 rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden"
       style={{
-        height: 'calc(100vh - 280px)',
-        minHeight: '400px',
+        height: 'calc(100vh - 240px)',
+        minHeight: '350px',
       }}
       role="region"
       aria-label="AI Assistant Chat"

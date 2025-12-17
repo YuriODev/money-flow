@@ -245,16 +245,16 @@ export function CardsDashboard() {
   const isLoading = cardsLoading || summaryLoading;
 
   return (
-    <div className="space-y-6" role="region" aria-label="Payment Cards Dashboard">
+    <div className="space-y-4 sm:space-y-6" role="region" aria-label="Payment Cards Dashboard">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 text-white" aria-hidden="true">
-            <Wallet className="w-6 h-6" />
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 text-white" aria-hidden="true">
+            <Wallet className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Payment Cards</h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">Payment Cards</h2>
+            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
               Manage your cards and see required balances
             </p>
           </div>
@@ -263,28 +263,28 @@ export function CardsDashboard() {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => openForm()}
-          className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-medium shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transition-shadow"
+          className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg sm:rounded-xl text-sm sm:text-base font-medium shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transition-shadow"
           aria-label="Add new payment card"
         >
-          <Plus className="w-5 h-5" aria-hidden="true" />
+          <Plus className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
           Add Card
         </motion.button>
       </div>
 
       {/* Summary Cards */}
       {(balanceSummary || paymentsSummary) && (
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {/* Main Progress Card - uses unified payments summary for consistent totals */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="glass-card p-6 rounded-2xl"
+            className="glass-card p-4 sm:p-6 rounded-xl sm:rounded-2xl"
           >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400">
-                <CreditCard className="w-5 h-5" />
+            <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+              <div className="p-1.5 sm:p-2 rounded-lg bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400">
+                <CreditCard className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">This Month&apos;s Progress</span>
+              <span className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">This Month&apos;s Progress</span>
             </div>
 
             {/* Progress Bar - uses unified summary */}
@@ -322,37 +322,37 @@ export function CardsDashboard() {
             </div>
 
             {/* Stats Row - uses unified summary */}
-            <div className="grid grid-cols-3 gap-4">
-              <div className="text-center p-3 rounded-xl bg-gray-50 dark:bg-gray-800">
-                <div className="flex items-center justify-center gap-1.5 mb-1">
-                  <Clock className="w-4 h-4 text-blue-500 dark:text-blue-400" />
-                  <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Total Due</span>
+            <div className="grid grid-cols-3 gap-2 sm:gap-4">
+              <div className="text-center p-2 sm:p-3 rounded-lg sm:rounded-xl bg-gray-50 dark:bg-gray-800">
+                <div className="flex items-center justify-center gap-1 sm:gap-1.5 mb-0.5 sm:mb-1">
+                  <Clock className="w-3 h-3 sm:w-4 sm:h-4 text-blue-500 dark:text-blue-400" />
+                  <span className="text-[10px] sm:text-xs font-medium text-gray-500 dark:text-gray-400">Total Due</span>
                 </div>
-                <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                <p className="text-sm sm:text-lg font-bold text-gray-900 dark:text-gray-100 truncate">
                   {format(
                     paymentsSummary ? parseFloat(paymentsSummary.current_month_total) : (balanceSummary ? parseFloat(balanceSummary.total_all_cards_this_month) : 0),
                     currencyInfo.code
                   )}
                 </p>
               </div>
-              <div className="text-center p-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/30">
-                <div className="flex items-center justify-center gap-1.5 mb-1">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
-                  <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Paid</span>
+              <div className="text-center p-2 sm:p-3 rounded-lg sm:rounded-xl bg-emerald-50 dark:bg-emerald-900/30">
+                <div className="flex items-center justify-center gap-1 sm:gap-1.5 mb-0.5 sm:mb-1">
+                  <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-500 dark:text-emerald-400" />
+                  <span className="text-[10px] sm:text-xs font-medium text-gray-500 dark:text-gray-400">Paid</span>
                 </div>
-                <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                <p className="text-sm sm:text-lg font-bold text-emerald-600 dark:text-emerald-400 truncate">
                   {format(
                     paymentsSummary ? parseFloat(paymentsSummary.current_month_paid) : (balanceSummary ? parseFloat(balanceSummary.total_paid_this_month) : 0),
                     currencyInfo.code
                   )}
                 </p>
               </div>
-              <div className="text-center p-3 rounded-xl bg-amber-50 dark:bg-amber-900/30">
-                <div className="flex items-center justify-center gap-1.5 mb-1">
-                  <AlertCircle className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-                  <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Remaining</span>
+              <div className="text-center p-2 sm:p-3 rounded-lg sm:rounded-xl bg-amber-50 dark:bg-amber-900/30">
+                <div className="flex items-center justify-center gap-1 sm:gap-1.5 mb-0.5 sm:mb-1">
+                  <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4 text-amber-500 dark:text-amber-400" />
+                  <span className="text-[10px] sm:text-xs font-medium text-gray-500 dark:text-gray-400">Remaining</span>
                 </div>
-                <p className="text-lg font-bold text-amber-600 dark:text-amber-400">
+                <p className="text-sm sm:text-lg font-bold text-amber-600 dark:text-amber-400 truncate">
                   {format(
                     paymentsSummary ? parseFloat(paymentsSummary.current_month_remaining) : (balanceSummary ? parseFloat(balanceSummary.total_remaining_this_month) : 0),
                     currencyInfo.code
@@ -363,20 +363,20 @@ export function CardsDashboard() {
           </motion.div>
 
           {/* Secondary Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="glass-card p-5 rounded-2xl"
+              className="glass-card p-3 sm:p-5 rounded-xl sm:rounded-2xl"
             >
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400">
-                  <PiggyBank className="w-5 h-5" />
+              <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
+                <div className="p-1.5 sm:p-2 rounded-lg bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400">
+                  <PiggyBank className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
-                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Due Next Month</span>
+                <span className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">Due Next Month</span>
               </div>
-              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-gray-100 truncate">
                 {format(
                   paymentsSummary ? parseFloat(paymentsSummary.next_month_total) : (balanceSummary ? parseFloat(balanceSummary.total_all_cards_next_month) : 0),
                   currencyInfo.code
@@ -392,21 +392,21 @@ export function CardsDashboard() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={handleUnassignedClick}
-                className="glass-card p-5 rounded-2xl text-left hover:shadow-lg hover:border-amber-200 dark:hover:border-amber-700 border-2 border-transparent transition-all cursor-pointer"
+                className="glass-card p-3 sm:p-5 rounded-xl sm:rounded-2xl text-left hover:shadow-lg hover:border-amber-200 dark:hover:border-amber-700 border-2 border-transparent transition-all cursor-pointer"
               >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400">
-                      <AlertCircle className="w-5 h-5" />
+                <div className="flex items-center justify-between mb-1 sm:mb-2">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="p-1.5 sm:p-2 rounded-lg bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400">
+                      <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5" />
                     </div>
-                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Unassigned</span>
+                    <span className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">Unassigned</span>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-amber-400 dark:text-amber-500" />
+                  <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400 dark:text-amber-500" />
                 </div>
-                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                  {balanceSummary.unassigned_count} payment{balanceSummary.unassigned_count !== 1 ? "s" : ""}
+                <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
+                  {balanceSummary.unassigned_count} <span className="text-sm sm:text-base font-medium">payment{balanceSummary.unassigned_count !== 1 ? "s" : ""}</span>
                 </p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">
                   {format(parseFloat(balanceSummary.unassigned_total), currencyInfo.code)} total
                 </p>
               </motion.button>
@@ -417,12 +417,12 @@ export function CardsDashboard() {
 
       {/* Cards Grid */}
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="glass-card p-6 rounded-2xl animate-pulse">
-              <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-4" />
-              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-2" />
-              <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/3" />
+            <div key={i} className="glass-card p-4 sm:p-6 rounded-xl sm:rounded-2xl animate-pulse">
+              <div className="h-5 sm:h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-3 sm:mb-4" />
+              <div className="h-3 sm:h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-2" />
+              <div className="h-6 sm:h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/3" />
             </div>
           ))}
         </div>
@@ -448,7 +448,7 @@ export function CardsDashboard() {
           </button>
         </motion.div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           <AnimatePresence>
             {cards.map((card, index) => {
               const balance = getCardBalance(card.id);
@@ -461,7 +461,7 @@ export function CardsDashboard() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ delay: index * 0.05 }}
-                  className="glass-card rounded-2xl overflow-hidden group"
+                  className="glass-card rounded-xl sm:rounded-2xl overflow-hidden group"
                 >
                   {/* Card Header with Color */}
                   {(() => {
@@ -469,60 +469,60 @@ export function CardsDashboard() {
                     return (
                       <div
                         className={cn(
-                          "p-4 relative",
+                          "p-3 sm:p-4 relative",
                           isLight ? "text-gray-800" : "text-white"
                         )}
                         style={{ backgroundColor: card.color }}
                       >
                         <div className="flex items-start justify-between">
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2 sm:gap-3">
                             {card.icon_url ? (
                               <div className={cn(
-                                "w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden",
+                                "w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center overflow-hidden",
                                 isLight ? "bg-white shadow-sm" : "bg-white/90"
                               )}>
                                 <img
                                   src={card.icon_url}
                                   alt={card.bank_name}
-                                  className="w-6 h-6 object-contain"
+                                  className="w-5 h-5 sm:w-6 sm:h-6 object-contain"
                                   onError={(e) => {
                                     const target = e.target as HTMLImageElement;
                                     target.style.display = "none";
                                     const parent = target.parentElement;
                                     if (parent) {
-                                      parent.innerHTML = `<span class="${isLight ? "text-gray-800" : "text-white"} font-semibold text-sm">${card.bank_name.charAt(0).toUpperCase()}</span>`;
+                                      parent.innerHTML = `<span class="${isLight ? "text-gray-800" : "text-white"} font-semibold text-xs sm:text-sm">${card.bank_name.charAt(0).toUpperCase()}</span>`;
                                     }
                                   }}
                                 />
                               </div>
                             ) : (
                               <div className={cn(
-                                "w-10 h-10 rounded-lg flex items-center justify-center",
+                                "w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center",
                                 isLight ? "bg-gray-800/10" : "bg-white/20"
                               )}>
-                                <Icon className="w-5 h-5" />
+                                <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
                               </div>
                             )}
-                            <div>
-                              <h3 className="font-semibold">{card.name}</h3>
-                              <p className={cn("text-sm", isLight ? "text-gray-600" : "opacity-80")}>{card.bank_name}</p>
+                            <div className="min-w-0">
+                              <h3 className="font-semibold text-sm sm:text-base truncate">{card.name}</h3>
+                              <p className={cn("text-xs sm:text-sm truncate", isLight ? "text-gray-600" : "opacity-80")}>{card.bank_name}</p>
                             </div>
                           </div>
-                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                             <button
                               onClick={() => openForm(card)}
                               className={cn(
-                                "p-1.5 rounded-lg transition-colors",
+                                "p-1 sm:p-1.5 rounded-lg transition-colors",
                                 isLight ? "bg-gray-800/10 hover:bg-gray-800/20" : "bg-white/20 hover:bg-white/30"
                               )}
                               aria-label={`Edit ${card.name}`}
                             >
-                              <Pencil className="w-4 h-4" aria-hidden="true" />
+                              <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />
                             </button>
                             <button
                               onClick={() => setDeleteConfirm(card.id)}
                               className={cn(
-                                "p-1.5 rounded-lg transition-colors",
+                                "p-1 sm:p-1.5 rounded-lg transition-colors",
                                 isLight ? "bg-gray-800/10 hover:bg-red-500/30" : "bg-white/20 hover:bg-red-500/50"
                               )}
                               aria-label={`Delete ${card.name}`}
@@ -531,17 +531,17 @@ export function CardsDashboard() {
                             </button>
                           </div>
                         </div>
-                        <p className={cn("mt-3 font-mono text-sm", isLight ? "text-gray-600" : "opacity-80")}>
+                        <p className={cn("mt-2 sm:mt-3 font-mono text-xs sm:text-sm", isLight ? "text-gray-600" : "opacity-80")}>
                           •••• •••• •••• {card.last_four || "••••"}
                         </p>
-                        <div className={cn("mt-2 text-xs flex items-center gap-2", isLight ? "text-gray-500" : "opacity-70")}>
+                        <div className={cn("mt-1.5 sm:mt-2 text-[10px] sm:text-xs flex flex-wrap items-center gap-1.5 sm:gap-2", isLight ? "text-gray-500" : "opacity-70")}>
                           <span>{CARD_TYPE_LABELS[card.card_type]} &bull; {card.currency}</span>
                           {card.funding_card && (
                             <span className={cn(
-                              "inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium",
+                              "inline-flex items-center gap-1 px-1 sm:px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-medium",
                               isLight ? "bg-gray-800/10" : "bg-white/20"
                             )}>
-                              <Link2 className="w-2.5 h-2.5" />
+                              <Link2 className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
                               via {card.funding_card.name}
                             </span>
                           )}
@@ -551,26 +551,26 @@ export function CardsDashboard() {
                   })()}
 
                   {/* Balance Info */}
-                  <div className="p-3 space-y-2">
+                  <div className="p-2.5 sm:p-3 space-y-2">
                     {balance ? (
                       <>
                         {/* This Month Progress */}
                         <div>
                           <div className="flex justify-between items-center mb-1">
-                            <span className="text-sm text-gray-500 dark:text-gray-400">This month</span>
+                            <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">This month</span>
                             <div className="text-right">
-                              <span className="font-semibold text-gray-900 dark:text-gray-100">
+                              <span className="font-semibold text-sm sm:text-base text-gray-900 dark:text-gray-100">
                                 {format(parseFloat(balance.total_this_month) + parseFloat(balance.funded_this_month), currencyInfo.code)}
                               </span>
                               {parseFloat(balance.funded_this_month) > 0 && (
-                                <span className="text-xs text-purple-500 ml-1">
+                                <span className="hidden sm:inline text-xs text-purple-500 ml-1">
                                   (+{format(parseFloat(balance.funded_this_month), currencyInfo.code)} via linked)
                                 </span>
                               )}
                             </div>
                           </div>
                           {/* Mini Progress Bar */}
-                          <div className="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                          <div className="h-1 sm:h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                             {(() => {
                               const total = parseFloat(balance.total_this_month) + parseFloat(balance.funded_this_month);
                               const paid = parseFloat(balance.paid_this_month);
@@ -590,7 +590,7 @@ export function CardsDashboard() {
                               );
                             })()}
                           </div>
-                          <div className="flex justify-between mt-0.5 text-xs">
+                          <div className="flex justify-between mt-0.5 text-[10px] sm:text-xs">
                             <span className="text-emerald-600 font-medium">
                               {format(parseFloat(balance.paid_this_month), currencyInfo.code)} paid
                             </span>
