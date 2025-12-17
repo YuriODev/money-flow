@@ -120,6 +120,15 @@ class User(Base):
         lazy="selectin",
     )
 
+    # One-to-one relationship with notification preferences
+    notification_preferences: Mapped["NotificationPreferences | None"] = relationship(  # noqa: F821
+        "NotificationPreferences",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        uselist=False,
+        lazy="selectin",
+    )
+
     def __repr__(self) -> str:
         """Return string representation of user.
 

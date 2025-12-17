@@ -9,6 +9,7 @@ Features:
 - Task status tracking
 - Health monitoring
 - Task result storage
+- Payment reminders via Telegram
 
 Usage:
     # Define a task
@@ -26,13 +27,16 @@ Usage:
 
 import logging
 from collections.abc import Callable, Coroutine
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from typing import Any
 
-from arq import create_pool
+from arq import create_pool, cron
 from arq.connections import ArqRedis, RedisSettings
 from arq.jobs import Job
 from pydantic import BaseModel
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy.orm import selectinload
 
 from src.core.config import settings
 
@@ -343,19 +347,353 @@ async def cleanup_expired_sessions(ctx: dict[str, Any]) -> dict[str, int]:
 
 
 @task(name="send_payment_reminders", max_tries=3, timeout=600)
-async def send_payment_reminders(ctx: dict[str, Any], days_ahead: int = 3) -> dict[str, int]:
-    """Send reminders for upcoming payments.
+async def send_payment_reminders(ctx: dict[str, Any], days_ahead: int = 7) -> dict[str, int]:
+    """Send reminders for upcoming payments via Telegram.
+
+    Runs daily and sends reminders to users who have Telegram notifications enabled.
+    Respects each user's reminder_days_before setting and quiet hours.
 
     Args:
         ctx: ARQ context dictionary.
-        days_ahead: Number of days to look ahead.
+        days_ahead: Number of days to look ahead for payments.
 
     Returns:
         Dictionary with count of reminders sent.
     """
-    # TODO: Implement actual reminder logic
+    from src.models.notification import NotificationPreferences
+    from src.models.subscription import Subscription
+    from src.services.telegram_service import TelegramService
+
     logger.info(f"Running send_payment_reminders task for {days_ahead} days ahead")
-    return {"reminders_sent": 0}
+
+    # Create database session
+    db_session = ctx.get("db_session")
+    if not db_session:
+        engine = create_async_engine(settings.database_url)
+        async_session = async_sessionmaker(engine, expire_on_commit=False)
+        db_session = async_session()
+
+    telegram_service = TelegramService()
+    reminders_sent = 0
+    users_notified = 0
+
+    try:
+        # Get all users with Telegram enabled and verified
+        prefs_result = await db_session.execute(
+            select(NotificationPreferences)
+            .where(NotificationPreferences.telegram_enabled.is_(True))
+            .where(NotificationPreferences.telegram_verified.is_(True))
+            .where(NotificationPreferences.reminder_enabled.is_(True))
+            .options(selectinload(NotificationPreferences.user))
+        )
+        notification_prefs = prefs_result.scalars().all()
+
+        today = date.today()
+        current_time = datetime.now().time()
+
+        for prefs in notification_prefs:
+            if not prefs.telegram_chat_id:
+                continue
+
+            # Check quiet hours
+            if prefs.is_in_quiet_hours(current_time):
+                logger.debug(f"Skipping user {prefs.user_id} - in quiet hours")
+                continue
+
+            # Calculate the target date based on user's reminder_days_before
+            target_date = today + timedelta(days=prefs.reminder_days_before)
+
+            # Get subscriptions due on the target date
+            subs_result = await db_session.execute(
+                select(Subscription)
+                .where(Subscription.user_id == prefs.user_id)
+                .where(Subscription.is_active.is_(True))
+                .where(Subscription.next_payment_date == target_date)
+            )
+            subscriptions = subs_result.scalars().all()
+
+            for sub in subscriptions:
+                try:
+                    success = await telegram_service.send_reminder(
+                        chat_id=prefs.telegram_chat_id,
+                        subscription=sub,
+                        days_until=prefs.reminder_days_before,
+                    )
+                    if success:
+                        reminders_sent += 1
+                except Exception as e:
+                    logger.error(f"Failed to send reminder for subscription {sub.id}: {e}")
+
+            if subscriptions:
+                users_notified += 1
+
+    finally:
+        await db_session.close()
+
+    logger.info(f"Payment reminders sent: {reminders_sent} to {users_notified} users")
+    return {"reminders_sent": reminders_sent, "users_notified": users_notified}
+
+
+@task(name="send_daily_digest", max_tries=3, timeout=600)
+async def send_daily_digest(ctx: dict[str, Any]) -> dict[str, int]:
+    """Send daily payment digest to users who have it enabled.
+
+    Sends a summary of today's payments and upcoming payments for the week.
+
+    Args:
+        ctx: ARQ context dictionary.
+
+    Returns:
+        Dictionary with count of digests sent.
+    """
+    from src.models.notification import NotificationPreferences
+    from src.models.subscription import Subscription
+    from src.models.user import User
+    from src.services.telegram_service import TelegramService
+
+    logger.info("Running send_daily_digest task")
+
+    # Create database session
+    db_session = ctx.get("db_session")
+    if not db_session:
+        engine = create_async_engine(settings.database_url)
+        async_session = async_sessionmaker(engine, expire_on_commit=False)
+        db_session = async_session()
+
+    telegram_service = TelegramService()
+    digests_sent = 0
+
+    try:
+        # Get all users with daily digest enabled
+        prefs_result = await db_session.execute(
+            select(NotificationPreferences)
+            .where(NotificationPreferences.telegram_enabled.is_(True))
+            .where(NotificationPreferences.telegram_verified.is_(True))
+            .where(NotificationPreferences.daily_digest.is_(True))
+            .options(selectinload(NotificationPreferences.user))
+        )
+        notification_prefs = prefs_result.scalars().all()
+
+        today = date.today()
+        week_end = today + timedelta(days=7)
+        current_time = datetime.now().time()
+
+        for prefs in notification_prefs:
+            if not prefs.telegram_chat_id:
+                continue
+
+            # Check quiet hours
+            if prefs.is_in_quiet_hours(current_time):
+                continue
+
+            # Get subscriptions due within the next week
+            subs_result = await db_session.execute(
+                select(Subscription)
+                .where(Subscription.user_id == prefs.user_id)
+                .where(Subscription.is_active.is_(True))
+                .where(Subscription.next_payment_date >= today)
+                .where(Subscription.next_payment_date <= week_end)
+                .order_by(Subscription.next_payment_date)
+            )
+            subscriptions = list(subs_result.scalars().all())
+
+            if not subscriptions:
+                continue
+
+            # Get user's preferred currency
+            user_result = await db_session.execute(select(User).where(User.id == prefs.user_id))
+            user = user_result.scalar_one_or_none()
+            currency = (
+                user.preferences.get("currency", "GBP") if user and user.preferences else "GBP"
+            )
+
+            try:
+                success = await telegram_service.send_daily_digest(
+                    chat_id=prefs.telegram_chat_id,
+                    subscriptions=subscriptions,
+                    currency=currency,
+                )
+                if success:
+                    digests_sent += 1
+            except Exception as e:
+                logger.error(f"Failed to send daily digest to user {prefs.user_id}: {e}")
+
+    finally:
+        await db_session.close()
+
+    logger.info(f"Daily digests sent: {digests_sent}")
+    return {"digests_sent": digests_sent}
+
+
+@task(name="send_weekly_digest", max_tries=3, timeout=600)
+async def send_weekly_digest(ctx: dict[str, Any]) -> dict[str, int]:
+    """Send weekly payment summary to users who have it enabled.
+
+    Sends a comprehensive summary of all payments for the upcoming week.
+    Only runs on each user's preferred day of the week.
+
+    Args:
+        ctx: ARQ context dictionary.
+
+    Returns:
+        Dictionary with count of digests sent.
+    """
+    from src.models.notification import NotificationPreferences
+    from src.models.subscription import Subscription
+    from src.models.user import User
+    from src.services.telegram_service import TelegramService
+
+    logger.info("Running send_weekly_digest task")
+
+    # Create database session
+    db_session = ctx.get("db_session")
+    if not db_session:
+        engine = create_async_engine(settings.database_url)
+        async_session = async_sessionmaker(engine, expire_on_commit=False)
+        db_session = async_session()
+
+    telegram_service = TelegramService()
+    digests_sent = 0
+
+    try:
+        today = date.today()
+        current_weekday = today.weekday()  # 0 = Monday
+        week_end = today + timedelta(days=7)
+        current_time = datetime.now().time()
+
+        # Get all users with weekly digest enabled on today's day
+        prefs_result = await db_session.execute(
+            select(NotificationPreferences)
+            .where(NotificationPreferences.telegram_enabled.is_(True))
+            .where(NotificationPreferences.telegram_verified.is_(True))
+            .where(NotificationPreferences.weekly_digest.is_(True))
+            .where(NotificationPreferences.weekly_digest_day == current_weekday)
+            .options(selectinload(NotificationPreferences.user))
+        )
+        notification_prefs = prefs_result.scalars().all()
+
+        for prefs in notification_prefs:
+            if not prefs.telegram_chat_id:
+                continue
+
+            # Check quiet hours
+            if prefs.is_in_quiet_hours(current_time):
+                continue
+
+            # Get all subscriptions due in the next 7 days
+            subs_result = await db_session.execute(
+                select(Subscription)
+                .where(Subscription.user_id == prefs.user_id)
+                .where(Subscription.is_active.is_(True))
+                .where(Subscription.next_payment_date >= today)
+                .where(Subscription.next_payment_date <= week_end)
+                .order_by(Subscription.next_payment_date)
+            )
+            subscriptions = list(subs_result.scalars().all())
+
+            # Get user's preferred currency
+            user_result = await db_session.execute(select(User).where(User.id == prefs.user_id))
+            user = user_result.scalar_one_or_none()
+            currency = (
+                user.preferences.get("currency", "GBP") if user and user.preferences else "GBP"
+            )
+
+            try:
+                success = await telegram_service.send_weekly_digest(
+                    chat_id=prefs.telegram_chat_id,
+                    subscriptions=subscriptions,
+                    currency=currency,
+                )
+                if success:
+                    digests_sent += 1
+            except Exception as e:
+                logger.error(f"Failed to send weekly digest to user {prefs.user_id}: {e}")
+
+    finally:
+        await db_session.close()
+
+    logger.info(f"Weekly digests sent: {digests_sent}")
+    return {"digests_sent": digests_sent}
+
+
+@task(name="send_overdue_alerts", max_tries=3, timeout=600)
+async def send_overdue_alerts(ctx: dict[str, Any]) -> dict[str, int]:
+    """Send alerts for overdue payments.
+
+    Notifies users about payments that were due but haven't been marked as paid.
+
+    Args:
+        ctx: ARQ context dictionary.
+
+    Returns:
+        Dictionary with count of alerts sent.
+    """
+    from src.models.notification import NotificationPreferences
+    from src.models.subscription import Subscription
+    from src.services.telegram_service import TelegramService
+
+    logger.info("Running send_overdue_alerts task")
+
+    # Create database session
+    db_session = ctx.get("db_session")
+    if not db_session:
+        engine = create_async_engine(settings.database_url)
+        async_session = async_sessionmaker(engine, expire_on_commit=False)
+        db_session = async_session()
+
+    telegram_service = TelegramService()
+    alerts_sent = 0
+
+    try:
+        # Get all users with overdue alerts enabled
+        prefs_result = await db_session.execute(
+            select(NotificationPreferences)
+            .where(NotificationPreferences.telegram_enabled.is_(True))
+            .where(NotificationPreferences.telegram_verified.is_(True))
+            .where(NotificationPreferences.overdue_alerts.is_(True))
+            .options(selectinload(NotificationPreferences.user))
+        )
+        notification_prefs = prefs_result.scalars().all()
+
+        today = date.today()
+        current_time = datetime.now().time()
+
+        for prefs in notification_prefs:
+            if not prefs.telegram_chat_id:
+                continue
+
+            # Check quiet hours
+            if prefs.is_in_quiet_hours(current_time):
+                continue
+
+            # Get overdue subscriptions (past due date, still active)
+            subs_result = await db_session.execute(
+                select(Subscription)
+                .where(Subscription.user_id == prefs.user_id)
+                .where(Subscription.is_active.is_(True))
+                .where(Subscription.next_payment_date < today)
+            )
+            overdue_subscriptions = subs_result.scalars().all()
+
+            for sub in overdue_subscriptions:
+                days_overdue = (today - sub.next_payment_date).days
+                try:
+                    # Use negative days_until to indicate overdue
+                    success = await telegram_service.send_reminder(
+                        chat_id=prefs.telegram_chat_id,
+                        subscription=sub,
+                        days_until=-days_overdue,  # Negative = overdue
+                    )
+                    if success:
+                        alerts_sent += 1
+                except Exception as e:
+                    logger.error(f"Failed to send overdue alert for subscription {sub.id}: {e}")
+
+    finally:
+        await db_session.close()
+
+    logger.info(f"Overdue alerts sent: {alerts_sent}")
+    return {"alerts_sent": alerts_sent}
 
 
 # =============================================================================
@@ -418,8 +756,14 @@ class WorkerSettings:
 
     # Cron jobs (scheduled tasks)
     cron_jobs = [
-        # Example: Run cleanup every day at 3 AM
-        # cron(cleanup_expired_sessions, hour=3, minute=0),
-        # Example: Send payment reminders daily at 9 AM
-        # cron(send_payment_reminders, hour=9, minute=0),
+        # Clean up expired sessions daily at 3 AM
+        cron(cleanup_expired_sessions, hour=3, minute=0),
+        # Send payment reminders daily at 9 AM
+        cron(send_payment_reminders, hour=9, minute=0),
+        # Send daily digest at 8 AM
+        cron(send_daily_digest, hour=8, minute=0),
+        # Send weekly digest at 8 AM (task filters by user's preferred day)
+        cron(send_weekly_digest, hour=8, minute=0),
+        # Check for overdue payments at 10 AM
+        cron(send_overdue_alerts, hour=10, minute=0),
     ]

@@ -2,14 +2,16 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Wallet, Sparkles, Download, User, LogOut, ChevronDown, Sun, Moon } from "lucide-react";
+import { Wallet, Sparkles, Download, User, LogOut, ChevronDown, Sun, Moon, Settings } from "lucide-react";
 import { CurrencySelector } from "./CurrencySelector";
 import ImportExportModal from "./ImportExportModal";
+import { SettingsModal } from "./SettingsModal";
 import { useAuth } from "@/lib/auth-context";
 import { useTheme } from "@/lib/theme-context";
 
 export function Header() {
   const [isImportExportOpen, setIsImportExportOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const { user, logout, isAuthenticated } = useAuth();
@@ -174,6 +176,16 @@ export function Header() {
                           {/* Menu Items */}
                           <div className="py-1">
                             <button
+                              onClick={() => {
+                                setIsUserMenuOpen(false);
+                                setIsSettingsOpen(true);
+                              }}
+                              className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                            >
+                              <Settings className="w-4 h-4" />
+                              Settings
+                            </button>
+                            <button
                               onClick={handleLogout}
                               className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                             >
@@ -196,6 +208,12 @@ export function Header() {
       <ImportExportModal
         isOpen={isImportExportOpen}
         onClose={() => setIsImportExportOpen(false)}
+      />
+
+      {/* Settings Modal */}
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
       />
     </header>
   );

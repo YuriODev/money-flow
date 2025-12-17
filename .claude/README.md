@@ -19,6 +19,12 @@ This directory contains all configuration, documentation, templates, and scripts
 ├── plans/                       # Implementation plans
 │   ├── RAG_PLAN.md            # 4-week RAG implementation plan
 │   └── PAYMENT_TRACKING_PLAN.md # 3-week payment features plan
+├── skills/                      # Custom Claude Skills
+│   ├── README.md               # Skills overview
+│   ├── financial-analysis/     # Spending analysis skill
+│   ├── payment-reminder/       # Smart reminders skill
+│   ├── debt-management/        # Debt payoff strategies skill
+│   └── savings-goal/           # Goal tracking skill
 ├── templates/                   # Code templates
 │   ├── README.md               # Template usage guide
 │   ├── python_service.py       # Service class template
@@ -81,6 +87,35 @@ Automated code quality setup:
 - Prettier for frontend
 - Secret detection
 - Installation and usage
+
+## 🤖 Claude Skills
+
+Custom Claude Skills for Money Flow financial management are in the `skills/` directory. See [skills/README.md](skills/README.md) for full documentation.
+
+### Available Skills
+
+| Skill | Description |
+|-------|-------------|
+| **Financial Analysis** | Spending analysis, budget comparison, trend detection, anomaly alerts |
+| **Payment Reminder** | Smart reminders with urgency classification, multi-channel support |
+| **Debt Management** | Debt payoff strategies (avalanche/snowball), interest calculations |
+| **Savings Goal** | Goal tracking, contribution recommendations, milestone celebrations |
+
+### Using Skills
+
+Skills contain:
+- **SKILL.md** - Skill definition with XML patterns and response templates
+- **Supporting files** - Examples, templates, and Python calculator modules
+
+```python
+# Example: Using debt management calculator
+from .claude.skills.debt_management.calculators import calculate_payoff, Debt
+from decimal import Decimal
+
+debts = [Debt("1", "Credit Card", Decimal("3500"), Decimal("22.9"), Decimal("87"))]
+result = calculate_payoff(debts, extra_payment=Decimal("100"))
+print(f"Debt-free in {result.months_to_payoff} months")
+```
 
 ## 🎨 Code Templates
 

@@ -537,6 +537,83 @@ export const cardsApi = {
   },
 };
 
+// Notification Preferences types
+export interface TelegramStatus {
+  enabled: boolean;
+  verified: boolean;
+  username: string | null;
+  linked: boolean;
+}
+
+export interface NotificationPreferences {
+  id: string;
+  user_id: string;
+  reminder_enabled: boolean;
+  reminder_days_before: number;
+  reminder_time: string;
+  overdue_alerts: boolean;
+  daily_digest: boolean;
+  weekly_digest: boolean;
+  weekly_digest_day: number;
+  quiet_hours_enabled: boolean;
+  quiet_hours_start: string | null;
+  quiet_hours_end: string | null;
+  telegram: TelegramStatus;
+}
+
+export interface NotificationPreferencesUpdate {
+  reminder_enabled?: boolean;
+  reminder_days_before?: number;
+  reminder_time?: string;
+  overdue_alerts?: boolean;
+  daily_digest?: boolean;
+  weekly_digest?: boolean;
+  weekly_digest_day?: number;
+  quiet_hours_enabled?: boolean;
+  quiet_hours_start?: string | null;
+  quiet_hours_end?: string | null;
+}
+
+export interface TelegramLinkResponse {
+  verification_code: string;
+  bot_username: string;
+  bot_link: string;
+  expires_in_minutes: number;
+  instructions: string;
+}
+
+export const notificationApi = {
+  getPreferences: async (): Promise<NotificationPreferences> => {
+    const { data } = await api.get("/notifications/preferences");
+    return data;
+  },
+
+  updatePreferences: async (prefs: NotificationPreferencesUpdate): Promise<NotificationPreferences> => {
+    const { data } = await api.put("/notifications/preferences", prefs);
+    return data;
+  },
+
+  getTelegramStatus: async (): Promise<TelegramStatus> => {
+    const { data } = await api.get("/notifications/telegram/status");
+    return data;
+  },
+
+  initiateTelegramLink: async (): Promise<TelegramLinkResponse> => {
+    const { data } = await api.post("/notifications/telegram/link");
+    return data;
+  },
+
+  unlinkTelegram: async (): Promise<{ success: boolean; message: string }> => {
+    const { data } = await api.delete("/notifications/telegram/unlink");
+    return data;
+  },
+
+  sendTestNotification: async (): Promise<{ success: boolean; message: string; channel: string }> => {
+    const { data } = await api.post("/notifications/test");
+    return data;
+  },
+};
+
 export const calendarApi = {
   getEvents: async (startDate: string, endDate: string): Promise<CalendarEvent[]> => {
     const { data } = await api.get("/calendar/events", {

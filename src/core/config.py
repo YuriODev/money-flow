@@ -140,6 +140,11 @@ class Settings(BaseSettings):
     metrics_enabled: bool = True  # Enable/disable Prometheus metrics
     metrics_endpoint: str = "/metrics"  # Metrics endpoint path
 
+    # Telegram Bot (for payment reminders)
+    telegram_bot_token: str = ""  # Bot token from @BotFather
+    telegram_bot_username: str = ""  # Bot username without @
+    telegram_webhook_secret: str = ""  # Secret for webhook verification
+
 
 @lru_cache
 def get_settings() -> Settings:

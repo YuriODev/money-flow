@@ -27,6 +27,65 @@
 | **Phase 3** | Sprint 3.4 | ✅ Complete | Monitoring & Alerting |
 | **Phase 4** | Sprint 4.1 | ✅ Complete | Custom Claude Skills |
 | **Phase 4** | Sprint 4.2 | ✅ Complete | Frontend Enhancements |
+| **Phase 4** | Sprint 4.3 | ✅ Complete | Payment Reminders & Telegram Bot |
+
+### Sprint 4.3 Tasks (Week 15) - Payment Reminders & Telegram Bot ✅
+
+| Task | Status | Description |
+|------|--------|-------------|
+| 4.3.1 | ✅ DONE | NotificationPreferences Model & Migration |
+| 4.3.2 | ✅ DONE | Telegram Bot Service |
+| 4.3.3 | ✅ DONE | Notification API Endpoints |
+| 4.3.4 | ✅ DONE | Telegram Webhook Handler |
+| 4.3.5 | ✅ DONE | Background Reminder Tasks |
+| 4.3.6 | ✅ DONE | Settings Modal Frontend |
+| 4.3.7 | ✅ DONE | Unit Tests (37 tests) |
+
+**Sprint 4.3 Features Completed:**
+- **NotificationPreferences Model** (`src/models/notification.py`)
+  - One-to-one relationship with User model
+  - Telegram integration fields (enabled, verified, chat_id, username)
+  - Verification code generation with 10-minute expiration
+  - Reminder settings (days_before, time, overdue_alerts)
+  - Digest settings (daily, weekly with day selector)
+  - Quiet hours support (overnight handling)
+- **Alembic Migration** (`src/db/migrations/versions/i4d5e6f7g890_add_notification_preferences.py`)
+  - Full table creation with indexes
+- **TelegramService** (`src/services/telegram_service.py`)
+  - `send_message()` - HTML formatted messages to Telegram
+  - `send_reminder()` - Payment reminders with urgency levels
+  - `send_daily_digest()` - Daily payment summary
+  - `send_weekly_digest()` - Weekly payment overview
+  - `send_test_notification()` - Test connectivity
+  - `send_verification_success()` - Account linking confirmation
+- **Notification API** (`src/api/notifications.py`)
+  - `GET /api/v1/notifications/preferences` - Get preferences
+  - `PUT /api/v1/notifications/preferences` - Update preferences
+  - `POST /api/v1/notifications/telegram/link` - Initiate Telegram linking
+  - `GET /api/v1/notifications/telegram/status` - Check Telegram status
+  - `DELETE /api/v1/notifications/telegram/unlink` - Unlink Telegram
+  - `POST /api/v1/notifications/test` - Send test notification
+- **Telegram Webhook** (`src/api/telegram.py`)
+  - Handles bot commands: /start, /status, /pause, /resume, /stop, /help
+  - Verification code processing
+  - Webhook secret validation
+- **Background Tasks** (`src/core/tasks.py`)
+  - `send_payment_reminders` - Daily at 9 AM (cron)
+  - `send_daily_digest` - Daily at 8 AM (cron)
+  - `send_weekly_digest` - Daily at 8 AM (filters by user's preferred day)
+  - `send_overdue_alerts` - Daily at 10 AM (cron)
+- **Settings Modal** (`frontend/src/components/SettingsModal.tsx`)
+  - Profile tab (read-only user info)
+  - Notifications tab with Telegram linking UI
+  - Verification code flow with copy button
+  - Notification preference toggles
+- **Header Update** - Settings button in user dropdown menu
+- **37 Unit Tests** (`tests/unit/test_notifications.py`)
+  - Model tests (verification codes, quiet hours, linking status)
+  - Schema tests (Pydantic validation)
+  - Service tests (message sending, formatting)
+  - Task tests (registration, health checks)
+- **Total unit tests: 524** (487 previous + 37 new)
 
 ### Sprint 4.2 Tasks (Week 14) - Frontend Enhancements ✅
 
@@ -1132,10 +1191,10 @@ This ensures context is preserved for future development.
 ---
 
 **Last Updated**: 2025-12-17
-**Version**: 4.2.0 (Sprint 4.2 Complete)
+**Version**: 4.3.0 (Sprint 4.3 Complete)
 **Current Phase**: Phase 4 - Features & Polish
-**Current Sprint**: 4.2 - Frontend Enhancements ✅ Complete
+**Current Sprint**: 4.3 - Payment Reminders & Telegram Bot ✅ Complete
 **Completed Phases**: Phase 1 ✅, Phase 2 ✅, Phase 3 ✅
-**Completed Sprints in Phase 4**: Sprint 4.1 ✅ (Custom Skills), Sprint 4.2 ✅ (Frontend Enhancements)
-**Upcoming Sprint**: Sprint 4.3 - Mobile App / PWA
+**Completed Sprints in Phase 4**: Sprint 4.1 ✅ (Custom Skills), Sprint 4.2 ✅ (Frontend Enhancements), Sprint 4.3 ✅ (Telegram Reminders)
+**Upcoming Sprint**: Sprint 4.4 - Mobile App / PWA
 **For Questions**: Check [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md) or [.claude/CHANGELOG.md](.claude/CHANGELOG.md)

@@ -1,5 +1,6 @@
 """SQLAlchemy ORM models."""
 
+from src.models.notification import NotificationPreferences
 from src.models.payment_card import CardType, PaymentCard
 from src.models.rag import Conversation, RAGAnalytics
 from src.models.subscription import Frequency, PaymentHistory, PaymentStatus, Subscription
@@ -9,6 +10,7 @@ __all__ = [
     "CardType",
     "Conversation",
     "Frequency",
+    "NotificationPreferences",
     "PaymentCard",
     "PaymentHistory",
     "PaymentStatus",

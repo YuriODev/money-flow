@@ -25,7 +25,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.api import agent, analytics, auth, calendar, cards, health, insights, search, subscriptions
+from src.api import agent, analytics, auth, calendar, cards, health, insights, notifications, search, subscriptions, telegram
 from src.api.v1 import v1_router
 from src.core.config import settings
 from src.core.container import init_container
@@ -204,6 +204,12 @@ app.include_router(search.router, prefix="/api/search", tags=["search"], depreca
 app.include_router(insights.router, prefix="/api/insights", tags=["insights"], deprecated=True)
 app.include_router(analytics.router, prefix="/api/analytics", tags=["analytics"], deprecated=True)
 app.include_router(cards.router, prefix="/api", tags=["cards"], deprecated=True)
+
+# Notification routes (not deprecated, new in v1)
+app.include_router(notifications.router, prefix="/api/v1", tags=["notifications"])
+
+# Telegram webhook (public, no auth required)
+app.include_router(telegram.router, prefix="/api", tags=["telegram"])
 
 # Set up Prometheus metrics (must be after all routers are added)
 setup_metrics(app)
