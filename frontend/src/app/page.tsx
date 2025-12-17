@@ -78,7 +78,7 @@ export default function Home() {
       {/* Animated mesh gradient background */}
       <div className="fixed inset-0 -z-10">
         <div className="absolute inset-0 gradient-mesh" />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/50 to-white" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/50 to-white dark:via-gray-900/50 dark:to-gray-900" />
 
         {/* Floating orbs for visual interest */}
         <motion.div
@@ -116,7 +116,7 @@ export default function Home() {
 
       <Header />
 
-      <main className="container mx-auto px-4 py-8 max-w-7xl relative z-10">
+      <main className="container mx-auto px-4 py-8 max-w-7xl relative z-10" role="main">
         {/* Stats Panel with entrance animation */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -126,12 +126,14 @@ export default function Home() {
           <StatsPanel />
         </motion.div>
 
-        {/* View Toggle - Glass morphism style */}
-        <motion.div
+        {/* View Toggle - Glass morphism style with mobile scroll */}
+        <motion.nav
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-          className="flex gap-2 mb-8 p-1.5 glass-card rounded-2xl w-fit"
+          className="flex gap-2 mb-6 sm:mb-8 p-1.5 glass-card rounded-2xl w-full sm:w-fit overflow-x-auto scrollbar-hide"
+          role="tablist"
+          aria-label="View options"
         >
           {(Object.keys(viewConfig) as ViewType[]).map((viewKey) => {
             const config = viewConfig[viewKey];
@@ -143,13 +145,17 @@ export default function Home() {
                 key={viewKey}
                 onClick={() => handleViewChange(viewKey)}
                 className={cn(
-                  "relative flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all duration-300",
+                  "relative flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl transition-all duration-300 whitespace-nowrap shrink-0",
                   isActive
                     ? "text-white"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-white/50"
+                    : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-white/50 dark:hover:bg-white/10"
                 )}
                 whileHover={{ scale: isActive ? 1 : 1.02 }}
                 whileTap={{ scale: 0.98 }}
+                role="tab"
+                aria-selected={isActive}
+                aria-controls={`${viewKey}-panel`}
+                tabIndex={isActive ? 0 : -1}
               >
                 {isActive && (
                   <motion.div
@@ -162,14 +168,14 @@ export default function Home() {
                   />
                 )}
                 <Icon className="w-4 h-4 relative z-10" />
-                <span className="font-medium relative z-10">{config.label}</span>
+                <span className="font-medium relative z-10 text-sm sm:text-base">{config.label}</span>
                 {viewKey === "agent" && (
-                  <Sparkles className="w-3 h-3 relative z-10 opacity-75" />
+                  <Sparkles className="w-3 h-3 relative z-10 opacity-75 hidden sm:block" />
                 )}
               </motion.button>
             );
           })}
-        </motion.div>
+        </motion.nav>
 
         {/* Content with smooth transitions */}
         <AnimatePresence mode="wait">
@@ -179,6 +185,9 @@ export default function Home() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.98 }}
             transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            role="tabpanel"
+            id={`${view}-panel`}
+            aria-labelledby={`${view}-tab`}
           >
             {view === "list" && <SubscriptionList initialFilter={filterParam} />}
             {view === "calendar" && <PaymentCalendar />}
@@ -189,7 +198,7 @@ export default function Home() {
       </main>
 
       {/* Decorative bottom gradient */}
-      <div className="fixed bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white to-transparent pointer-events-none z-0" />
+      <div className="fixed bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white dark:from-gray-900 to-transparent pointer-events-none z-0" />
     </div>
   );
 }

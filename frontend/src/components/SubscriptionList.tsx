@@ -33,7 +33,7 @@ import {
   CircleDot,
   type LucideIcon,
 } from "lucide-react";
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 
 // All payment types for filter tabs (including special "no_card" filter)
 const ALL_PAYMENT_TYPES: (PaymentType | "all" | "no_card")[] = [
@@ -67,6 +67,7 @@ const PAYMENT_TYPE_ICON_COMPONENTS: Record<PaymentType | "all" | "no_card", Luci
 import { AddSubscriptionModal } from "./AddSubscriptionModal";
 import { EditSubscriptionModal } from "./EditSubscriptionModal";
 import { findService, getIconUrl, CATEGORY_INFO } from "@/lib/service-icons";
+import { toast } from "@/components/Toast";
 
 // Stagger animation for list items
 const containerVariants = {
@@ -116,20 +117,20 @@ function StatusBadge({ status, daysUntil }: { status: string; daysUntil: number 
     { bg: string; text: string; label: string; icon: typeof CheckCircle2 }
   > = {
     overdue: {
-      bg: "bg-gradient-to-r from-red-500/10 to-rose-500/10 border-red-200",
-      text: "text-red-600",
+      bg: "bg-gradient-to-r from-red-500/10 to-rose-500/10 border-red-200 dark:border-red-800",
+      text: "text-red-600 dark:text-red-400",
       label: getDaysLabel(daysUntil),
       icon: AlertCircle,
     },
     due_soon: {
-      bg: "bg-gradient-to-r from-amber-500/10 to-yellow-500/10 border-amber-200",
-      text: "text-amber-600",
+      bg: "bg-gradient-to-r from-amber-500/10 to-yellow-500/10 border-amber-200 dark:border-amber-800",
+      text: "text-amber-600 dark:text-amber-400",
       label: getDaysLabel(daysUntil),
       icon: Clock,
     },
     upcoming: {
-      bg: "bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border-blue-200",
-      text: "text-blue-600",
+      bg: "bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border-blue-200 dark:border-blue-800",
+      text: "text-blue-600 dark:text-blue-400",
       label: getDaysLabel(daysUntil),
       icon: CheckCircle2,
     },
@@ -193,17 +194,17 @@ function InstallmentProgress({
       className="mt-4 p-4 glass-card-subtle rounded-xl"
     >
       <div className="flex items-center justify-between mb-3">
-        <span className="text-xs font-semibold text-purple-700 flex items-center gap-1.5">
+        <span className="text-xs font-semibold text-purple-700 dark:text-purple-400 flex items-center gap-1.5">
           <Repeat className="w-3.5 h-3.5" />
           Installment Plan
         </span>
-        <span className="text-xs font-medium text-purple-600 bg-purple-100 px-2 py-0.5 rounded-full">
+        <span className="text-xs font-medium text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/50 px-2 py-0.5 rounded-full">
           {completed}/{total}
         </span>
       </div>
 
       {/* Progress bar */}
-      <div className="h-2 bg-purple-100 rounded-full overflow-hidden">
+      <div className="h-2 bg-purple-100 dark:bg-purple-900/50 rounded-full overflow-hidden">
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${percentage}%` }}
@@ -213,10 +214,10 @@ function InstallmentProgress({
       </div>
 
       <div className="flex justify-between mt-2">
-        <p className="text-xs text-purple-500">
+        <p className="text-xs text-purple-500 dark:text-purple-400">
           {total - completed} remaining
         </p>
-        <p className="text-xs font-medium text-purple-600">
+        <p className="text-xs font-medium text-purple-600 dark:text-purple-400">
           {Math.round(percentage)}%
         </p>
       </div>
@@ -255,13 +256,18 @@ function SubscriptionCard({
   onEdit: () => void;
   isDeleting: boolean;
 }) {
-  const [isHovered, setIsHovered] = useState(false);
   const { format } = useCurrencyFormat();
+  const [iconError, setIconError] = useState(false);
 
   // Try to find service icon from library
   const serviceInfo = useMemo(() => {
     return findService(subscription.name);
   }, [subscription.name]);
+
+  // Reset icon error when subscription changes
+  useEffect(() => {
+    setIconError(false);
+  }, [subscription.id]);
 
   // Use service color if available, otherwise subscription color
   const displayColor = serviceInfo?.color || subscription.color;
@@ -273,40 +279,26 @@ function SubscriptionCard({
       if (serviceInfo.iconUrl) {
         return serviceInfo.iconUrl;
       }
-      // Use SimpleIcons if icon slug exists
+      // Use SimpleIcons if icon slug exists - pass the service color for proper coloring
       if (serviceInfo.icon) {
-        return getIconUrl(serviceInfo.icon);
+        return getIconUrl(serviceInfo.icon, serviceInfo.color);
       }
     }
     return subscription.icon_url;
   }, [serviceInfo, subscription.icon_url]);
 
   return (
-    <motion.div
-      layout
+    <motion.article
       variants={itemVariants}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
       className="group relative"
+      aria-label={`${subscription.name} - ${format(subscription.amount, subscription.currency)} ${getFrequencyLabel(subscription.frequency, subscription.frequency_interval)}`}
     >
-      {/* Glow effect on hover */}
-      <motion.div
-        initial={false}
-        animate={{
-          opacity: isHovered ? 1 : 0,
-          scale: isHovered ? 1 : 0.8,
-        }}
-        className="absolute -inset-px rounded-2xl blur-xl transition-opacity"
-        style={{
-          background: `linear-gradient(135deg, ${displayColor}40 0%, ${displayColor}20 100%)`,
-        }}
-      />
 
       {/* Card content */}
       <div
         className={cn(
           "relative glass-card rounded-2xl overflow-hidden transition-all duration-300",
-          "border-l-4 hover:shadow-xl"
+          "border-l-4 hover:shadow-xl dark:hover:shadow-2xl dark:hover:shadow-black/30"
         )}
         style={{ borderLeftColor: displayColor }}
       >
@@ -315,21 +307,16 @@ function SubscriptionCard({
           <div className="flex justify-between items-start mb-4">
             <div className="flex items-center gap-3">
               {/* Icon/Avatar */}
-              <motion.div
-                whileHover={{ scale: 1.1, rotate: 5 }}
-                transition={{ type: "spring", stiffness: 400 }}
-                className="relative"
-              >
-                {iconUrl ? (
+              <div className="relative transition-transform duration-200 hover:scale-105">
+                {iconUrl && !iconError ? (
                   <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg"
-                    style={{ backgroundColor: `${displayColor}15` }}
+                    className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg bg-white/80 dark:bg-white/90"
                   >
                     <img
                       src={iconUrl}
                       alt={subscription.name}
                       className="w-7 h-7"
-                      style={{ filter: `drop-shadow(0 1px 2px ${displayColor}40)` }}
+                      onError={() => setIconError(true)}
                     />
                   </div>
                 ) : (
@@ -342,10 +329,10 @@ function SubscriptionCard({
                     {subscription.name.charAt(0).toUpperCase()}
                   </div>
                 )}
-              </motion.div>
+              </div>
 
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 group-hover:text-gray-800 transition-colors">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 group-hover:text-gray-800 dark:group-hover:text-gray-200 transition-colors">
                   {subscription.name}
                 </h3>
                 {/* Use service library category if available, otherwise database category */}
@@ -356,31 +343,29 @@ function SubscriptionCard({
             </div>
 
             {/* Action buttons */}
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1" role="group" aria-label="Payment actions">
               {/* Edit button */}
-              <motion.button
+              <button
                 onClick={onEdit}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                className="p-2 rounded-xl transition-all duration-200 text-gray-400 hover:text-blue-500 hover:bg-blue-50"
+                className="p-2 rounded-xl transition-all duration-200 text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:scale-110 active:scale-95"
+                aria-label={`Edit ${subscription.name}`}
               >
-                <Pencil className="w-4 h-4" />
-              </motion.button>
+                <Pencil className="w-4 h-4" aria-hidden="true" />
+              </button>
 
               {/* Delete button */}
-              <motion.button
+              <button
                 onClick={onDelete}
                 disabled={isDeleting}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
                 className={cn(
-                  "p-2 rounded-xl transition-all duration-200",
-                  "text-gray-400 hover:text-red-500 hover:bg-red-50",
+                  "p-2 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95",
+                  "text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30",
                   isDeleting && "opacity-50 cursor-not-allowed"
                 )}
+                aria-label={`Delete ${subscription.name}`}
               >
-                <Trash2 className="w-4 h-4" />
-              </motion.button>
+                <Trash2 className="w-4 h-4" aria-hidden="true" />
+              </button>
             </div>
           </div>
 
@@ -398,7 +383,7 @@ function SubscriptionCard({
             >
               {format(subscription.amount, subscription.currency)}
             </motion.span>
-            <span className="text-sm text-gray-500 font-medium">
+            <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">
               / {getFrequencyLabel(subscription.frequency, subscription.frequency_interval)}
             </span>
           </div>
@@ -406,9 +391,9 @@ function SubscriptionCard({
           {/* Payment info grid */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <div className="p-1.5 bg-gray-100 rounded-lg">
-                  <Calendar className="w-4 h-4 text-gray-500" />
+              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <div className="p-1.5 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                  <Calendar className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                 </div>
                 <span className="font-medium">{formatDate(subscription.next_payment_date)}</span>
               </div>
@@ -423,10 +408,10 @@ function SubscriptionCard({
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.1 }}
-                className="flex items-center gap-2 text-sm text-gray-500"
+                className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400"
               >
-                <div className="p-1.5 bg-gray-100 rounded-lg">
-                  <CreditCard className="w-4 h-4 text-gray-500" />
+                <div className="p-1.5 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                  <CreditCard className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                 </div>
                 <span>{subscription.payment_method}</span>
               </motion.div>
@@ -439,10 +424,10 @@ function SubscriptionCard({
                 transition={{ delay: 0.15 }}
                 className="flex items-center gap-2 text-xs"
               >
-                <div className="p-1 bg-amber-100 rounded-lg">
-                  <Clock className="w-3 h-3 text-amber-600" />
+                <div className="p-1 bg-amber-100 dark:bg-amber-900/50 rounded-lg">
+                  <Clock className="w-3 h-3 text-amber-600 dark:text-amber-400" />
                 </div>
-                <span className="text-amber-600 font-medium">Manual renewal</span>
+                <span className="text-amber-600 dark:text-amber-400 font-medium">Manual renewal</span>
               </motion.div>
             )}
           </div>
@@ -461,25 +446,23 @@ function SubscriptionCard({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
-              className="text-sm text-gray-500 mt-4 line-clamp-2 italic border-t border-gray-100 pt-3"
+              className="text-sm text-gray-500 dark:text-gray-400 mt-4 line-clamp-2 italic border-t border-gray-100 dark:border-gray-700 pt-3"
             >
               "{subscription.notes}"
             </motion.p>
           )}
         </div>
 
-        {/* Bottom accent line */}
-        <motion.div
-          initial={false}
-          animate={{ scaleX: isHovered ? 1 : 0 }}
-          transition={{ duration: 0.3 }}
-          className="h-0.5 origin-left"
+        {/* Bottom accent line - using CSS group-hover for smooth transition */}
+        <div
+          className="h-0.5 origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"
           style={{
             background: `linear-gradient(90deg, ${displayColor} 0%, transparent 100%)`,
           }}
+          aria-hidden="true"
         />
       </div>
-    </motion.div>
+    </motion.article>
   );
 }
 
@@ -505,8 +488,8 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
         <Sparkles className="w-10 h-10 text-white" />
       </motion.div>
 
-      <h3 className="text-xl font-bold text-gray-900 mb-2">No subscriptions yet</h3>
-      <p className="text-gray-500 mb-6 max-w-sm mx-auto">
+      <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">No subscriptions yet</h3>
+      <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-sm mx-auto">
         Start tracking your recurring payments to get insights into your spending
       </p>
 
@@ -575,12 +558,16 @@ export function SubscriptionList({ initialFilter }: SubscriptionListProps) {
       queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
       queryClient.invalidateQueries({ queryKey: ["summary"] });
       queryClient.invalidateQueries({ queryKey: ["calendar-events"] });
+      toast.success("Payment deleted", "The payment has been removed from your list.");
+    },
+    onError: () => {
+      toast.error("Failed to delete", "There was an error deleting the payment. Please try again.");
     },
   });
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {[1, 2, 3, 4, 5, 6].map((i) => (
           <motion.div
             key={i}
@@ -597,22 +584,24 @@ export function SubscriptionList({ initialFilter }: SubscriptionListProps) {
 
   return (
     <>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
+          className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4"
         >
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500">
-              <TrendingUp className="w-5 h-5 text-white" />
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500">
+              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">Your Payments</h2>
-              <p className="text-sm text-gray-500">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">Your Payments</h2>
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                 {filteredSubscriptions.length} active payment{filteredSubscriptions.length !== 1 ? "s" : ""}
-                {selectedPaymentType !== "all" && ` (${selectedPaymentType === "no_card" ? "No Card Assigned" : PAYMENT_TYPE_LABELS[selectedPaymentType]})`}
+                {selectedPaymentType !== "all" && (
+                  <span className="hidden sm:inline"> ({selectedPaymentType === "no_card" ? "No Card Assigned" : PAYMENT_TYPE_LABELS[selectedPaymentType]})</span>
+                )}
               </p>
             </div>
           </div>
@@ -621,19 +610,20 @@ export function SubscriptionList({ initialFilter }: SubscriptionListProps) {
             onClick={() => setIsAddModalOpen(true)}
             whileHover={{ scale: 1.02, y: -2 }}
             whileTap={{ scale: 0.98 }}
-            className="btn-primary flex items-center gap-2"
+            className="btn-primary flex items-center gap-2 text-sm sm:text-base px-3 sm:px-4 py-2"
           >
-            <Plus className="w-5 h-5" />
-            Add Payment
+            <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="hidden xs:inline">Add Payment</span>
+            <span className="xs:hidden">Add</span>
           </motion.button>
         </motion.div>
 
-        {/* Payment Type Filter Tabs */}
+        {/* Payment Type Filter Tabs - horizontally scrollable on mobile */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="flex flex-wrap gap-2 pb-2"
+          className="flex gap-2 pb-2 overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap"
         >
           {ALL_PAYMENT_TYPES.map((type) => {
             const count = paymentTypeCounts[type] || 0;
@@ -651,24 +641,24 @@ export function SubscriptionList({ initialFilter }: SubscriptionListProps) {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 className={cn(
-                  "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200",
+                  "flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap shrink-0",
                   isSelected
                     ? type === "no_card"
                       ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg"
                       : "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg"
                     : type === "no_card"
-                      ? "glass-card-subtle text-amber-600 hover:shadow-md border border-amber-200"
-                      : "glass-card-subtle text-gray-600 hover:shadow-md"
+                      ? "glass-card-subtle text-amber-600 dark:text-amber-400 hover:shadow-md border border-amber-200 dark:border-amber-800"
+                      : "glass-card-subtle text-gray-600 dark:text-gray-400 hover:shadow-md"
                 )}
               >
-                <IconComponent className="w-4 h-4" />
+                <IconComponent className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span>{label}</span>
                 <span
                   className={cn(
-                    "ml-1 px-2 py-0.5 rounded-full text-xs font-semibold",
+                    "ml-0.5 sm:ml-1 px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold",
                     isSelected
                       ? "bg-white/20 text-white"
-                      : "bg-gray-200 text-gray-600"
+                      : "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
                   )}
                 >
                   {count}
@@ -686,7 +676,7 @@ export function SubscriptionList({ initialFilter }: SubscriptionListProps) {
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
           >
             <AnimatePresence mode="popLayout">
               {filteredSubscriptions.map((subscription: Subscription) => (

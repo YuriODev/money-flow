@@ -31,6 +31,7 @@ import {
   type ServiceInfo,
 } from "@/lib/service-icons";
 import { cn } from "@/lib/utils";
+import { toast } from "@/components/Toast";
 
 interface AddSubscriptionModalProps {
   isOpen: boolean;
@@ -86,8 +87,8 @@ function ServiceSuggestion({
       className={cn(
         "flex items-center gap-3 w-full p-3 rounded-xl transition-all duration-200",
         isSelected
-          ? "bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200"
-          : "hover:bg-gray-50 border-2 border-transparent"
+          ? "bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 border-2 border-blue-200 dark:border-blue-700"
+          : "hover:bg-gray-50 dark:hover:bg-gray-800 border-2 border-transparent"
       )}
     >
       {(service.icon || service.iconUrl) ? (
@@ -111,8 +112,8 @@ function ServiceSuggestion({
         </div>
       )}
       <div className="flex-1 text-left">
-        <p className="font-medium text-gray-900">{service.name}</p>
-        <p className="text-xs text-gray-500 capitalize">{service.category}</p>
+        <p className="font-medium text-gray-900 dark:text-gray-100">{service.name}</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">{service.category}</p>
       </div>
       {isSelected && (
         <motion.div
@@ -267,6 +268,7 @@ export function AddSubscriptionModal({
       queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
       queryClient.invalidateQueries({ queryKey: ["summary"] });
       queryClient.invalidateQueries({ queryKey: ["calendar-events"] });
+      toast.success("Payment added", `${formData.name} has been added to your payments.`);
       onClose();
       // Reset form
       setFormData({
@@ -286,6 +288,9 @@ export function AddSubscriptionModal({
       });
       setSelectedService(null);
       setSearchQuery("");
+    },
+    onError: () => {
+      toast.error("Failed to add payment", "There was an error adding the payment. Please try again.");
     },
   });
 
@@ -310,6 +315,9 @@ export function AddSubscriptionModal({
           exit="hidden"
           onClick={handleClose}
           className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="add-payment-title"
         >
           <motion.div
             variants={modalVariants}
@@ -329,14 +337,15 @@ export function AddSubscriptionModal({
                 <motion.div
                   whileHover={{ scale: 1.1, rotate: 10 }}
                   className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg"
+                  aria-hidden="true"
                 >
                   <Plus className="w-6 h-6 text-white" />
                 </motion.div>
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">
+                  <h2 id="add-payment-title" className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                     Add Payment
                   </h2>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     Track your recurring payments
                   </p>
                 </div>
@@ -345,18 +354,19 @@ export function AddSubscriptionModal({
                 onClick={handleClose}
                 whileHover={{ scale: 1.1, rotate: 90 }}
                 whileTap={{ scale: 0.9 }}
-                className="p-2 rounded-xl hover:bg-gray-100 transition-colors"
+                className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                aria-label="Close modal"
               >
-                <X className="w-6 h-6 text-gray-400" />
+                <X className="w-6 h-6 text-gray-400 dark:text-gray-500" aria-hidden="true" />
               </motion.button>
             </div>
 
             {/* Payment Type Selector */}
-            <div className="relative mb-6">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+            <fieldset className="relative mb-6">
+              <legend className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
                 Payment Type
-              </p>
-              <div className="flex flex-wrap gap-2">
+              </legend>
+              <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Select payment type">
                 {(Object.keys(PAYMENT_TYPE_LABELS) as PaymentType[]).map((type) => (
                   <motion.button
                     key={type}
@@ -370,18 +380,20 @@ export function AddSubscriptionModal({
                         ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg"
                         : "glass-card-subtle hover:shadow-md"
                     )}
+                    role="radio"
+                    aria-checked={formData.payment_type === type}
                   >
-                    <span>{PAYMENT_TYPE_ICONS[type]}</span>
+                    <span aria-hidden="true">{PAYMENT_TYPE_ICONS[type]}</span>
                     <span className="text-sm font-medium">{PAYMENT_TYPE_LABELS[type]}</span>
                   </motion.button>
                 ))}
               </div>
-            </div>
+            </fieldset>
 
             {/* Quick picks - only show for subscriptions */}
             {formData.payment_type === "subscription" && (
               <div className="relative mb-6">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3 flex items-center gap-2">
+                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3 flex items-center gap-2">
                   <Sparkles className="w-4 h-4" />
                   Popular Services
                 </p>
@@ -393,16 +405,17 @@ export function AddSubscriptionModal({
             )}
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="relative space-y-5">
+            <form onSubmit={handleSubmit} className="relative space-y-5" aria-label="Add payment form">
               {/* Service name with autocomplete */}
               <div className="relative">
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                  <Search className="w-4 h-4" />
+                <label htmlFor="service-name" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <Search className="w-4 h-4" aria-hidden="true" />
                   Service Name
                 </label>
                 <div className="relative">
                   <motion.input
                     ref={inputRef}
+                    id="service-name"
                     type="text"
                     required
                     value={formData.name}
@@ -419,13 +432,17 @@ export function AddSubscriptionModal({
                     variants={inputVariants}
                     whileFocus="focus"
                     className={cn(
-                      "w-full px-4 py-3 rounded-xl border-2 transition-all duration-200",
-                      "focus:ring-0 focus:border-blue-400 focus:shadow-lg focus:shadow-blue-100",
+                      "w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500",
+                      "focus:ring-0 focus:border-blue-400 dark:focus:border-blue-500 focus:shadow-lg focus:shadow-blue-100 dark:focus:shadow-blue-900/50",
                       selectedService
-                        ? "border-green-200 bg-green-50/50"
-                        : "border-gray-200 bg-white/50"
+                        ? "border-green-200 dark:border-green-700 bg-green-50/50 dark:bg-green-900/20"
+                        : "border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50"
                     )}
                     placeholder="Netflix, Spotify, etc."
+                    aria-required="true"
+                    aria-autocomplete="list"
+                    aria-expanded={showSuggestions && filteredServices.length > 0}
+                    aria-controls="service-suggestions"
                   />
                   {selectedService && (
                     <motion.div
@@ -458,7 +475,10 @@ export function AddSubscriptionModal({
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
+                      id="service-suggestions"
                       className="absolute z-50 w-full mt-2 p-2 glass-card rounded-2xl shadow-xl max-h-64 overflow-y-auto"
+                      role="listbox"
+                      aria-label="Service suggestions"
                     >
                       {filteredServices.map((service) => (
                         <ServiceSuggestion
@@ -476,11 +496,12 @@ export function AddSubscriptionModal({
               {/* Amount and Currency */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                    <Coins className="w-4 h-4" />
+                  <label htmlFor="payment-amount" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <Coins className="w-4 h-4" aria-hidden="true" />
                     Amount
                   </label>
                   <motion.input
+                    id="payment-amount"
                     type="number"
                     required
                     step="0.01"
@@ -494,22 +515,24 @@ export function AddSubscriptionModal({
                     }
                     variants={inputVariants}
                     whileFocus="focus"
-                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-white/50 focus:ring-0 focus:border-blue-400 focus:shadow-lg focus:shadow-blue-100 transition-all duration-200"
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-0 focus:border-blue-400 dark:focus:border-blue-500 focus:shadow-lg focus:shadow-blue-100 dark:focus:shadow-blue-900/50 transition-all duration-200"
                     placeholder="15.99"
+                    aria-required="true"
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  <label htmlFor="payment-currency" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                     Currency
                   </label>
                   <motion.select
+                    id="payment-currency"
                     value={formData.currency}
                     onChange={(e) =>
                       setFormData({ ...formData, currency: e.target.value })
                     }
                     variants={inputVariants}
                     whileFocus="focus"
-                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-white/50 focus:ring-0 focus:border-blue-400 focus:shadow-lg focus:shadow-blue-100 transition-all duration-200"
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 text-gray-900 dark:text-gray-100 focus:ring-0 focus:border-blue-400 dark:focus:border-blue-500 focus:shadow-lg focus:shadow-blue-100 dark:focus:shadow-blue-900/50 transition-all duration-200"
                   >
                     <option value="GBP">£ GBP</option>
                     <option value="USD">$ USD</option>
@@ -520,12 +543,12 @@ export function AddSubscriptionModal({
               </div>
 
               {/* Frequency */}
-              <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                  <Calendar className="w-4 h-4" />
+              <fieldset>
+                <legend className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <Calendar className="w-4 h-4" aria-hidden="true" />
                   Billing Frequency
-                </label>
-                <div className="grid grid-cols-3 gap-2">
+                </legend>
+                <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Select billing frequency">
                   {[
                     { value: "monthly", label: "Monthly" },
                     { value: "yearly", label: "Yearly" },
@@ -543,22 +566,25 @@ export function AddSubscriptionModal({
                         "py-3 rounded-xl font-medium transition-all duration-200",
                         formData.frequency === option.value
                           ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg"
-                          : "glass-card-subtle text-gray-600 hover:shadow-md"
+                          : "glass-card-subtle text-gray-600 dark:text-gray-300 hover:shadow-md"
                       )}
+                      role="radio"
+                      aria-checked={formData.frequency === option.value}
                     >
                       {option.label}
                     </motion.button>
                   ))}
                 </div>
-              </div>
+              </fieldset>
 
               {/* Category */}
               <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                  <Tag className="w-4 h-4" />
+                <label htmlFor="payment-category" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <Tag className="w-4 h-4" aria-hidden="true" />
                   Category
                 </label>
                 <motion.input
+                  id="payment-category"
                   type="text"
                   value={formData.category}
                   onChange={(e) =>
@@ -566,29 +592,30 @@ export function AddSubscriptionModal({
                   }
                   variants={inputVariants}
                   whileFocus="focus"
-                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-white/50 focus:ring-0 focus:border-blue-400 focus:shadow-lg focus:shadow-blue-100 transition-all duration-200"
+                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-0 focus:border-blue-400 dark:focus:border-blue-500 focus:shadow-lg focus:shadow-blue-100 dark:focus:shadow-blue-900/50 transition-all duration-200"
                   placeholder="Entertainment, Productivity, etc."
                 />
               </div>
 
               {/* Debt-specific fields */}
               {formData.payment_type === "debt" && (
-                <motion.div
+                <motion.fieldset
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="space-y-4 p-4 rounded-xl bg-red-50/50 border-2 border-red-100"
+                  className="space-y-4 p-4 rounded-xl bg-red-50/50 dark:bg-red-900/20 border-2 border-red-100 dark:border-red-800"
                 >
-                  <p className="text-sm font-semibold text-red-700 flex items-center gap-2">
-                    <CreditCard className="w-4 h-4" />
+                  <legend className="text-sm font-semibold text-red-700 dark:text-red-400 flex items-center gap-2">
+                    <CreditCard className="w-4 h-4" aria-hidden="true" />
                     Debt Details
-                  </p>
+                  </legend>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-sm font-medium text-gray-700 mb-2 block">
+                      <label htmlFor="total-owed" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                         Total Owed
                       </label>
                       <motion.input
+                        id="total-owed"
                         type="number"
                         step="0.01"
                         min="0"
@@ -601,15 +628,16 @@ export function AddSubscriptionModal({
                         }
                         variants={inputVariants}
                         whileFocus="focus"
-                        className="w-full px-4 py-3 rounded-xl border-2 border-red-200 bg-white/50 focus:ring-0 focus:border-red-400 focus:shadow-lg focus:shadow-red-100 transition-all duration-200"
+                        className="w-full px-4 py-3 rounded-xl border-2 border-red-200 dark:border-red-700 bg-white/50 dark:bg-gray-800/50 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-0 focus:border-red-400 dark:focus:border-red-500 focus:shadow-lg focus:shadow-red-100 dark:focus:shadow-red-900/50 transition-all duration-200"
                         placeholder="5000.00"
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-700 mb-2 block">
+                      <label htmlFor="remaining-balance" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                         Remaining Balance
                       </label>
                       <motion.input
+                        id="remaining-balance"
                         type="number"
                         step="0.01"
                         min="0"
@@ -622,17 +650,18 @@ export function AddSubscriptionModal({
                         }
                         variants={inputVariants}
                         whileFocus="focus"
-                        className="w-full px-4 py-3 rounded-xl border-2 border-red-200 bg-white/50 focus:ring-0 focus:border-red-400 focus:shadow-lg focus:shadow-red-100 transition-all duration-200"
+                        className="w-full px-4 py-3 rounded-xl border-2 border-red-200 dark:border-red-700 bg-white/50 dark:bg-gray-800/50 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-0 focus:border-red-400 dark:focus:border-red-500 focus:shadow-lg focus:shadow-red-100 dark:focus:shadow-red-900/50 transition-all duration-200"
                         placeholder="3500.00"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                      <User className="w-4 h-4" />
+                    <label htmlFor="creditor" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <User className="w-4 h-4" aria-hidden="true" />
                       Creditor
                     </label>
                     <motion.input
+                      id="creditor"
                       type="text"
                       value={formData.creditor || ""}
                       onChange={(e) =>
@@ -640,31 +669,32 @@ export function AddSubscriptionModal({
                       }
                       variants={inputVariants}
                       whileFocus="focus"
-                      className="w-full px-4 py-3 rounded-xl border-2 border-red-200 bg-white/50 focus:ring-0 focus:border-red-400 focus:shadow-lg focus:shadow-red-100 transition-all duration-200"
+                      className="w-full px-4 py-3 rounded-xl border-2 border-red-200 dark:border-red-700 bg-white/50 dark:bg-gray-800/50 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-0 focus:border-red-400 dark:focus:border-red-500 focus:shadow-lg focus:shadow-red-100 dark:focus:shadow-red-900/50 transition-all duration-200"
                       placeholder="Bank name, friend, etc."
                     />
                   </div>
-                </motion.div>
+                </motion.fieldset>
               )}
 
               {/* Savings-specific fields */}
               {(formData.payment_type === "savings" || formData.payment_type === "transfer") && (
-                <motion.div
+                <motion.fieldset
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="space-y-4 p-4 rounded-xl bg-green-50/50 border-2 border-green-100"
+                  className="space-y-4 p-4 rounded-xl bg-green-50/50 dark:bg-green-900/20 border-2 border-green-100 dark:border-green-800"
                 >
-                  <p className="text-sm font-semibold text-green-700 flex items-center gap-2">
-                    <PiggyBank className="w-4 h-4" />
+                  <legend className="text-sm font-semibold text-green-700 dark:text-green-400 flex items-center gap-2">
+                    <PiggyBank className="w-4 h-4" aria-hidden="true" />
                     {formData.payment_type === "savings" ? "Savings Goal" : "Transfer Details"}
-                  </p>
+                  </legend>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-sm font-medium text-gray-700 mb-2 block">
+                      <label htmlFor="target-amount" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                         Target Amount
                       </label>
                       <motion.input
+                        id="target-amount"
                         type="number"
                         step="0.01"
                         min="0"
@@ -677,15 +707,16 @@ export function AddSubscriptionModal({
                         }
                         variants={inputVariants}
                         whileFocus="focus"
-                        className="w-full px-4 py-3 rounded-xl border-2 border-green-200 bg-white/50 focus:ring-0 focus:border-green-400 focus:shadow-lg focus:shadow-green-100 transition-all duration-200"
+                        className="w-full px-4 py-3 rounded-xl border-2 border-green-200 dark:border-green-700 bg-white/50 dark:bg-gray-800/50 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-0 focus:border-green-400 dark:focus:border-green-500 focus:shadow-lg focus:shadow-green-100 dark:focus:shadow-green-900/50 transition-all duration-200"
                         placeholder="10000.00"
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-700 mb-2 block">
+                      <label htmlFor="current-saved" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                         Current Saved
                       </label>
                       <motion.input
+                        id="current-saved"
                         type="number"
                         step="0.01"
                         min="0"
@@ -698,17 +729,18 @@ export function AddSubscriptionModal({
                         }
                         variants={inputVariants}
                         whileFocus="focus"
-                        className="w-full px-4 py-3 rounded-xl border-2 border-green-200 bg-white/50 focus:ring-0 focus:border-green-400 focus:shadow-lg focus:shadow-green-100 transition-all duration-200"
+                        className="w-full px-4 py-3 rounded-xl border-2 border-green-200 dark:border-green-700 bg-white/50 dark:bg-gray-800/50 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-0 focus:border-green-400 dark:focus:border-green-500 focus:shadow-lg focus:shadow-green-100 dark:focus:shadow-green-900/50 transition-all duration-200"
                         placeholder="2500.00"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                      <User className="w-4 h-4" />
+                    <label htmlFor="recipient" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <User className="w-4 h-4" aria-hidden="true" />
                       Recipient
                     </label>
                     <motion.input
+                      id="recipient"
                       type="text"
                       value={formData.recipient || ""}
                       onChange={(e) =>
@@ -716,11 +748,11 @@ export function AddSubscriptionModal({
                       }
                       variants={inputVariants}
                       whileFocus="focus"
-                      className="w-full px-4 py-3 rounded-xl border-2 border-green-200 bg-white/50 focus:ring-0 focus:border-green-400 focus:shadow-lg focus:shadow-green-100 transition-all duration-200"
+                      className="w-full px-4 py-3 rounded-xl border-2 border-green-200 dark:border-green-700 bg-white/50 dark:bg-gray-800/50 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-0 focus:border-green-400 dark:focus:border-green-500 focus:shadow-lg focus:shadow-green-100 dark:focus:shadow-green-900/50 transition-all duration-200"
                       placeholder="Savings account, family member, etc."
                     />
                   </div>
-                </motion.div>
+                </motion.fieldset>
               )}
 
               {/* Submit buttons */}
@@ -730,7 +762,7 @@ export function AddSubscriptionModal({
                   onClick={handleClose}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="flex-1 px-6 py-3 rounded-xl border-2 border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition-colors"
+                  className="flex-1 px-6 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                 >
                   Cancel
                 </motion.button>

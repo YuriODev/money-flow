@@ -176,9 +176,9 @@ async def get_payment_history(
 @router.post("/payments/{subscription_id}", response_model=PaymentHistoryResponse)
 @limiter.limit(rate_limit_write)
 async def record_payment(
-    http_request: Request,
+    request: Request,
     subscription_id: str,
-    request: RecordPaymentRequest,
+    payment_request: RecordPaymentRequest,
     db: AsyncSession = Depends(get_db),
 ) -> PaymentHistoryResponse:
     """Record a payment for a subscription.
@@ -207,7 +207,7 @@ async def record_payment(
     """
     logger.info(
         f"[API] POST /calendar/payments/{subscription_id} - "
-        f"date={request.payment_date}, amount={request.amount}, status={request.status}"
+        f"date={payment_request.payment_date}, amount={payment_request.amount}, status={payment_request.status}"
     )
 
     service = PaymentService(db)
@@ -215,11 +215,11 @@ async def record_payment(
     try:
         payment = await service.record_payment(
             subscription_id=subscription_id,
-            payment_date=request.payment_date,
-            amount=request.amount,
-            status=request.status,
-            payment_method=request.payment_method,
-            notes=request.notes,
+            payment_date=payment_request.payment_date,
+            amount=payment_request.amount,
+            status=payment_request.status,
+            payment_method=payment_request.payment_method,
+            notes=payment_request.notes,
         )
         await db.commit()
         logger.info(f"[API] Payment recorded successfully: id={payment.id}")

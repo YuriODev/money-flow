@@ -1,0 +1,138 @@
+{
+  "examples": [
+    {
+      "name": "monthly_spending_summary",
+      "user_input": "How much am I spending this month?",
+      "expected_output": {
+        "type": "spending_summary",
+        "data": {
+          "total": 1523.45,
+          "currency": "GBP",
+          "period": "December 2025",
+          "breakdown": [
+            {"category": "housing", "amount": 1200.00, "percentage": 78.8},
+            {"category": "utilities", "amount": 185.50, "percentage": 12.2},
+            {"category": "subscriptions", "amount": 127.94, "percentage": 8.4},
+            {"category": "insurance", "amount": 10.01, "percentage": 0.6}
+          ],
+          "change_from_previous": 2.3
+        }
+      }
+    },
+    {
+      "name": "category_breakdown",
+      "user_input": "Show me my subscription breakdown",
+      "expected_output": {
+        "type": "category_breakdown",
+        "category": "subscriptions",
+        "data": {
+          "total": 127.94,
+          "currency": "GBP",
+          "items": [
+            {"name": "Adobe Creative Cloud", "amount": 54.99},
+            {"name": "Claude Pro", "amount": 18.00},
+            {"name": "Netflix", "amount": 15.99},
+            {"name": "Spotify", "amount": 10.99},
+            {"name": "iCloud", "amount": 2.99},
+            {"name": "Others", "amount": 24.98}
+          ]
+        }
+      }
+    },
+    {
+      "name": "budget_comparison",
+      "user_input": "Am I within budget?",
+      "expected_output": {
+        "type": "budget_comparison",
+        "data": {
+          "categories": [
+            {
+              "name": "subscriptions",
+              "budget": 150.00,
+              "actual": 127.94,
+              "utilization": 85.3,
+              "status": "on_track"
+            },
+            {
+              "name": "utilities",
+              "budget": 200.00,
+              "actual": 185.50,
+              "utilization": 92.8,
+              "status": "warning"
+            }
+          ],
+          "overall_status": "on_track"
+        }
+      }
+    },
+    {
+      "name": "trend_analysis",
+      "user_input": "How has my spending changed over the last 6 months?",
+      "expected_output": {
+        "type": "trend_analysis",
+        "data": {
+          "period": "6 months",
+          "trend": "increasing",
+          "change_rate": 3.2,
+          "key_drivers": [
+            {"description": "New subscription: Claude Pro", "impact": 18.00},
+            {"description": "Netflix price increase", "impact": 2.00}
+          ],
+          "forecast": {
+            "next_month": 1548.50,
+            "confidence": "high"
+          }
+        }
+      }
+    },
+    {
+      "name": "anomaly_detection",
+      "user_input": "Are there any unusual charges?",
+      "expected_output": {
+        "type": "anomaly_detection",
+        "data": {
+          "anomalies": [
+            {
+              "severity": "warning",
+              "type": "price_change",
+              "description": "Netflix increased from £13.99 to £15.99",
+              "subscription": "Netflix",
+              "expected": 13.99,
+              "actual": 15.99,
+              "suggested_action": "Review your Netflix plan or consider alternatives"
+            },
+            {
+              "severity": "info",
+              "type": "potential_duplicate",
+              "description": "Similar streaming services detected",
+              "subscriptions": ["Netflix", "Disney+"],
+              "combined_cost": 26.98,
+              "suggested_action": "Review if both services are being used"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "yearly_projection",
+      "user_input": "What will I spend on subscriptions this year?",
+      "expected_output": {
+        "type": "yearly_projection",
+        "data": {
+          "annual_total": 1535.28,
+          "currency": "GBP",
+          "monthly_average": 127.94,
+          "breakdown_by_frequency": [
+            {"frequency": "monthly", "annual_cost": 1235.28},
+            {"frequency": "yearly", "annual_cost": 300.00}
+          ],
+          "comparison_to_previous_year": {
+            "change": 145.50,
+            "percentage": 10.5,
+            "reason": "Added 3 new subscriptions"
+          }
+        }
+      }
+    }
+  ]
+}

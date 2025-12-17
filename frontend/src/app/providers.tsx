@@ -5,6 +5,9 @@ import { useState } from "react";
 import { CurrencyProvider } from "@/lib/currency-context";
 import { AuthProvider } from "@/lib/auth-context";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { ToastProvider } from "@/components/Toast";
+import { ThemeProvider } from "@/lib/theme-context";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -21,11 +24,16 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <ProtectedRoute>
-          <CurrencyProvider>{children}</CurrencyProvider>
-        </ProtectedRoute>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <ProtectedRoute>
+            <CurrencyProvider>
+              <ErrorBoundary>{children}</ErrorBoundary>
+              <ToastProvider />
+            </CurrencyProvider>
+          </ProtectedRoute>
+        </AuthProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

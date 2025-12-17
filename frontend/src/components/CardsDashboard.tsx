@@ -25,6 +25,7 @@ import { useCurrency } from "@/lib/currency-context";
 import { cn } from "@/lib/utils";
 import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
 import { findService, getIconUrl } from "@/lib/service-icons";
+import { toast } from "@/components/Toast";
 
 // Check if a color is light (needs dark text)
 const isLightColor = (hexColor: string): boolean => {
@@ -148,7 +149,11 @@ export function CardsDashboard() {
     mutationFn: (data: PaymentCardCreate) => cardsApi.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cards"] });
+      toast.success("Card added", `${formData.name} has been added to your cards.`);
       closeForm();
+    },
+    onError: () => {
+      toast.error("Failed to add card", "There was an error adding the card. Please try again.");
     },
   });
 
@@ -157,7 +162,11 @@ export function CardsDashboard() {
       cardsApi.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cards"] });
+      toast.success("Card updated", `${formData.name} has been updated.`);
       closeForm();
+    },
+    onError: () => {
+      toast.error("Failed to update card", "There was an error updating the card. Please try again.");
     },
   });
 
@@ -165,7 +174,11 @@ export function CardsDashboard() {
     mutationFn: (id: string) => cardsApi.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cards"] });
+      toast.success("Card deleted", "The card has been removed.");
       setDeleteConfirm(null);
+    },
+    onError: () => {
+      toast.error("Failed to delete card", "There was an error deleting the card. Please try again.");
     },
   });
 
@@ -232,16 +245,16 @@ export function CardsDashboard() {
   const isLoading = cardsLoading || summaryLoading;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" role="region" aria-label="Payment Cards Dashboard">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 text-white">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 text-white" aria-hidden="true">
             <Wallet className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Payment Cards</h2>
-            <p className="text-sm text-gray-500">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Payment Cards</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               Manage your cards and see required balances
             </p>
           </div>
@@ -251,8 +264,9 @@ export function CardsDashboard() {
           whileTap={{ scale: 0.98 }}
           onClick={() => openForm()}
           className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-medium shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transition-shadow"
+          aria-label="Add new payment card"
         >
-          <Plus className="w-5 h-5" />
+          <Plus className="w-5 h-5" aria-hidden="true" />
           Add Card
         </motion.button>
       </div>
@@ -267,15 +281,15 @@ export function CardsDashboard() {
             className="glass-card p-6 rounded-2xl"
           >
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-blue-100 text-blue-600">
+              <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400">
                 <CreditCard className="w-5 h-5" />
               </div>
-              <span className="text-lg font-semibold text-gray-900">This Month&apos;s Progress</span>
+              <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">This Month&apos;s Progress</span>
             </div>
 
             {/* Progress Bar - uses unified summary */}
             <div className="mb-4">
-              <div className="h-4 bg-gray-100 rounded-full overflow-hidden">
+              <div className="h-4 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
                 {(() => {
                   const total = paymentsSummary ? parseFloat(paymentsSummary.current_month_total) : (balanceSummary ? parseFloat(balanceSummary.total_all_cards_this_month) : 0);
                   const paid = paymentsSummary ? parseFloat(paymentsSummary.current_month_paid) : (balanceSummary ? parseFloat(balanceSummary.total_paid_this_month) : 0);
@@ -291,14 +305,14 @@ export function CardsDashboard() {
                 })()}
               </div>
               <div className="flex justify-between mt-2 text-sm">
-                <span className="text-gray-500">
+                <span className="text-gray-500 dark:text-gray-400">
                   {(() => {
                     const total = paymentsSummary ? parseFloat(paymentsSummary.current_month_total) : (balanceSummary ? parseFloat(balanceSummary.total_all_cards_this_month) : 0);
                     const paid = paymentsSummary ? parseFloat(paymentsSummary.current_month_paid) : (balanceSummary ? parseFloat(balanceSummary.total_paid_this_month) : 0);
                     return total > 0 ? Math.round((paid / total) * 100) : 0;
                   })()}% paid
                 </span>
-                <span className="text-gray-500">
+                <span className="text-gray-500 dark:text-gray-400">
                   {format(
                     paymentsSummary ? parseFloat(paymentsSummary.current_month_remaining) : (balanceSummary ? parseFloat(balanceSummary.total_remaining_this_month) : 0),
                     currencyInfo.code
@@ -309,36 +323,36 @@ export function CardsDashboard() {
 
             {/* Stats Row - uses unified summary */}
             <div className="grid grid-cols-3 gap-4">
-              <div className="text-center p-3 rounded-xl bg-gray-50">
+              <div className="text-center p-3 rounded-xl bg-gray-50 dark:bg-gray-800">
                 <div className="flex items-center justify-center gap-1.5 mb-1">
-                  <Clock className="w-4 h-4 text-blue-500" />
-                  <span className="text-xs font-medium text-gray-500">Total Due</span>
+                  <Clock className="w-4 h-4 text-blue-500 dark:text-blue-400" />
+                  <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Total Due</span>
                 </div>
-                <p className="text-lg font-bold text-gray-900">
+                <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
                   {format(
                     paymentsSummary ? parseFloat(paymentsSummary.current_month_total) : (balanceSummary ? parseFloat(balanceSummary.total_all_cards_this_month) : 0),
                     currencyInfo.code
                   )}
                 </p>
               </div>
-              <div className="text-center p-3 rounded-xl bg-emerald-50">
+              <div className="text-center p-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/30">
                 <div className="flex items-center justify-center gap-1.5 mb-1">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  <span className="text-xs font-medium text-gray-500">Paid</span>
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
+                  <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Paid</span>
                 </div>
-                <p className="text-lg font-bold text-emerald-600">
+                <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
                   {format(
                     paymentsSummary ? parseFloat(paymentsSummary.current_month_paid) : (balanceSummary ? parseFloat(balanceSummary.total_paid_this_month) : 0),
                     currencyInfo.code
                   )}
                 </p>
               </div>
-              <div className="text-center p-3 rounded-xl bg-amber-50">
+              <div className="text-center p-3 rounded-xl bg-amber-50 dark:bg-amber-900/30">
                 <div className="flex items-center justify-center gap-1.5 mb-1">
-                  <AlertCircle className="w-4 h-4 text-amber-500" />
-                  <span className="text-xs font-medium text-gray-500">Remaining</span>
+                  <AlertCircle className="w-4 h-4 text-amber-500 dark:text-amber-400" />
+                  <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Remaining</span>
                 </div>
-                <p className="text-lg font-bold text-amber-600">
+                <p className="text-lg font-bold text-amber-600 dark:text-amber-400">
                   {format(
                     paymentsSummary ? parseFloat(paymentsSummary.current_month_remaining) : (balanceSummary ? parseFloat(balanceSummary.total_remaining_this_month) : 0),
                     currencyInfo.code
@@ -357,12 +371,12 @@ export function CardsDashboard() {
               className="glass-card p-5 rounded-2xl"
             >
               <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 rounded-lg bg-purple-100 text-purple-600">
+                <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400">
                   <PiggyBank className="w-5 h-5" />
                 </div>
-                <span className="text-sm font-medium text-gray-600">Due Next Month</span>
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Due Next Month</span>
               </div>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                 {format(
                   paymentsSummary ? parseFloat(paymentsSummary.next_month_total) : (balanceSummary ? parseFloat(balanceSummary.total_all_cards_next_month) : 0),
                   currencyInfo.code
@@ -378,21 +392,21 @@ export function CardsDashboard() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={handleUnassignedClick}
-                className="glass-card p-5 rounded-2xl text-left hover:shadow-lg hover:border-amber-200 border-2 border-transparent transition-all cursor-pointer"
+                className="glass-card p-5 rounded-2xl text-left hover:shadow-lg hover:border-amber-200 dark:hover:border-amber-700 border-2 border-transparent transition-all cursor-pointer"
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-amber-100 text-amber-600">
+                    <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400">
                       <AlertCircle className="w-5 h-5" />
                     </div>
-                    <span className="text-sm font-medium text-gray-600">Unassigned</span>
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Unassigned</span>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-amber-400" />
+                  <ChevronRight className="w-5 h-5 text-amber-400 dark:text-amber-500" />
                 </div>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                   {balanceSummary.unassigned_count} payment{balanceSummary.unassigned_count !== 1 ? "s" : ""}
                 </p>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   {format(parseFloat(balanceSummary.unassigned_total), currencyInfo.code)} total
                 </p>
               </motion.button>
@@ -406,9 +420,9 @@ export function CardsDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
             <div key={i} className="glass-card p-6 rounded-2xl animate-pulse">
-              <div className="h-6 bg-gray-200 rounded w-3/4 mb-4" />
-              <div className="h-4 bg-gray-200 rounded w-1/2 mb-2" />
-              <div className="h-8 bg-gray-200 rounded w-1/3" />
+              <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-4" />
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-2" />
+              <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/3" />
             </div>
           ))}
         </div>
@@ -418,11 +432,11 @@ export function CardsDashboard() {
           animate={{ opacity: 1, scale: 1 }}
           className="glass-card p-12 rounded-2xl text-center"
         >
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
-            <CreditCard className="w-8 h-8 text-gray-400" />
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+            <CreditCard className="w-8 h-8 text-gray-400 dark:text-gray-500" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No cards yet</h3>
-          <p className="text-gray-500 mb-4">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">No cards yet</h3>
+          <p className="text-gray-500 dark:text-gray-400 mb-4">
             Add your payment cards to track which card pays for each subscription
           </p>
           <button
@@ -471,6 +485,14 @@ export function CardsDashboard() {
                                   src={card.icon_url}
                                   alt={card.bank_name}
                                   className="w-6 h-6 object-contain"
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    target.style.display = "none";
+                                    const parent = target.parentElement;
+                                    if (parent) {
+                                      parent.innerHTML = `<span class="${isLight ? "text-gray-800" : "text-white"} font-semibold text-sm">${card.bank_name.charAt(0).toUpperCase()}</span>`;
+                                    }
+                                  }}
                                 />
                               </div>
                             ) : (
@@ -493,8 +515,9 @@ export function CardsDashboard() {
                                 "p-1.5 rounded-lg transition-colors",
                                 isLight ? "bg-gray-800/10 hover:bg-gray-800/20" : "bg-white/20 hover:bg-white/30"
                               )}
+                              aria-label={`Edit ${card.name}`}
                             >
-                              <Pencil className="w-4 h-4" />
+                              <Pencil className="w-4 h-4" aria-hidden="true" />
                             </button>
                             <button
                               onClick={() => setDeleteConfirm(card.id)}
@@ -502,8 +525,9 @@ export function CardsDashboard() {
                                 "p-1.5 rounded-lg transition-colors",
                                 isLight ? "bg-gray-800/10 hover:bg-red-500/30" : "bg-white/20 hover:bg-red-500/50"
                               )}
+                              aria-label={`Delete ${card.name}`}
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="w-4 h-4" aria-hidden="true" />
                             </button>
                           </div>
                         </div>
@@ -533,9 +557,9 @@ export function CardsDashboard() {
                         {/* This Month Progress */}
                         <div>
                           <div className="flex justify-between items-center mb-1">
-                            <span className="text-sm text-gray-500">This month</span>
+                            <span className="text-sm text-gray-500 dark:text-gray-400">This month</span>
                             <div className="text-right">
-                              <span className="font-semibold text-gray-900">
+                              <span className="font-semibold text-gray-900 dark:text-gray-100">
                                 {format(parseFloat(balance.total_this_month) + parseFloat(balance.funded_this_month), currencyInfo.code)}
                               </span>
                               {parseFloat(balance.funded_this_month) > 0 && (
@@ -546,7 +570,7 @@ export function CardsDashboard() {
                             </div>
                           </div>
                           {/* Mini Progress Bar */}
-                          <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                          <div className="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                             {(() => {
                               const total = parseFloat(balance.total_this_month) + parseFloat(balance.funded_this_month);
                               const paid = parseFloat(balance.paid_this_month);
@@ -576,18 +600,18 @@ export function CardsDashboard() {
                           </div>
                         </div>
 
-                        <div className="flex justify-between items-center pt-1.5 border-t border-gray-100">
-                          <span className="text-sm text-gray-500">Next month</span>
-                          <span className="font-medium text-gray-600">
+                        <div className="flex justify-between items-center pt-1.5 border-t border-gray-100 dark:border-gray-700">
+                          <span className="text-sm text-gray-500 dark:text-gray-400">Next month</span>
+                          <span className="font-medium text-gray-600 dark:text-gray-300">
                             {format(parseFloat(balance.total_next_month) + parseFloat(balance.funded_next_month), currencyInfo.code)}
                           </span>
                         </div>
                         <button
                           onClick={() => handleCardSubscriptionsClick(card, balance)}
-                          className="w-full pt-1.5 border-t border-gray-100 hover:bg-gray-50 rounded-lg transition-colors -mx-1 px-1"
+                          className="w-full pt-1.5 border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors -mx-1 px-1"
                         >
                           <div className="flex items-center justify-between text-sm">
-                            <span className="text-gray-500">
+                            <span className="text-gray-500 dark:text-gray-400">
                               {balance.subscription_count + balance.funded_subscription_count} payment
                               {(balance.subscription_count + balance.funded_subscription_count) !== 1 ? "s" : ""}
                               {balance.funded_subscription_count > 0 && (
@@ -596,10 +620,10 @@ export function CardsDashboard() {
                                 </span>
                               )}
                             </span>
-                            <ChevronRight className="w-4 h-4 text-gray-400" />
+                            <ChevronRight className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                           </div>
                           {(balance.subscriptions.length > 0 || balance.funded_subscriptions.length > 0) && (
-                            <p className="text-xs text-gray-400 mt-0.5 truncate text-left">
+                            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 truncate text-left">
                               {[...balance.subscriptions, ...balance.funded_subscriptions].slice(0, 3).join(", ")}
                               {[...balance.subscriptions, ...balance.funded_subscriptions].length > 3 &&
                                 ` +${[...balance.subscriptions, ...balance.funded_subscriptions].length - 3} more`}
@@ -608,7 +632,7 @@ export function CardsDashboard() {
                         </button>
                       </>
                     ) : (
-                      <p className="text-sm text-gray-400 text-center py-2">
+                      <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-2">
                         No payments assigned
                       </p>
                     )}
@@ -629,58 +653,66 @@ export function CardsDashboard() {
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
             onClick={closeForm}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="card-form-title"
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+              className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
             >
-              <div className="p-6 border-b border-gray-100">
-                <h3 className="text-xl font-bold text-gray-900">
+              <div className="p-6 border-b border-gray-100 dark:border-gray-800">
+                <h3 id="card-form-title" className="text-xl font-bold text-gray-900 dark:text-gray-100">
                   {editingCard ? "Edit Card" : "Add New Card"}
                 </h3>
               </div>
 
-              <form onSubmit={handleSubmit} className="p-6 space-y-4">
+              <form onSubmit={handleSubmit} className="p-6 space-y-4" aria-label={editingCard ? "Edit card form" : "Add new card form"}>
                 {/* Card Name */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="card-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Card Name
                   </label>
                   <input
+                    id="card-name"
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="e.g., Revolut Platinum"
                     required
-                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                    aria-required="true"
                   />
                 </div>
 
                 {/* Bank Name */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="bank-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Bank / Provider
                   </label>
                   <input
+                    id="bank-name"
                     type="text"
                     value={formData.bank_name}
                     onChange={(e) => setFormData({ ...formData, bank_name: e.target.value })}
                     placeholder="e.g., Revolut"
                     required
-                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                    aria-required="true"
                   />
                 </div>
 
                 {/* Card Type & Currency */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="card-type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Card Type
                     </label>
                     <select
+                      id="card-type"
                       value={formData.card_type}
                       onChange={(e) =>
                         setFormData({
@@ -688,7 +720,7 @@ export function CardsDashboard() {
                           card_type: e.target.value as CardFormData["card_type"],
                         })
                       }
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
                     >
                       <option value="debit">Debit</option>
                       <option value="credit">Credit</option>
@@ -697,15 +729,16 @@ export function CardsDashboard() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="card-currency" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Currency
                     </label>
                     <select
+                      id="card-currency"
                       value={formData.currency}
                       onChange={(e) =>
                         setFormData({ ...formData, currency: e.target.value })
                       }
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
                     >
                       <option value="GBP">GBP (£)</option>
                       <option value="USD">USD ($)</option>
@@ -717,10 +750,11 @@ export function CardsDashboard() {
 
                 {/* Last 4 Digits */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="last-four" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Last 4 Digits (optional)
                   </label>
                   <input
+                    id="last-four"
                     type="text"
                     value={formData.last_four}
                     onChange={(e) => {
@@ -729,16 +763,18 @@ export function CardsDashboard() {
                     }}
                     placeholder="1234"
                     maxLength={4}
-                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all font-mono"
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all font-mono"
+                    aria-describedby="last-four-hint"
                   />
+                  <span id="last-four-hint" className="sr-only">Enter the last 4 digits of your card number</span>
                 </div>
 
                 {/* Color Picker */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                <fieldset>
+                  <legend className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Card Color
-                  </label>
-                  <div className="flex flex-wrap gap-2">
+                  </legend>
+                  <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Select card color">
                     {PRESET_COLORS.map((color) => (
                       <button
                         key={color}
@@ -751,6 +787,8 @@ export function CardsDashboard() {
                             : "hover:scale-105"
                         )}
                         style={{ backgroundColor: color }}
+                        aria-label={`Select color ${color}`}
+                        aria-pressed={formData.color === color}
                       />
                     ))}
                     <input
@@ -758,46 +796,48 @@ export function CardsDashboard() {
                       value={formData.color}
                       onChange={(e) => setFormData({ ...formData, color: e.target.value })}
                       className="w-8 h-8 rounded-lg cursor-pointer"
+                      aria-label="Choose custom color"
                     />
                   </div>
-                </div>
+                </fieldset>
 
                 {/* Icon URL */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="icon-url" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Icon URL (optional)
                   </label>
                   <input
+                    id="icon-url"
                     type="url"
                     value={formData.icon_url}
                     onChange={(e) => setFormData({ ...formData, icon_url: e.target.value })}
                     placeholder="https://logo.clearbit.com/bank.com"
-                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
                   />
                 </div>
 
                 {/* Funding Card (for cards like PayPal funded by Monzo) */}
                 {availableFundingCards.length > 0 && (
                   <div className="relative">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       <div className="flex items-center gap-1.5">
                         <Link2 className="w-4 h-4" />
                         Funded By (optional)
                       </div>
-                      <span className="text-xs text-gray-500 font-normal">
+                      <span className="text-xs text-gray-500 dark:text-gray-400 font-normal">
                         Link to another card that funds this one (e.g., PayPal funded by Monzo)
                       </span>
                     </label>
                     <button
                       type="button"
                       onClick={() => setIsFundingDropdownOpen(!isFundingDropdownOpen)}
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all text-left flex items-center justify-between"
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all text-left flex items-center justify-between"
                     >
                       {formData.funding_card_id ? (
                         <div className="flex items-center gap-2">
                           {(() => {
                             const fundingCard = cards.find(c => c.id === formData.funding_card_id);
-                            if (!fundingCard) return <span className="text-gray-500">Select a card...</span>;
+                            if (!fundingCard) return <span className="text-gray-500 dark:text-gray-400">Select a card...</span>;
                             return (
                               <>
                                 <div
@@ -825,7 +865,7 @@ export function CardsDashboard() {
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           exit={{ opacity: 0, y: -10, scale: 0.95 }}
                           transition={{ duration: 0.15 }}
-                          className="absolute z-50 w-full mt-2 py-2 bg-white rounded-xl shadow-xl border border-gray-100 max-h-48 overflow-y-auto"
+                          className="absolute z-50 w-full mt-2 py-2 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 max-h-48 overflow-y-auto"
                         >
                           <button
                             type="button"
@@ -834,12 +874,12 @@ export function CardsDashboard() {
                               setIsFundingDropdownOpen(false);
                             }}
                             className={cn(
-                              "w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2",
-                              !formData.funding_card_id && "bg-blue-50"
+                              "w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2",
+                              !formData.funding_card_id && "bg-blue-50 dark:bg-blue-900/30"
                             )}
                           >
-                            <div className="w-4 h-4 rounded border border-gray-300" />
-                            <span className="text-gray-600">None (standalone)</span>
+                            <div className="w-4 h-4 rounded border border-gray-300 dark:border-gray-600" />
+                            <span className="text-gray-600 dark:text-gray-300">None (standalone)</span>
                           </button>
                           {availableFundingCards.map((fundCard) => (
                             <button
@@ -850,16 +890,16 @@ export function CardsDashboard() {
                                 setIsFundingDropdownOpen(false);
                               }}
                               className={cn(
-                                "w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2",
-                                formData.funding_card_id === fundCard.id && "bg-blue-50"
+                                "w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2",
+                                formData.funding_card_id === fundCard.id && "bg-blue-50 dark:bg-blue-900/30"
                               )}
                             >
                               <div
                                 className="w-4 h-4 rounded"
                                 style={{ backgroundColor: fundCard.color }}
                               />
-                              <span>{fundCard.name}</span>
-                              <span className="text-xs text-gray-400">({fundCard.bank_name})</span>
+                              <span className="text-gray-900 dark:text-gray-100">{fundCard.name}</span>
+                              <span className="text-xs text-gray-400 dark:text-gray-500">({fundCard.bank_name})</span>
                             </button>
                           ))}
                         </motion.div>
@@ -877,15 +917,16 @@ export function CardsDashboard() {
 
                 {/* Notes */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="card-notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Notes (optional)
                   </label>
                   <textarea
+                    id="card-notes"
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     placeholder="Any notes about this card..."
                     rows={2}
-                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all resize-none"
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all resize-none"
                   />
                 </div>
 
@@ -894,7 +935,7 @@ export function CardsDashboard() {
                   <button
                     type="button"
                     onClick={closeForm}
-                    className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors"
+                    className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                   >
                     Cancel
                   </button>
@@ -925,35 +966,39 @@ export function CardsDashboard() {
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
             onClick={() => setDeleteConfirm(null)}
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="delete-card-title"
+            aria-describedby="delete-card-description"
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6"
+              className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl max-w-sm w-full p-6"
             >
-              <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
-                <Trash2 className="w-6 h-6 text-red-600" />
+              <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center" aria-hidden="true">
+                <Trash2 className="w-6 h-6 text-red-600 dark:text-red-400" />
               </div>
-              <h3 className="text-lg font-bold text-gray-900 text-center mb-2">
+              <h3 id="delete-card-title" className="text-lg font-bold text-gray-900 dark:text-gray-100 text-center mb-2">
                 Delete Card?
               </h3>
-              <p className="text-gray-500 text-center mb-6">
+              <p id="delete-card-description" className="text-gray-500 dark:text-gray-400 text-center mb-6">
                 This will unlink all subscriptions from this card. This action cannot be
                 undone.
               </p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setDeleteConfirm(null)}
-                  className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors"
+                  className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={() => deleteMutation.mutate(deleteConfirm)}
                   disabled={deleteMutation.isPending}
-                  className="flex-1 px-4 py-2.5 bg-red-500 text-white rounded-xl font-medium hover:bg-red-600 transition-colors disabled:opacity-50"
+                  className="flex-1 px-4 py-2.5 bg-red-500 dark:bg-red-600 text-white rounded-xl font-medium hover:bg-red-600 dark:hover:bg-red-700 transition-colors disabled:opacity-50"
                 >
                   {deleteMutation.isPending ? "Deleting..." : "Delete"}
                 </button>
@@ -972,13 +1017,16 @@ export function CardsDashboard() {
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
             onClick={() => setSelectedCardSubs(null)}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="card-subs-title"
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden"
+              className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl max-w-md w-full overflow-hidden"
             >
               {/* Modal Header with Card Color */}
               {(() => {
@@ -999,6 +1047,14 @@ export function CardsDashboard() {
                               src={selectedCardSubs.card.icon_url}
                               alt={selectedCardSubs.card.bank_name}
                               className="w-6 h-6 object-contain"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = "none";
+                                const parent = target.parentElement;
+                                if (parent) {
+                                  parent.innerHTML = `<span class="${isLight ? "text-gray-800" : "text-white"} font-semibold text-sm">${selectedCardSubs.card.bank_name.charAt(0).toUpperCase()}</span>`;
+                                }
+                              }}
                             />
                           </div>
                         ) : (
@@ -1010,7 +1066,7 @@ export function CardsDashboard() {
                           </div>
                         )}
                         <div>
-                          <h3 className="font-semibold text-lg">{selectedCardSubs.card.name}</h3>
+                          <h3 id="card-subs-title" className="font-semibold text-lg">{selectedCardSubs.card.name}</h3>
                           <p className={cn("text-sm", isLight ? "text-gray-600" : "opacity-80")}>{selectedCardSubs.card.bank_name}</p>
                         </div>
                       </div>
@@ -1020,8 +1076,9 @@ export function CardsDashboard() {
                           "p-2 rounded-lg transition-colors",
                           isLight ? "bg-gray-800/10 hover:bg-gray-800/20" : "bg-white/20 hover:bg-white/30"
                         )}
+                        aria-label="Close card payments"
                       >
-                        <X className="w-5 h-5" />
+                        <X className="w-5 h-5" aria-hidden="true" />
                       </button>
                     </div>
                   </div>
@@ -1029,9 +1086,9 @@ export function CardsDashboard() {
               })()}
 
               {/* Subscriptions List */}
-              <div className="p-4 max-h-[60vh] overflow-y-auto">
+              <div className="p-4 max-h-[60vh] overflow-y-auto" role="list" aria-label={`Payments for ${selectedCardSubs.card.name}`}>
                 {selectedCardSubs.subscriptions.length === 0 && (!selectedCardSubs.fundedSubscriptions || selectedCardSubs.fundedSubscriptions.length === 0) ? (
-                  <p className="text-center text-gray-500 py-8">
+                  <p className="text-center text-gray-500 dark:text-gray-400 py-8">
                     No payments assigned to this card
                   </p>
                 ) : (
@@ -1039,7 +1096,7 @@ export function CardsDashboard() {
                     {/* Direct Subscriptions */}
                     {selectedCardSubs.subscriptions.length > 0 && (
                       <div className="space-y-2">
-                        <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Direct Payments</h4>
+                        <h4 className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Direct Payments</h4>
                         {selectedCardSubs.subscriptions.map((sub) => {
                           const serviceInfo = findService(sub.name);
                           const iconUrl = serviceInfo?.iconUrl || (serviceInfo?.icon ? getIconUrl(serviceInfo.icon) : null) || sub.icon_url;
@@ -1047,11 +1104,11 @@ export function CardsDashboard() {
                           return (
                             <div
                               key={sub.id}
-                              className="flex items-center justify-between p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
+                              className="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                             >
                               <div className="flex items-center gap-3">
                                 {iconUrl ? (
-                                  <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-gray-100 overflow-hidden">
+                                  <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-gray-100 dark:bg-gray-700 overflow-hidden">
                                     <img
                                       src={iconUrl}
                                       alt={sub.name}
@@ -1076,8 +1133,8 @@ export function CardsDashboard() {
                                   </div>
                                 )}
                                 <div>
-                                  <p className="font-medium text-gray-900 text-sm">{sub.name}</p>
-                                  <p className="text-xs text-gray-500">
+                                  <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">{sub.name}</p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">
                                     {sub.frequency === "monthly" ? "Monthly" :
                                      sub.frequency === "yearly" ? "Yearly" :
                                      sub.frequency === "weekly" ? "Weekly" : sub.frequency}
@@ -1085,11 +1142,11 @@ export function CardsDashboard() {
                                 </div>
                               </div>
                               <div className="text-right">
-                                <p className="font-semibold text-gray-900">
+                                <p className="font-semibold text-gray-900 dark:text-gray-100">
                                   {format(parseFloat(sub.amount), sub.currency)}
                                 </p>
                                 {sub.is_installment && sub.installments_remaining && (
-                                  <p className="text-xs text-gray-500">
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">
                                     {sub.installments_remaining} left
                                   </p>
                                 )}
@@ -1103,7 +1160,7 @@ export function CardsDashboard() {
                     {/* Funded Subscriptions (from linked cards like PayPal) */}
                     {selectedCardSubs.fundedSubscriptions && selectedCardSubs.fundedSubscriptions.length > 0 && (
                       <div className="space-y-2">
-                        <h4 className="text-xs font-semibold text-purple-500 uppercase tracking-wider flex items-center gap-1">
+                        <h4 className="text-xs font-semibold text-purple-500 dark:text-purple-400 uppercase tracking-wider flex items-center gap-1">
                           <Link2 className="w-3 h-3" />
                           Via Linked Cards
                         </h4>
@@ -1114,11 +1171,11 @@ export function CardsDashboard() {
                           return (
                             <div
                               key={sub.id}
-                              className="flex items-center justify-between p-3 rounded-xl bg-purple-50/50 hover:bg-purple-50 transition-colors"
+                              className="flex items-center justify-between p-3 rounded-xl bg-purple-50/50 dark:bg-purple-900/20 hover:bg-purple-50 dark:hover:bg-purple-900/30 transition-colors"
                             >
                               <div className="flex items-center gap-3">
                                 {iconUrl ? (
-                                  <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-gray-100 overflow-hidden">
+                                  <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-gray-100 dark:bg-gray-700 overflow-hidden">
                                     <img
                                       src={iconUrl}
                                       alt={sub.name}
@@ -1143,8 +1200,8 @@ export function CardsDashboard() {
                                   </div>
                                 )}
                                 <div>
-                                  <p className="font-medium text-gray-900 text-sm">{sub.name}</p>
-                                  <p className="text-xs text-gray-500">
+                                  <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">{sub.name}</p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">
                                     {sub.frequency === "monthly" ? "Monthly" :
                                      sub.frequency === "yearly" ? "Yearly" :
                                      sub.frequency === "weekly" ? "Weekly" : sub.frequency}
@@ -1152,11 +1209,11 @@ export function CardsDashboard() {
                                 </div>
                               </div>
                               <div className="text-right">
-                                <p className="font-semibold text-gray-900">
+                                <p className="font-semibold text-gray-900 dark:text-gray-100">
                                   {format(parseFloat(sub.amount), sub.currency)}
                                 </p>
                                 {sub.is_installment && sub.installments_remaining && (
-                                  <p className="text-xs text-gray-500">
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">
                                     {sub.installments_remaining} left
                                   </p>
                                 )}
@@ -1172,18 +1229,18 @@ export function CardsDashboard() {
 
               {/* Footer */}
               {(selectedCardSubs.subscriptions.length > 0 || (selectedCardSubs.fundedSubscriptions && selectedCardSubs.fundedSubscriptions.length > 0)) && (
-                <div className="p-4 border-t border-gray-100 bg-gray-50">
+                <div className="p-4 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-500">
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
                       {selectedCardSubs.subscriptions.length + (selectedCardSubs.fundedSubscriptions?.length || 0)} payment
                       {(selectedCardSubs.subscriptions.length + (selectedCardSubs.fundedSubscriptions?.length || 0)) !== 1 ? "s" : ""}
                     </span>
-                    <span className="font-semibold text-gray-900">
+                    <span className="font-semibold text-gray-900 dark:text-gray-100">
                       {format(
                         [...selectedCardSubs.subscriptions, ...(selectedCardSubs.fundedSubscriptions || [])].reduce((sum, s) => sum + convert(parseFloat(s.amount), s.currency), 0),
                         currencyInfo.code
                       )}
-                      <span className="text-xs text-gray-500 font-normal">/mo</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400 font-normal">/mo</span>
                     </span>
                   </div>
                 </div>

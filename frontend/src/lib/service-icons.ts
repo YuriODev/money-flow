@@ -850,7 +850,7 @@ export const SERVICES: Record<string, ServiceInfo> = {
     color: "#1E3A5F",
     icon: "",
     category: "utilities",
-    aliases: ["council tax", "council", "local council", "lambeth council", "croydon council"],
+    aliases: ["council tax", "council", "local council", "lambeth council", "croydon council", "croydon council tax"],
   },
 
   // UK Gyms & Leisure
@@ -987,14 +987,59 @@ export const SERVICES: Record<string, ServiceInfo> = {
     category: "finance",
     aliases: ["privatbank", "приватбанк", "privat"],
   },
+
+  // Buy Now Pay Later - Klarna
+  klarna: {
+    name: "Klarna",
+    color: "#FFB3C7",
+    icon: "klarna",
+    category: "shopping",
+    aliases: ["klarna", "klarna pay in 3", "klarna pay later", "klarna - desktronic", "klarna - lge uk", "klarna - puma", "klarna - boohoo"],
+  },
+
+  // UK Banking - Lloyds
+  lloyds: {
+    name: "Lloyds Bank",
+    color: "#006A4D",
+    icon: "",
+    iconUrl: "https://logo.clearbit.com/lloydsbank.com",
+    category: "finance",
+    aliases: ["lloyds", "lloyds bank", "lloyds bank debt"],
+  },
+
+  // UK Banking - Airwallex
+  airwallex: {
+    name: "Airwallex",
+    color: "#EE2E24",
+    icon: "",
+    iconUrl: "https://logo.clearbit.com/airwallex.com",
+    category: "finance",
+    aliases: ["airwallex", "deel"],
+  },
+
+  // Payment Provider - PayPal
+  paypal: {
+    name: "PayPal",
+    color: "#00457C",
+    icon: "paypal",
+    category: "finance",
+    aliases: ["paypal", "paypal debt"],
+  },
 };
 
 /**
  * Get the SimpleIcons CDN URL for a service icon
- * Uses jsdelivr CDN which has better coverage than cdn.simpleicons.org
+ * Uses cdn.simpleicons.org which serves properly colored SVGs
  */
-export function getIconUrl(iconSlug: string): string {
-  return `https://cdn.jsdelivr.net/npm/simple-icons@v14/icons/${iconSlug}.svg`;
+export function getIconUrl(iconSlug: string, color?: string): string {
+  // Use cdn.simpleicons.org for pre-colored icons
+  // This serves colored SVGs directly without needing CSS filters
+  if (color) {
+    const hexColor = color.replace("#", "");
+    return `https://cdn.simpleicons.org/${iconSlug}/${hexColor}`;
+  }
+  // Default to white icons for dark mode compatibility
+  return `https://cdn.simpleicons.org/${iconSlug}/white`;
 }
 
 /**

@@ -29,8 +29,8 @@ WORKDIR /app
 # Copy package files
 COPY package.json package-lock.json* ./
 
-# Install dependencies
-RUN npm ci --only=production=false
+# Install dependencies (including devDependencies for build)
+RUN npm install --legacy-peer-deps
 
 # -----------------------------------------------------------------------------
 # Stage 3: Development - For local development

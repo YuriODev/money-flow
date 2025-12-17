@@ -12,13 +12,29 @@ export const metadata: Metadata = {
   },
 };
 
+// Script to run before React hydrates to prevent flash of wrong theme
+const themeScript = `
+  (function() {
+    const STORAGE_KEY = 'money-flow-theme';
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  })();
+`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
+    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body className="font-sans antialiased">
         <Providers>{children}</Providers>
       </body>

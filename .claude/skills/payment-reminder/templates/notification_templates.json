@@ -1,0 +1,158 @@
+{
+  "templates": {
+    "critical": {
+      "in_app": {
+        "title": "Payment Due {timeframe}!",
+        "body": "{service_name} - {currency}{amount}",
+        "icon": "alert-circle",
+        "color": "red",
+        "action": {
+          "text": "View Details",
+          "url": "/subscriptions/{id}"
+        }
+      },
+      "email": {
+        "subject": "Urgent: {service_name} payment due {timeframe}",
+        "preheader": "Your {currency}{amount} payment is due {timeframe}",
+        "template": "critical_payment"
+      },
+      "push": {
+        "title": "Payment Due {timeframe}!",
+        "body": "{service_name}: {currency}{amount}",
+        "priority": "high",
+        "sound": "alert",
+        "badge": 1,
+        "ttl": 3600
+      },
+      "sms": {
+        "message": "Money Flow: {service_name} payment of {currency}{amount} is due {timeframe}. Reply STOP to unsubscribe."
+      }
+    },
+    "high": {
+      "in_app": {
+        "title": "Payment Due Soon",
+        "body": "{service_name} - {currency}{amount} due in {days} days",
+        "icon": "clock",
+        "color": "orange",
+        "action": {
+          "text": "View Payment",
+          "url": "/subscriptions/{id}"
+        }
+      },
+      "email": {
+        "subject": "Reminder: {service_name} payment due in {days} days",
+        "preheader": "{currency}{amount} due on {due_date}",
+        "template": "high_priority_reminder"
+      },
+      "push": {
+        "title": "Payment Due Soon",
+        "body": "{service_name}: {currency}{amount} in {days} days",
+        "priority": "high",
+        "sound": "default"
+      }
+    },
+    "medium": {
+      "in_app": {
+        "title": "Upcoming Payment",
+        "body": "{service_name} - {currency}{amount} on {due_date}",
+        "icon": "calendar",
+        "color": "yellow",
+        "action": {
+          "text": "Manage",
+          "url": "/subscriptions/{id}"
+        }
+      },
+      "email": {
+        "subject": "Upcoming: {service_name} payment on {due_date}",
+        "preheader": "{currency}{amount} scheduled for {due_date}",
+        "template": "standard_reminder"
+      },
+      "push": {
+        "title": "Upcoming Payment",
+        "body": "{service_name}: {currency}{amount} on {due_date}",
+        "priority": "normal"
+      }
+    },
+    "low": {
+      "in_app": {
+        "title": "Payment Scheduled",
+        "body": "{service_name} - {currency}{amount} in {days} days",
+        "icon": "calendar-check",
+        "color": "blue",
+        "action": {
+          "text": "View",
+          "url": "/subscriptions/{id}"
+        }
+      },
+      "email": {
+        "subject": "Payment scheduled: {service_name}",
+        "preheader": "{currency}{amount} on {due_date}",
+        "template": "low_priority_reminder"
+      },
+      "push": {
+        "title": "Payment Scheduled",
+        "body": "{service_name}: {currency}{amount}",
+        "priority": "low"
+      }
+    },
+    "daily_digest": {
+      "email": {
+        "subject": "Your Daily Payment Summary - {date}",
+        "preheader": "{count} payments totaling {currency}{total}",
+        "template": "daily_digest"
+      },
+      "in_app": {
+        "title": "Daily Payment Summary",
+        "body": "{count} payments due this week ({currency}{total})",
+        "icon": "list",
+        "color": "gray",
+        "action": {
+          "text": "View All",
+          "url": "/calendar"
+        }
+      }
+    },
+    "weekly_summary": {
+      "email": {
+        "subject": "Your Weekly Payment Summary - {week_range}",
+        "preheader": "{count} payments totaling {currency}{total} this week",
+        "template": "weekly_summary"
+      }
+    }
+  },
+  "variables": {
+    "timeframe": {
+      "0": "today",
+      "1": "tomorrow",
+      "default": "in {days} days"
+    },
+    "currency_symbols": {
+      "GBP": "£",
+      "USD": "$",
+      "EUR": "€",
+      "UAH": "₴"
+    }
+  },
+  "personalization_rules": [
+    {
+      "condition": "user.payment_history.on_time_rate > 0.95",
+      "action": "reduce_frequency",
+      "factor": 0.5
+    },
+    {
+      "condition": "payment.amount > settings.high_amount_threshold",
+      "action": "increase_urgency",
+      "levels": 1
+    },
+    {
+      "condition": "payment.type in ['housing', 'utilities']",
+      "action": "use_schedule",
+      "schedule": "bills"
+    },
+    {
+      "condition": "payment.category == 'debt'",
+      "action": "add_context",
+      "context": "debt_progress"
+    }
+  ]
+}

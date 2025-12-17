@@ -37,17 +37,17 @@ export function CurrencySelector() {
         className={cn(
           "flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-200",
           "glass-card-subtle hover:shadow-md",
-          isOpen && "ring-2 ring-blue-200"
+          isOpen && "ring-2 ring-blue-200 dark:ring-blue-700"
         )}
       >
         <span className="text-lg">{currencyInfo.flag}</span>
-        <span className="font-semibold text-gray-700">{currencyInfo.symbol}</span>
-        <span className="text-sm text-gray-500 hidden sm:inline">{currency}</span>
+        <span className="font-semibold text-gray-700 dark:text-gray-200">{currencyInfo.symbol}</span>
+        <span className="text-sm text-gray-500 dark:text-gray-400 hidden sm:inline">{currency}</span>
         <motion.div
           animate={{ rotate: isOpen ? 180 : 0 }}
           transition={{ duration: 0.2 }}
         >
-          <ChevronDown className="w-4 h-4 text-gray-400" />
+          <ChevronDown className="w-4 h-4 text-gray-400 dark:text-gray-500" />
         </motion.div>
       </motion.button>
 
@@ -58,9 +58,9 @@ export function CurrencySelector() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.15 }}
-            className="absolute right-0 top-full mt-2 z-50 w-56 glass-card rounded-2xl shadow-xl p-2 overflow-hidden"
+            className="absolute right-0 top-full mt-2 z-50 w-56 glass-card rounded-2xl shadow-xl p-2 overflow-hidden bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700"
           >
-            <p className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">
+            <p className="px-3 py-2 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">
               Display Currency
             </p>
             {CURRENCIES.map((c) => (
@@ -71,14 +71,14 @@ export function CurrencySelector() {
                 className={cn(
                   "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200",
                   currency === c.code
-                    ? "bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700"
-                    : "hover:bg-gray-50 text-gray-700"
+                    ? "bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 text-blue-700 dark:text-blue-400"
+                    : "hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
                 )}
               >
                 <span className="text-xl">{c.flag}</span>
                 <div className="flex-1 text-left">
                   <p className="font-medium">{c.symbol} {c.code}</p>
-                  <p className="text-xs text-gray-500">{c.name}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{c.name}</p>
                 </div>
                 {currency === c.code && (
                   <motion.div

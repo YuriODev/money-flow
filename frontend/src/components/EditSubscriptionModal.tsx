@@ -6,6 +6,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { subscriptionApi, cardsApi, type Subscription, type PaymentType, PAYMENT_TYPE_LABELS } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { X, Save, Loader2, Calendar, CreditCard, Wallet, ChevronDown, Tag } from "lucide-react";
+import { toast } from "@/components/Toast";
 
 interface EditSubscriptionModalProps {
   isOpen: boolean;
@@ -75,7 +76,11 @@ export function EditSubscriptionModal({
       queryClient.invalidateQueries({ queryKey: ["summary"] });
       queryClient.invalidateQueries({ queryKey: ["calendar-events"] });
       queryClient.invalidateQueries({ queryKey: ["cards"] });
+      toast.success("Payment updated", `${subscription.name} has been updated.`);
       onClose();
+    },
+    onError: () => {
+      toast.error("Failed to update", "There was an error updating the payment. Please try again.");
     },
   });
 
@@ -120,10 +125,10 @@ export function EditSubscriptionModal({
             <div className="relative px-6 pt-6 pb-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900">
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
                     Edit Subscription
                   </h2>
-                  <p className="text-sm text-gray-500 mt-1">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                     {subscription.name}
                   </p>
                 </div>
@@ -131,9 +136,9 @@ export function EditSubscriptionModal({
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={onClose}
-                  className="p-2 rounded-xl hover:bg-gray-100 transition-colors"
+                  className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 >
-                  <X className="w-5 h-5 text-gray-500" />
+                  <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
                 </motion.button>
               </div>
             </div>
@@ -142,11 +147,11 @@ export function EditSubscriptionModal({
             <form onSubmit={handleSubmit} className="px-6 pb-6">
               {/* Amount Input */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Amount
                 </label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 font-medium">
                     {selectedCurrency?.symbol}
                   </span>
                   <input
@@ -157,8 +162,8 @@ export function EditSubscriptionModal({
                     onChange={(e) => setAmount(e.target.value)}
                     className={cn(
                       "w-full pl-10 pr-4 py-3 rounded-xl border-2 transition-all duration-200",
-                      "focus:ring-0 focus:border-blue-400 focus:shadow-lg focus:shadow-blue-100",
-                      "border-gray-200 bg-white/50 text-lg font-semibold"
+                      "focus:ring-0 focus:border-blue-400 dark:focus:border-blue-500 focus:shadow-lg focus:shadow-blue-100 dark:focus:shadow-blue-900/50",
+                      "border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 text-gray-900 dark:text-gray-100 text-lg font-semibold placeholder-gray-400 dark:placeholder-gray-500"
                     )}
                     placeholder="0.00"
                   />
@@ -167,19 +172,19 @@ export function EditSubscriptionModal({
 
               {/* Start Date */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Start Date
                 </label>
                 <div className="relative">
-                  <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
                   <input
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
                     className={cn(
                       "w-full pl-10 pr-4 py-3 rounded-xl border-2 transition-all duration-200",
-                      "focus:ring-0 focus:border-blue-400 focus:shadow-lg focus:shadow-blue-100",
-                      "border-gray-200 bg-white/50"
+                      "focus:ring-0 focus:border-blue-400 dark:focus:border-blue-500 focus:shadow-lg focus:shadow-blue-100 dark:focus:shadow-blue-900/50",
+                      "border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 text-gray-900 dark:text-gray-100"
                     )}
                   />
                 </div>
@@ -187,7 +192,7 @@ export function EditSubscriptionModal({
 
               {/* Currency Selector */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Currency
                 </label>
                 <div className="grid grid-cols-4 gap-2">
@@ -214,7 +219,7 @@ export function EditSubscriptionModal({
 
               {/* Payment Type Selector */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <div className="flex items-center gap-2">
                     <Tag className="w-4 h-4" />
                     Payment Type
@@ -226,16 +231,16 @@ export function EditSubscriptionModal({
                     onClick={() => setIsPaymentTypeDropdownOpen(!isPaymentTypeDropdownOpen)}
                     className={cn(
                       "w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 text-left",
-                      "focus:ring-0 focus:border-blue-400 focus:shadow-lg focus:shadow-blue-100",
-                      isPaymentTypeDropdownOpen ? "border-blue-400 shadow-lg shadow-blue-100" : "border-gray-200",
-                      "bg-white/50 flex items-center justify-between"
+                      "focus:ring-0 focus:border-blue-400 dark:focus:border-blue-500 focus:shadow-lg focus:shadow-blue-100 dark:focus:shadow-blue-900/50",
+                      isPaymentTypeDropdownOpen ? "border-blue-400 dark:border-blue-500 shadow-lg shadow-blue-100 dark:shadow-blue-900/50" : "border-gray-200 dark:border-gray-700",
+                      "bg-white/50 dark:bg-gray-800/50 flex items-center justify-between"
                     )}
                   >
-                    <span className="font-medium text-gray-900">
+                    <span className="font-medium text-gray-900 dark:text-gray-100">
                       {PAYMENT_TYPE_LABELS[paymentType]}
                     </span>
                     <ChevronDown className={cn(
-                      "w-5 h-5 text-gray-400 transition-transform",
+                      "w-5 h-5 text-gray-400 dark:text-gray-500 transition-transform",
                       isPaymentTypeDropdownOpen && "rotate-180"
                     )} />
                   </button>
@@ -247,7 +252,7 @@ export function EditSubscriptionModal({
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -10, scale: 0.95 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute z-[100] w-full mt-2 py-2 bg-white rounded-xl shadow-xl border border-gray-100 max-h-64 overflow-y-auto"
+                        className="absolute z-[100] w-full mt-2 py-2 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 max-h-64 overflow-y-auto"
                       >
                         {(Object.keys(PAYMENT_TYPE_LABELS) as PaymentType[]).map((type) => (
                           <button
@@ -258,13 +263,13 @@ export function EditSubscriptionModal({
                               setIsPaymentTypeDropdownOpen(false);
                             }}
                             className={cn(
-                              "w-full px-4 py-2.5 text-left hover:bg-gray-50 transition-colors",
-                              paymentType === type && "bg-blue-50"
+                              "w-full px-4 py-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors",
+                              paymentType === type && "bg-blue-50 dark:bg-blue-900/30"
                             )}
                           >
                             <span className={cn(
                               "font-medium",
-                              paymentType === type ? "text-blue-600" : "text-gray-700"
+                              paymentType === type ? "text-blue-600 dark:text-blue-400" : "text-gray-700 dark:text-gray-300"
                             )}>
                               {PAYMENT_TYPE_LABELS[type]}
                             </span>
@@ -285,7 +290,7 @@ export function EditSubscriptionModal({
 
               {/* Payment Card Selector - Custom Dropdown */}
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <div className="flex items-center gap-2">
                     <Wallet className="w-4 h-4" />
                     Payment Card
@@ -298,9 +303,9 @@ export function EditSubscriptionModal({
                     onClick={() => setIsCardDropdownOpen(!isCardDropdownOpen)}
                     className={cn(
                       "w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 text-left",
-                      "focus:ring-0 focus:border-blue-400 focus:shadow-lg focus:shadow-blue-100",
-                      isCardDropdownOpen ? "border-blue-400 shadow-lg shadow-blue-100" : "border-gray-200",
-                      "bg-white/50 flex items-center gap-3"
+                      "focus:ring-0 focus:border-blue-400 dark:focus:border-blue-500 focus:shadow-lg focus:shadow-blue-100 dark:focus:shadow-blue-900/50",
+                      isCardDropdownOpen ? "border-blue-400 dark:border-blue-500 shadow-lg shadow-blue-100 dark:shadow-blue-900/50" : "border-gray-200 dark:border-gray-700",
+                      "bg-white/50 dark:bg-gray-800/50 flex items-center gap-3"
                     )}
                   >
                     {selectedCard ? (
@@ -309,7 +314,7 @@ export function EditSubscriptionModal({
                           <img
                             src={selectedCard.icon_url}
                             alt={selectedCard.bank_name}
-                            className="w-8 h-8 rounded-lg object-contain bg-gray-50"
+                            className="w-8 h-8 rounded-lg object-contain bg-gray-50 dark:bg-gray-700"
                           />
                         ) : (
                           <div
@@ -320,22 +325,22 @@ export function EditSubscriptionModal({
                           </div>
                         )}
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-gray-900 truncate">{selectedCard.name}</p>
-                          <p className="text-xs text-gray-500">
+                          <p className="font-medium text-gray-900 dark:text-gray-100 truncate">{selectedCard.name}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
                             {selectedCard.bank_name} {selectedCard.last_four ? `• ${selectedCard.last_four}` : ""} • {selectedCard.currency}
                           </p>
                         </div>
                       </>
                     ) : (
                       <>
-                        <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
-                          <X className="w-4 h-4 text-gray-400" />
+                        <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                          <X className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                         </div>
-                        <span className="text-gray-500">No card assigned</span>
+                        <span className="text-gray-500 dark:text-gray-400">No card assigned</span>
                       </>
                     )}
                     <ChevronDown className={cn(
-                      "w-5 h-5 text-gray-400 transition-transform ml-auto",
+                      "w-5 h-5 text-gray-400 dark:text-gray-500 transition-transform ml-auto",
                       isCardDropdownOpen && "rotate-180"
                     )} />
                   </button>
@@ -348,7 +353,7 @@ export function EditSubscriptionModal({
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute z-[100] w-full bottom-full mb-2 py-2 bg-white rounded-xl shadow-xl border border-gray-100 max-h-64 overflow-y-auto"
+                        className="absolute z-[100] w-full bottom-full mb-2 py-2 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 max-h-64 overflow-y-auto"
                       >
                         {/* No card option */}
                         <button
@@ -358,16 +363,16 @@ export function EditSubscriptionModal({
                             setIsCardDropdownOpen(false);
                           }}
                           className={cn(
-                            "w-full px-4 py-2.5 flex items-center gap-3 hover:bg-gray-50 transition-colors",
-                            !cardId && "bg-blue-50"
+                            "w-full px-4 py-2.5 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors",
+                            !cardId && "bg-blue-50 dark:bg-blue-900/30"
                           )}
                         >
-                          <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
-                            <X className="w-4 h-4 text-gray-400" />
+                          <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                            <X className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                           </div>
                           <span className={cn(
                             "font-medium",
-                            !cardId ? "text-blue-600" : "text-gray-700"
+                            !cardId ? "text-blue-600 dark:text-blue-400" : "text-gray-700 dark:text-gray-300"
                           )}>No card assigned</span>
                         </button>
 
@@ -381,15 +386,15 @@ export function EditSubscriptionModal({
                               setIsCardDropdownOpen(false);
                             }}
                             className={cn(
-                              "w-full px-4 py-2.5 flex items-center gap-3 hover:bg-gray-50 transition-colors",
-                              cardId === card.id && "bg-blue-50"
+                              "w-full px-4 py-2.5 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors",
+                              cardId === card.id && "bg-blue-50 dark:bg-blue-900/30"
                             )}
                           >
                             {card.icon_url ? (
                               <img
                                 src={card.icon_url}
                                 alt={card.bank_name}
-                                className="w-8 h-8 rounded-lg object-contain bg-gray-50"
+                                className="w-8 h-8 rounded-lg object-contain bg-gray-50 dark:bg-gray-700"
                               />
                             ) : (
                               <div
@@ -402,9 +407,9 @@ export function EditSubscriptionModal({
                             <div className="flex-1 min-w-0 text-left">
                               <p className={cn(
                                 "font-medium truncate",
-                                cardId === card.id ? "text-blue-600" : "text-gray-900"
+                                cardId === card.id ? "text-blue-600 dark:text-blue-400" : "text-gray-900 dark:text-gray-100"
                               )}>{card.name}</p>
-                              <p className="text-xs text-gray-500">
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
                                 {card.bank_name} {card.last_four ? `• ${card.last_four}` : ""} • {card.currency}
                               </p>
                             </div>
@@ -433,7 +438,7 @@ export function EditSubscriptionModal({
                 className={cn(
                   "w-full py-3 rounded-xl font-semibold transition-all duration-200",
                   "bg-gradient-to-r from-blue-500 to-indigo-500 text-white",
-                  "hover:shadow-lg hover:shadow-blue-200",
+                  "hover:shadow-lg hover:shadow-blue-200 dark:hover:shadow-blue-900/50",
                   "disabled:opacity-50 disabled:cursor-not-allowed",
                   "flex items-center justify-center gap-2"
                 )}
@@ -456,7 +461,7 @@ export function EditSubscriptionModal({
                 <motion.p
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="mt-4 text-sm text-red-600 text-center"
+                  className="mt-4 text-sm text-red-600 dark:text-red-400 text-center"
                 >
                   Failed to update subscription. Please try again.
                 </motion.p>
