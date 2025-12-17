@@ -593,14 +593,37 @@ export function SubscriptionList({ initialFilter }: SubscriptionListProps) {
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => subscriptionApi.delete(id),
+    // Optimistic update - immediately remove from UI
+    onMutate: async (deletedId) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["subscriptions"] });
+
+      // Snapshot previous value
+      const previousSubscriptions = queryClient.getQueryData<Subscription[]>(["subscriptions"]);
+
+      // Optimistically update by removing the item
+      queryClient.setQueryData<Subscription[]>(["subscriptions"], (old) =>
+        old?.filter((sub) => sub.id !== deletedId) ?? []
+      );
+
+      // Return context with snapshot
+      return { previousSubscriptions };
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
       queryClient.invalidateQueries({ queryKey: ["summary"] });
       queryClient.invalidateQueries({ queryKey: ["calendar-events"] });
       toast.success("Payment deleted", "The payment has been removed from your list.");
     },
-    onError: () => {
+    onError: (_err, _deletedId, context) => {
+      // Rollback on error
+      if (context?.previousSubscriptions) {
+        queryClient.setQueryData(["subscriptions"], context.previousSubscriptions);
+      }
       toast.error("Failed to delete", "There was an error deleting the payment. Please try again.");
+    },
+    onSettled: () => {
+      // Always refetch after error or success to ensure sync
+      queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
     },
   });
 

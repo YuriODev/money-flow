@@ -583,153 +583,189 @@ Prepare database for multi-user scale with proper indexing, partitioning, and ba
 
 ---
 
-## Sprint 3.3: Service Architecture Improvements (Week 11)
+## Sprint 3.3: Service Architecture Improvements (Week 11) ✅ COMPLETE
 
 ### Overview
 Improve service architecture with dependency injection, proper error handling, and resilience patterns.
 
+**Status: ✅ COMPLETE** (December 16, 2025)
+
+**Completed:**
+- Dependency injection with `dependency-injector` library
+- Service container with Singleton, Factory, and Resource providers
+- Custom exception hierarchy in `src/core/exceptions.py`
+- Global exception handler with error codes and messages
+- Resilience patterns with circuit breaker, retry, and timeout
+- ARQ async task queue with Redis
+- Unit tests for container, exceptions, resilience, and tasks (455 tests total)
+
 | Task ID | Task Name | Priority | Hours | Dependencies | Deliverable |
 |---------|-----------|----------|-------|--------------|-------------|
-| **3.3.1** | **Dependency Injection** | 🟠 | 5h | None | DI pattern |
-| 3.3.1.1 | Install dependency-injector | 🟠 | 0.5h | - | DI library |
-| 3.3.1.2 | Create service container | 🟠 | 1h | 3.3.1.1 | Container |
-| 3.3.1.3 | Refactor services to use DI | 🟠 | 2h | 3.3.1.2 | Service refactor |
-| 3.3.1.4 | Create factory providers | 🟠 | 0.5h | 3.3.1.2 | Factories |
-| 3.3.1.5 | Add singleton providers for expensive resources | 🟠 | 0.5h | 3.3.1.2 | Singletons |
-| 3.3.1.6 | Update tests to use test container | 🟠 | 0.5h | 3.3.1.3 | Test updates |
-| **3.3.2** | **Error Handling Standardization** | 🔴 | 5h | None | Error handling |
-| 3.3.2.1 | Create custom exception hierarchy | 🔴 | 1h | - | Exceptions |
-| 3.3.2.2 | Create global exception handler | 🔴 | 1h | 3.3.2.1 | Handler |
-| 3.3.2.3 | Add validation error formatting | 🟠 | 0.5h | 3.3.2.2 | Validation errors |
-| 3.3.2.4 | Add database error handling | 🔴 | 0.5h | 3.3.2.2 | DB errors |
-| 3.3.2.5 | Add external API error handling | 🟠 | 0.5h | 3.3.2.2 | API errors |
-| 3.3.2.6 | Add error codes and messages catalog | 🟠 | 1h | 3.3.2.1 | Error catalog |
-| 3.3.2.7 | Update frontend error handling | 🟠 | 0.5h | 3.3.2.6 | Frontend errors |
-| **3.3.3** | **Resilience Patterns** | 🟠 | 6h | None | Resilience |
-| 3.3.3.1 | Add circuit breaker for Claude API | 🟠 | 1h | - | Circuit breaker |
-| 3.3.3.2 | Add retry with exponential backoff | 🟠 | 1h | 3.3.3.1 | Retry logic |
-| 3.3.3.3 | Add timeout configuration | 🔴 | 0.5h | - | Timeouts |
-| 3.3.3.4 | Add bulkhead pattern for AI requests | 🟡 | 1h | 3.3.3.1 | Bulkhead |
-| 3.3.3.5 | Add fallback for degraded mode | 🟠 | 1h | 3.3.3.1 | Fallback |
-| 3.3.3.6 | Add health degradation indicators | 🟡 | 0.5h | 3.3.3.5 | Health status |
-| 3.3.3.7 | Test failure scenarios | 🟠 | 1h | 3.3.3.2 | Chaos testing |
-| **3.3.4** | **Async Task Queue** | 🟡 | 5h | None | Background tasks |
-| 3.3.4.1 | Evaluate task queue options (Celery/ARQ) | 🟡 | 0.5h | - | Evaluation |
-| 3.3.4.2 | Set up ARQ with Redis | 🟡 | 1h | 3.3.4.1 | ARQ setup |
-| 3.3.4.3 | Move email sending to background | 🟡 | 0.5h | 3.3.4.2 | Email queue |
-| 3.3.4.4 | Move export generation to background | 🟡 | 1h | 3.3.4.2 | Export queue |
-| 3.3.4.5 | Add task monitoring | 🟡 | 0.5h | 3.3.4.2 | Task monitoring |
-| 3.3.4.6 | Add task retry logic | 🟡 | 0.5h | 3.3.4.2 | Task retry |
-| 3.3.4.7 | Update Docker Compose with worker | 🟡 | 1h | 3.3.4.2 | Worker container |
+| **3.3.1** | **Dependency Injection** | ✅ | 5h | None | DI pattern |
+| 3.3.1.1 | Install dependency-injector | ✅ | 0.5h | - | DI library |
+| 3.3.1.2 | Create service container | ✅ | 1h | 3.3.1.1 | Container |
+| 3.3.1.3 | Refactor services to use DI | ✅ | 2h | 3.3.1.2 | Service refactor |
+| 3.3.1.4 | Create factory providers | ✅ | 0.5h | 3.3.1.2 | Factories |
+| 3.3.1.5 | Add singleton providers for expensive resources | ✅ | 0.5h | 3.3.1.2 | Singletons |
+| 3.3.1.6 | Update tests to use test container | ✅ | 0.5h | 3.3.1.3 | Test updates |
+| **3.3.2** | **Error Handling Standardization** | ✅ | 5h | None | Error handling |
+| 3.3.2.1 | Create custom exception hierarchy | ✅ | 1h | - | Exceptions |
+| 3.3.2.2 | Create global exception handler | ✅ | 1h | 3.3.2.1 | Handler |
+| 3.3.2.3 | Add validation error formatting | ✅ | 0.5h | 3.3.2.2 | Validation errors |
+| 3.3.2.4 | Add database error handling | ✅ | 0.5h | 3.3.2.2 | DB errors |
+| 3.3.2.5 | Add external API error handling | ✅ | 0.5h | 3.3.2.2 | API errors |
+| 3.3.2.6 | Add error codes and messages catalog | ✅ | 1h | 3.3.2.1 | Error catalog |
+| 3.3.2.7 | Update frontend error handling | ✅ | 0.5h | 3.3.2.6 | Frontend errors |
+| **3.3.3** | **Resilience Patterns** | ✅ | 6h | None | Resilience |
+| 3.3.3.1 | Add circuit breaker for Claude API | ✅ | 1h | - | Circuit breaker |
+| 3.3.3.2 | Add retry with exponential backoff | ✅ | 1h | 3.3.3.1 | Retry logic |
+| 3.3.3.3 | Add timeout configuration | ✅ | 0.5h | - | Timeouts |
+| 3.3.3.4 | Add bulkhead pattern for AI requests | ✅ | 1h | 3.3.3.1 | Bulkhead |
+| 3.3.3.5 | Add fallback for degraded mode | ✅ | 1h | 3.3.3.1 | Fallback |
+| 3.3.3.6 | Add health degradation indicators | ✅ | 0.5h | 3.3.3.5 | Health status |
+| 3.3.3.7 | Test failure scenarios | ✅ | 1h | 3.3.3.2 | Chaos testing |
+| **3.3.4** | **Async Task Queue** | ✅ | 5h | None | Background tasks |
+| 3.3.4.1 | Evaluate task queue options (Celery/ARQ) | ✅ | 0.5h | - | Evaluation |
+| 3.3.4.2 | Set up ARQ with Redis | ✅ | 1h | 3.3.4.1 | ARQ setup |
+| 3.3.4.3 | Move email sending to background | ✅ | 0.5h | 3.3.4.2 | Email queue |
+| 3.3.4.4 | Move export generation to background | ✅ | 1h | 3.3.4.2 | Export queue |
+| 3.3.4.5 | Add task monitoring | ✅ | 0.5h | 3.3.4.2 | Task monitoring |
+| 3.3.4.6 | Add task retry logic | ✅ | 0.5h | 3.3.4.2 | Task retry |
+| 3.3.4.7 | Update Docker Compose with worker | ✅ | 1h | 3.3.4.2 | Worker container |
 
 ---
 
-## Sprint 3.4: Monitoring & Alerting (Week 12)
+## Sprint 3.4: Monitoring & Alerting (Week 12) ✅ COMPLETE
 
 ### Overview
 Implement comprehensive monitoring stack with Prometheus, Grafana, and alerting.
 
+**Status: ✅ COMPLETE** (December 16, 2025)
+
+**Completed:**
+- Prometheus setup with scrape targets for all services
+- PostgreSQL, Redis, and Node exporters configured
+- Grafana dashboards with provisioning
+- API performance dashboard in JSON format
+- Alertmanager with alert routing configuration
+- Alert rules for errors, latency, service health, database, AI agent
+- Loki log aggregation with 7-day retention
+- Promtail log shipping from Docker containers
+- All monitoring services added to docker-compose.yml
+
 | Task ID | Task Name | Priority | Hours | Dependencies | Deliverable |
 |---------|-----------|----------|-------|--------------|-------------|
-| **3.4.1** | **Prometheus Setup** | 🟠 | 4h | None | Metrics collection |
-| 3.4.1.1 | Add Prometheus to Docker Compose | 🟠 | 0.5h | - | Prometheus container |
-| 3.4.1.2 | Configure Prometheus scrape targets | 🟠 | 0.5h | 3.4.1.1 | Scrape config |
-| 3.4.1.3 | Add FastAPI metrics exporter | 🟠 | 0.5h | 3.4.1.1 | Backend metrics |
-| 3.4.1.4 | Add PostgreSQL exporter | 🟠 | 0.5h | 3.4.1.1 | DB metrics |
-| 3.4.1.5 | Add Redis exporter | 🟡 | 0.5h | 3.4.1.1 | Redis metrics |
-| 3.4.1.6 | Add Qdrant metrics | 🟡 | 0.5h | 3.4.1.1 | Vector DB metrics |
-| 3.4.1.7 | Configure retention and storage | 🟠 | 0.5h | 3.4.1.1 | Storage config |
+| **3.4.1** | **Prometheus Setup** | ✅ | 4h | None | Metrics collection |
+| 3.4.1.1 | Add Prometheus to Docker Compose | ✅ | 0.5h | - | Prometheus container |
+| 3.4.1.2 | Configure Prometheus scrape targets | ✅ | 0.5h | 3.4.1.1 | Scrape config |
+| 3.4.1.3 | Add FastAPI metrics exporter | ✅ | 0.5h | 3.4.1.1 | Backend metrics |
+| 3.4.1.4 | Add PostgreSQL exporter | ✅ | 0.5h | 3.4.1.1 | DB metrics |
+| 3.4.1.5 | Add Redis exporter | ✅ | 0.5h | 3.4.1.1 | Redis metrics |
+| 3.4.1.6 | Add Qdrant metrics | ✅ | 0.5h | 3.4.1.1 | Vector DB metrics |
+| 3.4.1.7 | Configure retention and storage | ✅ | 0.5h | 3.4.1.1 | Storage config |
 | 3.4.1.8 | Set up Prometheus federation (future) | 🟡 | 0.5h | 3.4.1.7 | Federation prep |
-| **3.4.2** | **Grafana Dashboards** | 🟠 | 6h | 3.4.1 | Visualizations |
-| 3.4.2.1 | Add Grafana to Docker Compose | 🟠 | 0.5h | - | Grafana container |
-| 3.4.2.2 | Create API performance dashboard | 🟠 | 1h | 3.4.2.1 | API dashboard |
-| 3.4.2.3 | Create database dashboard | 🟠 | 1h | 3.4.2.1 | DB dashboard |
-| 3.4.2.4 | Create AI agent dashboard | 🟠 | 1h | 3.4.2.1 | AI dashboard |
-| 3.4.2.5 | Create RAG metrics dashboard | 🟡 | 1h | 3.4.2.1 | RAG dashboard |
-| 3.4.2.6 | Create business metrics dashboard | 🟡 | 1h | 3.4.2.1 | Business dashboard |
-| 3.4.2.7 | Export dashboards as code | 🟠 | 0.5h | 3.4.2.2 | Dashboard as code |
-| **3.4.3** | **Alerting Rules** | 🔴 | 5h | 3.4.1 | Alerts |
-| 3.4.3.1 | Configure Alertmanager | 🔴 | 0.5h | - | Alertmanager |
-| 3.4.3.2 | Add high error rate alert | 🔴 | 0.5h | 3.4.3.1 | Error alert |
-| 3.4.3.3 | Add high latency alert (p95 > 1s) | 🔴 | 0.5h | 3.4.3.1 | Latency alert |
-| 3.4.3.4 | Add database connection alert | 🔴 | 0.5h | 3.4.3.1 | DB alert |
-| 3.4.3.5 | Add service down alert | 🔴 | 0.5h | 3.4.3.1 | Uptime alert |
-| 3.4.3.6 | Add disk space alert | 🟠 | 0.5h | 3.4.3.1 | Disk alert |
-| 3.4.3.7 | Add Claude API quota alert | 🟠 | 0.5h | 3.4.3.1 | Quota alert |
-| 3.4.3.8 | Configure Slack integration | 🟠 | 0.5h | 3.4.3.1 | Slack alerts |
+| **3.4.2** | **Grafana Dashboards** | ✅ | 6h | 3.4.1 | Visualizations |
+| 3.4.2.1 | Add Grafana to Docker Compose | ✅ | 0.5h | - | Grafana container |
+| 3.4.2.2 | Create API performance dashboard | ✅ | 1h | 3.4.2.1 | API dashboard |
+| 3.4.2.3 | Create database dashboard | ✅ | 1h | 3.4.2.1 | DB dashboard |
+| 3.4.2.4 | Create AI agent dashboard | ✅ | 1h | 3.4.2.1 | AI dashboard |
+| 3.4.2.5 | Create RAG metrics dashboard | ✅ | 1h | 3.4.2.1 | RAG dashboard |
+| 3.4.2.6 | Create business metrics dashboard | ✅ | 1h | 3.4.2.1 | Business dashboard |
+| 3.4.2.7 | Export dashboards as code | ✅ | 0.5h | 3.4.2.2 | Dashboard as code |
+| **3.4.3** | **Alerting Rules** | ✅ | 5h | 3.4.1 | Alerts |
+| 3.4.3.1 | Configure Alertmanager | ✅ | 0.5h | - | Alertmanager |
+| 3.4.3.2 | Add high error rate alert | ✅ | 0.5h | 3.4.3.1 | Error alert |
+| 3.4.3.3 | Add high latency alert (p95 > 1s) | ✅ | 0.5h | 3.4.3.1 | Latency alert |
+| 3.4.3.4 | Add database connection alert | ✅ | 0.5h | 3.4.3.1 | DB alert |
+| 3.4.3.5 | Add service down alert | ✅ | 0.5h | 3.4.3.1 | Uptime alert |
+| 3.4.3.6 | Add disk space alert | ✅ | 0.5h | 3.4.3.1 | Disk alert |
+| 3.4.3.7 | Add Claude API quota alert | ✅ | 0.5h | 3.4.3.1 | Quota alert |
+| 3.4.3.8 | Configure Slack integration | ✅ | 0.5h | 3.4.3.1 | Slack alerts |
 | 3.4.3.9 | Configure PagerDuty (future) | 🟡 | 0.5h | 3.4.3.1 | PagerDuty |
-| 3.4.3.10 | Test alert routing | 🔴 | 0.5h | 3.4.3.8 | Alert testing |
-| **3.4.4** | **Log Aggregation** | 🟡 | 4h | None | Centralized logs |
-| 3.4.4.1 | Set up Loki for log aggregation | 🟡 | 1h | - | Loki setup |
-| 3.4.4.2 | Configure Promtail log shipping | 🟡 | 0.5h | 3.4.4.1 | Log shipping |
-| 3.4.4.3 | Create log exploration dashboard | 🟡 | 1h | 3.4.4.1 | Log dashboard |
-| 3.4.4.4 | Set up log-based alerts | 🟡 | 0.5h | 3.4.4.1 | Log alerts |
-| 3.4.4.5 | Configure log retention | 🟡 | 0.5h | 3.4.4.1 | Log retention |
-| 3.4.4.6 | Add request trace correlation | 🟡 | 0.5h | 3.4.4.2 | Trace correlation |
+| 3.4.3.10 | Test alert routing | ✅ | 0.5h | 3.4.3.8 | Alert testing |
+| **3.4.4** | **Log Aggregation** | ✅ | 4h | None | Centralized logs |
+| 3.4.4.1 | Set up Loki for log aggregation | ✅ | 1h | - | Loki setup |
+| 3.4.4.2 | Configure Promtail log shipping | ✅ | 0.5h | 3.4.4.1 | Log shipping |
+| 3.4.4.3 | Create log exploration dashboard | ✅ | 1h | 3.4.4.1 | Log dashboard |
+| 3.4.4.4 | Set up log-based alerts | ✅ | 0.5h | 3.4.4.1 | Log alerts |
+| 3.4.4.5 | Configure log retention | ✅ | 0.5h | 3.4.4.1 | Log retention |
+| 3.4.4.6 | Add request trace correlation | ✅ | 0.5h | 3.4.4.2 | Trace correlation |
 
 **Phase 3 Completion Checklist:**
 ```
-□ API versioned at /api/v1/
-□ Comprehensive API documentation
-□ Database indexes optimized
-□ Backup/restore tested
-□ Dependency injection implemented
-□ Circuit breakers for external APIs
-□ Prometheus metrics collection
-□ Grafana dashboards operational
-□ Alerting configured and tested
+✅ API versioned at /api/v1/ (Sprint 3.1)
+✅ Comprehensive API documentation (Sprint 3.1)
+✅ Database indexes optimized (Sprint 3.2)
+✅ Backup/restore tested (Sprint 3.2)
+✅ Dependency injection implemented (Sprint 3.3)
+✅ Circuit breakers for external APIs (Sprint 3.3)
+✅ Prometheus metrics collection (Sprint 3.4)
+✅ Grafana dashboards operational (Sprint 3.4)
+✅ Alerting configured and tested (Sprint 3.4)
 ```
+
+**Phase 3 Status: ✅ COMPLETE** (December 16, 2025)
 
 ---
 
 # PHASE 4: Features & Polish (Weeks 13-16)
 
-## Sprint 4.1: Custom Claude Skills (Week 13)
+## Sprint 4.1: Custom Claude Skills (Week 13) ✅ COMPLETE
 
 ### Overview
 Create custom Claude Skills specifically for Money Flow to enhance AI capabilities.
 
+**Status: ✅ COMPLETE** (December 16, 2025)
+
+**Completed:**
+- Financial Analysis Skill with spending analysis, budget comparison, trend detection, anomaly alerts
+- Payment Reminder Skill with urgency classification, multi-channel support, scheduling logic
+- Debt Management Skill with avalanche/snowball strategies, interest calculations, Python calculator module
+- Savings Goal Skill with goal tracking, contribution recommendations, milestone celebrations
+- 32 unit tests for skill calculators
+- Skills README documentation
+
 | Task ID | Task Name | Priority | Hours | Dependencies | Deliverable |
 |---------|-----------|----------|-------|--------------|-------------|
-| **4.1.1** | **Financial Analysis Skill** | 🟠 | 6h | None | Analysis skill |
-| 4.1.1.1 | Create SKILL.md structure | 🟠 | 0.5h | - | Skill structure |
-| 4.1.1.2 | Define spending analysis patterns | 🟠 | 1h | 4.1.1.1 | Analysis patterns |
-| 4.1.1.3 | Add budget comparison logic | 🟠 | 1h | 4.1.1.2 | Budget comparison |
-| 4.1.1.4 | Add trend detection instructions | 🟠 | 1h | 4.1.1.2 | Trend detection |
-| 4.1.1.5 | Add anomaly detection patterns | 🟡 | 1h | 4.1.1.2 | Anomaly detection |
-| 4.1.1.6 | Create example prompts and outputs | 🟠 | 0.5h | 4.1.1.2 | Examples |
-| 4.1.1.7 | Test skill integration | 🟠 | 1h | 4.1.1.5 | Integration test |
-| **4.1.2** | **Payment Reminder Skill** | 🟡 | 4h | None | Reminder skill |
-| 4.1.2.1 | Create reminder generation patterns | 🟡 | 1h | - | Reminder patterns |
-| 4.1.2.2 | Add urgency level classification | 🟡 | 0.75h | 4.1.2.1 | Urgency levels |
-| 4.1.2.3 | Add personalization rules | 🟡 | 0.75h | 4.1.2.1 | Personalization |
-| 4.1.2.4 | Add multi-channel format templates | 🟡 | 0.75h | 4.1.2.1 | Format templates |
-| 4.1.2.5 | Create notification scheduling logic | 🟡 | 0.75h | 4.1.2.2 | Scheduling |
-| **4.1.3** | **Debt Management Skill** | 🟠 | 5h | None | Debt skill |
-| 4.1.3.1 | Create debt payoff strategy patterns | 🟠 | 1h | - | Payoff strategies |
-| 4.1.3.2 | Add avalanche vs snowball comparison | 🟠 | 1h | 4.1.3.1 | Method comparison |
-| 4.1.3.3 | Add interest calculation helpers | 🟠 | 1h | 4.1.3.1 | Interest calc |
-| 4.1.3.4 | Add debt-free date projection | 🟠 | 1h | 4.1.3.2 | Date projection |
-| 4.1.3.5 | Create motivational response patterns | 🟡 | 0.5h | 4.1.3.1 | Motivation |
-| 4.1.3.6 | Test with various debt scenarios | 🟠 | 0.5h | 4.1.3.4 | Scenario testing |
-| **4.1.4** | **Savings Goal Skill** | 🟡 | 4h | None | Savings skill |
-| 4.1.4.1 | Create goal tracking patterns | 🟡 | 1h | - | Goal tracking |
-| 4.1.4.2 | Add milestone celebration messages | 🟡 | 0.5h | 4.1.4.1 | Milestones |
-| 4.1.4.3 | Add contribution recommendation logic | 🟡 | 1h | 4.1.4.1 | Recommendations |
-| 4.1.4.4 | Add goal achievement projection | 🟡 | 1h | 4.1.4.1 | Projections |
-| 4.1.4.5 | Create progress visualization prompts | 🟡 | 0.5h | 4.1.4.1 | Visualizations |
-| **4.1.5** | **Skill Testing & Documentation** | 🟠 | 4h | 4.1.1-4.1.4 | Skill docs |
-| 4.1.5.1 | Create skill test suite | 🟠 | 1h | - | Test suite |
-| 4.1.5.2 | Test skill composition (multiple skills) | 🟠 | 1h | 4.1.5.1 | Composition test |
-| 4.1.5.3 | Document skill usage | 🟠 | 1h | - | Usage docs |
-| 4.1.5.4 | Create skill showcase demo | 🟡 | 0.5h | 4.1.5.3 | Demo |
-| 4.1.5.5 | Package skills for distribution | 🟡 | 0.5h | 4.1.5.3 | Package |
+| **4.1.1** | **Financial Analysis Skill** | ✅ | 6h | None | Analysis skill |
+| 4.1.1.1 | Create SKILL.md structure | ✅ | 0.5h | - | Skill structure |
+| 4.1.1.2 | Define spending analysis patterns | ✅ | 1h | 4.1.1.1 | Analysis patterns |
+| 4.1.1.3 | Add budget comparison logic | ✅ | 1h | 4.1.1.2 | Budget comparison |
+| 4.1.1.4 | Add trend detection instructions | ✅ | 1h | 4.1.1.2 | Trend detection |
+| 4.1.1.5 | Add anomaly detection patterns | ✅ | 1h | 4.1.1.2 | Anomaly detection |
+| 4.1.1.6 | Create example prompts and outputs | ✅ | 0.5h | 4.1.1.2 | Examples |
+| 4.1.1.7 | Test skill integration | ✅ | 1h | 4.1.1.5 | Integration test |
+| **4.1.2** | **Payment Reminder Skill** | ✅ | 4h | None | Reminder skill |
+| 4.1.2.1 | Create reminder generation patterns | ✅ | 1h | - | Reminder patterns |
+| 4.1.2.2 | Add urgency level classification | ✅ | 0.75h | 4.1.2.1 | Urgency levels |
+| 4.1.2.3 | Add personalization rules | ✅ | 0.75h | 4.1.2.1 | Personalization |
+| 4.1.2.4 | Add multi-channel format templates | ✅ | 0.75h | 4.1.2.1 | Format templates |
+| 4.1.2.5 | Create notification scheduling logic | ✅ | 0.75h | 4.1.2.2 | Scheduling |
+| **4.1.3** | **Debt Management Skill** | ✅ | 5h | None | Debt skill |
+| 4.1.3.1 | Create debt payoff strategy patterns | ✅ | 1h | - | Payoff strategies |
+| 4.1.3.2 | Add avalanche vs snowball comparison | ✅ | 1h | 4.1.3.1 | Method comparison |
+| 4.1.3.3 | Add interest calculation helpers | ✅ | 1h | 4.1.3.1 | Interest calc |
+| 4.1.3.4 | Add debt-free date projection | ✅ | 1h | 4.1.3.2 | Date projection |
+| 4.1.3.5 | Create motivational response patterns | ✅ | 0.5h | 4.1.3.1 | Motivation |
+| 4.1.3.6 | Test with various debt scenarios | ✅ | 0.5h | 4.1.3.4 | Scenario testing |
+| **4.1.4** | **Savings Goal Skill** | ✅ | 4h | None | Savings skill |
+| 4.1.4.1 | Create goal tracking patterns | ✅ | 1h | - | Goal tracking |
+| 4.1.4.2 | Add milestone celebration messages | ✅ | 0.5h | 4.1.4.1 | Milestones |
+| 4.1.4.3 | Add contribution recommendation logic | ✅ | 1h | 4.1.4.1 | Recommendations |
+| 4.1.4.4 | Add goal achievement projection | ✅ | 1h | 4.1.4.1 | Projections |
+| 4.1.4.5 | Create progress visualization prompts | ✅ | 0.5h | 4.1.4.1 | Visualizations |
+| **4.1.5** | **Skill Testing & Documentation** | ✅ | 4h | 4.1.1-4.1.4 | Skill docs |
+| 4.1.5.1 | Create skill test suite | ✅ | 1h | - | Test suite |
+| 4.1.5.2 | Test skill composition (multiple skills) | ✅ | 1h | 4.1.5.1 | Composition test |
+| 4.1.5.3 | Document skill usage | ✅ | 1h | - | Usage docs |
+| 4.1.5.4 | Create skill showcase demo | ✅ | 0.5h | 4.1.5.3 | Demo |
+| 4.1.5.5 | Package skills for distribution | ✅ | 0.5h | 4.1.5.3 | Package |
 
 **Custom Skills File Structure:**
 ```
 money-flow-skills/
 ├── financial-analysis/
-│   ├── SKILL.md
+│   ├── SKILL.mdDid 
 │   ├── examples/
 │   └── scripts/
 ├── payment-reminder/
@@ -752,37 +788,187 @@ Polish the frontend with improved UX, accessibility, and mobile responsiveness.
 
 | Task ID | Task Name | Priority | Hours | Dependencies | Deliverable |
 |---------|-----------|----------|-------|--------------|-------------|
-| **4.2.1** | **Mobile Responsiveness** | 🟠 | 6h | None | Mobile UI |
-| 4.2.1.1 | Audit current mobile breakpoints | 🟠 | 0.5h | - | Breakpoint audit |
-| 4.2.1.2 | Fix subscription list mobile layout | 🟠 | 1h | 4.2.1.1 | List responsive |
-| 4.2.1.3 | Fix calendar mobile layout | 🟠 | 1h | 4.2.1.1 | Calendar responsive |
-| 4.2.1.4 | Fix cards dashboard mobile layout | 🟠 | 1h | 4.2.1.1 | Cards responsive |
-| 4.2.1.5 | Fix agent chat mobile layout | 🟠 | 1h | 4.2.1.1 | Chat responsive |
-| 4.2.1.6 | Add mobile navigation drawer | 🟠 | 1h | 4.2.1.1 | Nav drawer |
-| 4.2.1.7 | Test on various device sizes | 🟠 | 0.5h | 4.2.1.2 | Device testing |
-| **4.2.2** | **Accessibility (a11y)** | 🟠 | 5h | None | Accessible UI |
-| 4.2.2.1 | Add ARIA labels to all interactive elements | 🟠 | 1h | - | ARIA labels |
-| 4.2.2.2 | Ensure keyboard navigation | 🟠 | 1h | 4.2.2.1 | Keyboard nav |
-| 4.2.2.3 | Add focus indicators | 🟠 | 0.5h | 4.2.2.2 | Focus states |
-| 4.2.2.4 | Check color contrast ratios | 🟠 | 0.5h | - | Contrast check |
-| 4.2.2.5 | Add screen reader announcements | 🟡 | 1h | 4.2.2.1 | SR support |
-| 4.2.2.6 | Run axe-core accessibility audit | 🟠 | 0.5h | 4.2.2.1 | a11y audit |
-| 4.2.2.7 | Fix audit findings | 🟠 | 0.5h | 4.2.2.6 | Fix issues |
-| **4.2.3** | **UX Improvements** | 🟡 | 6h | None | Better UX |
-| 4.2.3.1 | Add loading skeletons | 🟡 | 1h | - | Skeletons |
-| 4.2.3.2 | Add optimistic updates | 🟡 | 1.5h | - | Optimistic UI |
-| 4.2.3.3 | Add pull-to-refresh (mobile) | 🟡 | 0.5h | - | Pull refresh |
-| 4.2.3.4 | Add keyboard shortcuts | 🟡 | 1h | - | Shortcuts |
-| 4.2.3.5 | Add toast notifications | 🟡 | 0.5h | - | Toasts |
-| 4.2.3.6 | Add confirmation dialogs for destructive actions | 🟠 | 0.5h | - | Confirmations |
-| 4.2.3.7 | Add empty state illustrations | 🟡 | 0.5h | - | Empty states |
-| 4.2.3.8 | Add onboarding tour | 🟡 | 0.5h | - | Onboarding |
-| **4.2.4** | **Dark Mode** | 🟡 | 4h | None | Dark theme |
-| 4.2.4.1 | Create dark color palette with OKLCH | 🟡 | 1h | - | Dark palette |
-| 4.2.4.2 | Add theme toggle component | 🟡 | 0.5h | 4.2.4.1 | Toggle |
-| 4.2.4.3 | Update all components for dark mode | 🟡 | 1.5h | 4.2.4.1 | Component updates |
-| 4.2.4.4 | Add system preference detection | 🟡 | 0.5h | 4.2.4.2 | System pref |
-| 4.2.4.5 | Persist theme preference | 🟡 | 0.5h | 4.2.4.2 | Persistence |
+| **4.2.1** | **Mobile Responsiveness** | ✅ | 6h | None | Mobile UI |
+| 4.2.1.1 | Audit current mobile breakpoints | ✅ | 0.5h | - | Breakpoint audit |
+| 4.2.1.2 | Fix subscription list mobile layout | ✅ | 1h | 4.2.1.1 | List responsive |
+| 4.2.1.3 | Fix calendar mobile layout | ✅ | 1h | 4.2.1.1 | Calendar responsive |
+| 4.2.1.4 | Fix cards dashboard mobile layout | ✅ | 1h | 4.2.1.1 | Cards responsive |
+| 4.2.1.5 | Fix agent chat mobile layout | ✅ | 1h | 4.2.1.1 | Chat responsive |
+| 4.2.1.6 | Add mobile navigation drawer | ✅ | 1h | 4.2.1.1 | Nav drawer |
+| 4.2.1.7 | Test on various device sizes | ✅ | 0.5h | 4.2.1.2 | Device testing |
+| **4.2.2** | **Accessibility (a11y)** | ✅ | 5h | None | Accessible UI |
+| 4.2.2.1 | Add ARIA labels to all interactive elements | ✅ | 1h | - | ARIA labels |
+| 4.2.2.2 | Ensure keyboard navigation | ✅ | 1h | 4.2.2.1 | Keyboard nav |
+| 4.2.2.3 | Add focus indicators | ✅ | 0.5h | 4.2.2.2 | Focus states |
+| 4.2.2.4 | Check color contrast ratios | ✅ | 0.5h | - | Contrast check |
+| 4.2.2.5 | Add screen reader announcements | ✅ | 1h | 4.2.2.1 | SR support |
+| 4.2.2.6 | Run axe-core accessibility audit | ✅ | 0.5h | 4.2.2.1 | a11y audit |
+| 4.2.2.7 | Fix audit findings | ✅ | 0.5h | 4.2.2.6 | Fix issues |
+| **4.2.3** | **UX Improvements** | ✅ | 6h | None | Better UX |
+| 4.2.3.1 | Add loading skeletons | ✅ | 1h | - | Skeletons |
+| 4.2.3.2 | Add optimistic updates | ✅ | 1.5h | - | Optimistic UI |
+| 4.2.3.3 | Add pull-to-refresh (mobile) | ✅ | 0.5h | - | Pull refresh |
+| 4.2.3.4 | Add keyboard shortcuts | ✅ | 1h | - | Shortcuts |
+| 4.2.3.5 | Add toast notifications | ✅ | 0.5h | - | Toasts |
+| 4.2.3.6 | Add confirmation dialogs for destructive actions | ✅ | 0.5h | - | Confirmations |
+| 4.2.3.7 | Add empty state illustrations | ✅ | 0.5h | - | Empty states |
+| 4.2.3.8 | Add onboarding tour | ✅ | 0.5h | - | Onboarding |
+| **4.2.4** | **Dark Mode** | ✅ | 12h | None | Dark theme |
+| 4.2.4.1 | Create dark color palette with OKLCH | ✅ | 1h | - | Dark palette |
+| 4.2.4.2 | Add theme toggle component | ✅ | 0.5h | 4.2.4.1 | Toggle |
+| 4.2.4.3 | Add system preference detection | ✅ | 0.5h | 4.2.4.2 | System pref |
+| 4.2.4.4 | Persist theme preference | ✅ | 0.5h | 4.2.4.2 | Persistence |
+| 4.2.4.5 | Add inline script for flash prevention | ✅ | 0.25h | 4.2.4.3 | No flash |
+| **4.2.5** | **Dark Mode - Global Styles** | ✅ | 2h | 4.2.4 | Global dark |
+| 4.2.5.1 | Update globals.css glass-card classes | ✅ | 0.25h | - | Glass cards |
+| 4.2.5.2 | Update globals.css gradient-mesh | ✅ | 0.25h | - | Gradient mesh |
+| 4.2.5.3 | Update globals.css shimmer animation | ✅ | 0.25h | - | Shimmer |
+| 4.2.5.4 | Update globals.css btn-glass styles | ✅ | 0.25h | - | Glass buttons |
+| 4.2.5.5 | Update globals.css input-glass styles | ✅ | 0.25h | - | Glass inputs |
+| 4.2.5.6 | Update globals.css text-gradient | ✅ | 0.25h | - | Text gradients |
+| 4.2.5.7 | Update globals.css scrollbar styles | ✅ | 0.25h | - | Scrollbars |
+| 4.2.5.8 | Update Tailwind dark mode base colors | ✅ | 0.25h | - | Base colors |
+| **4.2.6** | **Dark Mode - Header Component** | ✅ | 0.5h | 4.2.4 | Header dark |
+| 4.2.6.1 | Update Header glass-card background | ✅ | 0.1h | - | Header bg |
+| 4.2.6.2 | Update Import/Export button | ✅ | 0.1h | - | I/E button |
+| 4.2.6.3 | Update theme toggle button | ✅ | 0.1h | - | Theme toggle |
+| 4.2.6.4 | Update user menu dropdown | ✅ | 0.1h | - | User menu |
+| 4.2.6.5 | Update date display text | ✅ | 0.1h | - | Date text |
+| **4.2.7** | **Dark Mode - StatsPanel Component** | ✅ | 1h | 4.2.4 | Stats dark |
+| 4.2.7.1 | Update stat card backgrounds | ✅ | 0.2h | - | Card bg |
+| 4.2.7.2 | Update stat card borders | ✅ | 0.1h | - | Card borders |
+| 4.2.7.3 | Update Monthly Spending card colors | ✅ | 0.1h | - | Monthly colors |
+| 4.2.7.4 | Update Yearly Total card colors | ✅ | 0.1h | - | Yearly colors |
+| 4.2.7.5 | Update Active Payments card colors | ✅ | 0.1h | - | Active colors |
+| 4.2.7.6 | Update Total Debt card colors | ✅ | 0.1h | - | Debt colors |
+| 4.2.7.7 | Update stat card icon containers | ✅ | 0.1h | - | Icon containers |
+| 4.2.7.8 | Update stat card labels and values | ✅ | 0.1h | - | Labels/values |
+| **4.2.8** | **Dark Mode - Main Page Tabs** | ✅ | 0.5h | 4.2.4 | Tabs dark |
+| 4.2.8.1 | Update tab container background | ✅ | 0.1h | - | Tab container |
+| 4.2.8.2 | Update inactive tab text color | ✅ | 0.1h | - | Inactive tabs |
+| 4.2.8.3 | Update active tab background | ✅ | 0.1h | - | Active tab bg |
+| 4.2.8.4 | Update tab hover states | ✅ | 0.1h | - | Tab hover |
+| 4.2.8.5 | Update tab icons color | ✅ | 0.1h | - | Tab icons |
+| **4.2.9** | **Dark Mode - AgentChat Component** | ✅ | 1.5h | 4.2.4 | Chat dark |
+| 4.2.9.1 | Update chat container background | ✅ | 0.1h | - | Chat bg |
+| 4.2.9.2 | Update chat header/title | ✅ | 0.1h | - | Chat header |
+| 4.2.9.3 | Update AI welcome message card | ✅ | 0.2h | - | Welcome card |
+| 4.2.9.4 | Update quick action buttons | ✅ | 0.2h | - | Action buttons |
+| 4.2.9.5 | Update chat message bubbles (user) | ✅ | 0.15h | - | User bubbles |
+| 4.2.9.6 | Update chat message bubbles (AI) | ✅ | 0.15h | - | AI bubbles |
+| 4.2.9.7 | Update chat input field | ✅ | 0.15h | - | Input field |
+| 4.2.9.8 | Update send button | ✅ | 0.1h | - | Send button |
+| 4.2.9.9 | Update typing indicator | ✅ | 0.1h | - | Typing dots |
+| 4.2.9.10 | Update scroll area | ✅ | 0.1h | - | Scroll area |
+| **4.2.10** | **Dark Mode - SubscriptionList Component** | ✅ | 2h | 4.2.4 | List dark |
+| 4.2.10.1 | Update list header (Your Payments title) | ✅ | 0.1h | - | List header |
+| 4.2.10.2 | Update Add Payment button | ✅ | 0.1h | - | Add button |
+| 4.2.10.3 | Update category filter pills container | ✅ | 0.1h | - | Filter container |
+| 4.2.10.4 | Update category pill inactive state | ✅ | 0.15h | - | Inactive pills |
+| 4.2.10.5 | Update category pill active state | ✅ | 0.15h | - | Active pills |
+| 4.2.10.6 | Update category pill counts badge | ✅ | 0.1h | - | Count badges |
+| 4.2.10.7 | Update subscription card background | ✅ | 0.2h | - | Card bg |
+| 4.2.10.8 | Update subscription card border | ✅ | 0.1h | - | Card border |
+| 4.2.10.9 | Update subscription name text | ✅ | 0.1h | - | Name text |
+| 4.2.10.10 | Update subscription category badge | ✅ | 0.1h | - | Category badge |
+| 4.2.10.11 | Update subscription amount text | ✅ | 0.1h | - | Amount text |
+| 4.2.10.12 | Update subscription frequency text | ✅ | 0.1h | - | Frequency text |
+| 4.2.10.13 | Update due date display | ✅ | 0.1h | - | Due date |
+| 4.2.10.14 | Update "Due today" badge | ✅ | 0.1h | - | Due today |
+| 4.2.10.15 | Update "X days" remaining badge | ✅ | 0.1h | - | Days remaining |
+| 4.2.10.16 | Update notes/description text | ✅ | 0.1h | - | Notes text |
+| 4.2.10.17 | Update edit/delete action buttons | ✅ | 0.1h | - | Action buttons |
+| **4.2.11** | **Dark Mode - CardsDashboard Component** | ✅ | 1.5h | 4.2.4 | Cards dark |
+| 4.2.11.1 | Update cards dashboard header | ✅ | 0.1h | - | Dashboard header |
+| 4.2.11.2 | Update Add Card button | ✅ | 0.1h | - | Add card btn |
+| 4.2.11.3 | Update summary card backgrounds | ✅ | 0.15h | - | Summary bg |
+| 4.2.11.4 | Update Total Due stat box | ✅ | 0.15h | - | Total due |
+| 4.2.11.5 | Update Paid stat box | ✅ | 0.15h | - | Paid box |
+| 4.2.11.6 | Update Remaining stat box | ✅ | 0.15h | - | Remaining box |
+| 4.2.11.7 | Update progress bar track | ✅ | 0.1h | - | Progress track |
+| 4.2.11.8 | Update progress bar fill | ✅ | 0.1h | - | Progress fill |
+| 4.2.11.9 | Update "Due Next Month" section | ✅ | 0.1h | - | Due next month |
+| 4.2.11.10 | Update individual card items | ✅ | 0.15h | - | Card items |
+| 4.2.11.11 | Update card name and bank text | ✅ | 0.1h | - | Card text |
+| **4.2.12** | **Dark Mode - PaymentCalendar Component** | ✅ | 1h | 4.2.4 | Calendar dark |
+| 4.2.12.1 | Update calendar container | ✅ | 0.1h | - | Calendar bg |
+| 4.2.12.2 | Update month navigation arrows | ✅ | 0.1h | - | Nav arrows |
+| 4.2.12.3 | Update month/year header | ✅ | 0.1h | - | Month header |
+| 4.2.12.4 | Update day of week headers | ✅ | 0.1h | - | Day headers |
+| 4.2.12.5 | Update regular day cells | ✅ | 0.1h | - | Day cells |
+| 4.2.12.6 | Update today highlight | ✅ | 0.1h | - | Today highlight |
+| 4.2.12.7 | Update days with payments indicator | ✅ | 0.15h | - | Payment dots |
+| 4.2.12.8 | Update payment details popup | ✅ | 0.15h | - | Details popup |
+| **4.2.13** | **Dark Mode - AddSubscriptionModal** | ✅ | 1h | 4.2.4 | Add modal dark |
+| 4.2.13.1 | Update modal overlay backdrop | ✅ | 0.1h | - | Modal overlay |
+| 4.2.13.2 | Update modal container background | ✅ | 0.1h | - | Modal bg |
+| 4.2.13.3 | Update modal header/title | ✅ | 0.1h | - | Modal header |
+| 4.2.13.4 | Update close button | ✅ | 0.05h | - | Close btn |
+| 4.2.13.5 | Update form labels | ✅ | 0.1h | - | Form labels |
+| 4.2.13.6 | Update text input fields | ✅ | 0.15h | - | Text inputs |
+| 4.2.13.7 | Update select dropdowns | ✅ | 0.15h | - | Selects |
+| 4.2.13.8 | Update date picker | ✅ | 0.1h | - | Date picker |
+| 4.2.13.9 | Update cancel button | ✅ | 0.05h | - | Cancel btn |
+| 4.2.13.10 | Update submit button | ✅ | 0.05h | - | Submit btn |
+| **4.2.14** | **Dark Mode - EditSubscriptionModal** | ✅ | 0.5h | 4.2.13 | Edit modal dark |
+| 4.2.14.1 | Apply same styles as AddSubscriptionModal | ✅ | 0.25h | - | Same styles |
+| 4.2.14.2 | Update delete confirmation state | ✅ | 0.25h | - | Delete confirm |
+| **4.2.15** | **Dark Mode - ImportExportModal** | ✅ | 0.5h | 4.2.4 | I/E modal dark |
+| 4.2.15.1 | Update modal container | ✅ | 0.1h | - | Modal container |
+| 4.2.15.2 | Update tab switcher (Import/Export) | ✅ | 0.1h | - | Tab switcher |
+| 4.2.15.3 | Update file drop zone | ✅ | 0.15h | - | Drop zone |
+| 4.2.15.4 | Update format selection buttons | ✅ | 0.1h | - | Format btns |
+| 4.2.15.5 | Update status messages | ✅ | 0.05h | - | Status msgs |
+| **4.2.16** | **Dark Mode - CurrencySelector** | ✅ | 0.25h | 4.2.4 | Currency dark |
+| 4.2.16.1 | Update dropdown trigger button | ✅ | 0.1h | - | Trigger btn |
+| 4.2.16.2 | Update dropdown menu | ✅ | 0.1h | - | Menu bg |
+| 4.2.16.3 | Update currency option items | ✅ | 0.05h | - | Option items |
+| **4.2.17** | **Dark Mode - Login Page** | ✅ | 0.5h | 4.2.4 | Login dark |
+| 4.2.17.1 | Update page background | ✅ | 0.1h | - | Page bg |
+| 4.2.17.2 | Update login card container | ✅ | 0.1h | - | Card container |
+| 4.2.17.3 | Update form inputs | ✅ | 0.1h | - | Form inputs |
+| 4.2.17.4 | Update login button | ✅ | 0.1h | - | Login btn |
+| 4.2.17.5 | Update register link | ✅ | 0.1h | - | Register link |
+| **4.2.18** | **Dark Mode - Register Page** | ✅ | 0.5h | 4.2.17 | Register dark |
+| 4.2.18.1 | Apply same styles as Login page | ✅ | 0.25h | - | Same styles |
+| 4.2.18.2 | Update password requirements text | ✅ | 0.25h | - | Requirements |
+| **4.2.19** | **Dark Mode - Error Pages** | ✅ | 0.25h | 4.2.4 | Error dark |
+| 4.2.19.1 | Update error.tsx page | ✅ | 0.1h | - | Error page |
+| 4.2.19.2 | Update global-error.tsx page | ✅ | 0.15h | - | Global error |
+| **4.2.20** | **Dark Mode - Toast Notifications** | ✅ | 0.25h | 4.2.4 | Toast dark |
+| 4.2.20.1 | Update success toast | ✅ | 0.1h | - | Success toast |
+| 4.2.20.2 | Update error toast | ✅ | 0.1h | - | Error toast |
+| 4.2.20.3 | Update info/warning toast | ✅ | 0.05h | - | Other toasts |
+| **4.2.21** | **Dark Mode - Loading States** | ✅ | 0.5h | 4.2.4 | Loading dark |
+| 4.2.21.1 | Update loading spinner | ✅ | 0.1h | - | Spinner |
+| 4.2.21.2 | Update skeleton loaders | ✅ | 0.2h | - | Skeletons |
+| 4.2.21.3 | Update progress indicators | ✅ | 0.2h | - | Progress |
+| **4.2.22** | **Dark Mode - Empty States** | ✅ | 0.25h | 4.2.4 | Empty dark |
+| 4.2.22.1 | Update "No subscriptions" state | ✅ | 0.1h | - | No subs |
+| 4.2.22.2 | Update "No cards" state | ✅ | 0.1h | - | No cards |
+| 4.2.22.3 | Update search "No results" state | ✅ | 0.05h | - | No results |
+| **4.2.23** | **Dark Mode - Scrollbars & Misc** | ✅ | 0.25h | 4.2.4 | Misc dark |
+| 4.2.23.1 | Update custom scrollbar colors | ✅ | 0.1h | - | Scrollbars |
+| 4.2.23.2 | Update focus ring colors | ✅ | 0.1h | - | Focus rings |
+| 4.2.23.3 | Update selection highlight | ✅ | 0.05h | - | Selection |
+| **4.2.24** | **Dark Mode - Testing & Polish** | ✅ | 1h | 4.2.5-4.2.23 | Testing |
+| 4.2.24.1 | Test all components in dark mode | ✅ | 0.25h | - | Component test |
+| 4.2.24.2 | Check contrast ratios (WCAG AA) | ✅ | 0.25h | - | Contrast check |
+| 4.2.24.3 | Test theme transitions smoothness | ✅ | 0.15h | - | Transitions |
+| 4.2.24.4 | Test system preference changes | ✅ | 0.1h | - | System pref |
+| 4.2.24.5 | Fix any visual inconsistencies | ✅ | 0.25h | - | Visual fixes |
+| **4.2.25** | **Dark Mode - Documentation** | ✅ | 0.25h | 4.2.24 | Docs |
+| 4.2.25.1 | Document dark mode color palette | ✅ | 0.1h | - | Palette docs |
+| 4.2.25.2 | Update component styling guide | ✅ | 0.1h | - | Style guide |
+| 4.2.25.3 | Add dark mode to CHANGELOG | ✅ | 0.05h | - | Changelog |
+| **4.2.26** | **Dark Mode - Refinements & Bug Fixes** | ✅ | 2h | 4.2.25 | Refinements |
+| 4.2.26.1 | Fix SimpleIcons CDN URL (use cdn.simpleicons.org) | ✅ | 0.25h | - | Icon CDN fix |
+| 4.2.26.2 | Fix card hover blinking animation | ✅ | 0.25h | - | Hover fix |
+| 4.2.26.3 | Fix calendar payment completion handler | ✅ | 0.25h | - | Calendar fix |
+| 4.2.26.4 | Improve glass-card dark mode styling | ✅ | 0.25h | - | Card styling |
+| 4.2.26.5 | Add missing service icons (Klarna, Lloyds, etc.) | ✅ | 0.25h | - | Service icons |
+| 4.2.26.6 | Improve subscription card hover shadow | ✅ | 0.25h | - | Shadow refinement |
+| 4.2.26.7 | Add inset border highlight for glass cards | ✅ | 0.25h | - | Border highlight |
 
 ---
 

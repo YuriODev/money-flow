@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { SubscriptionList } from "@/components/SubscriptionList";
@@ -9,8 +9,12 @@ import { StatsPanel } from "@/components/StatsPanel";
 import { Header } from "@/components/Header";
 import { PaymentCalendar } from "@/components/PaymentCalendar";
 import { CardsDashboard } from "@/components/CardsDashboard";
+import { KeyboardShortcutsModal } from "@/components/KeyboardShortcutsModal";
 import { Bot, CreditCard, Calendar, Sparkles, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useKeyboardShortcuts, SHORTCUTS } from "@/hooks/useKeyboardShortcuts";
+import { useTheme } from "@/lib/theme-context";
+import { useAuth } from "@/lib/auth-context";
 
 type ViewType = "list" | "calendar" | "cards" | "agent";
 const VALID_VIEWS: ViewType[] = ["list", "calendar", "cards", "agent"];
@@ -41,6 +45,9 @@ const viewConfig = {
 export default function Home() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { toggleTheme } = useTheme();
+  const { isAuthenticated } = useAuth();
+  const [showShortcutsModal, setShowShortcutsModal] = useState(false);
 
   // Get initial view from URL params (computed once, no effect needed)
   const initialView = useMemo(() => {
@@ -72,6 +79,37 @@ export default function Home() {
 
   // Get filter from URL for SubscriptionList
   const filterParam = searchParams.get("filter");
+
+  // Keyboard shortcuts - only enabled when authenticated
+  useKeyboardShortcuts({
+    shortcuts: [
+      {
+        ...SHORTCUTS.VIEW_LIST,
+        callback: () => handleViewChange("list"),
+      },
+      {
+        ...SHORTCUTS.VIEW_CALENDAR,
+        callback: () => handleViewChange("calendar"),
+      },
+      {
+        ...SHORTCUTS.VIEW_CARDS,
+        callback: () => handleViewChange("cards"),
+      },
+      {
+        ...SHORTCUTS.VIEW_AGENT,
+        callback: () => handleViewChange("agent"),
+      },
+      {
+        ...SHORTCUTS.TOGGLE_THEME,
+        callback: toggleTheme,
+      },
+      {
+        ...SHORTCUTS.HELP,
+        callback: () => setShowShortcutsModal(true),
+      },
+    ],
+    enabled: isAuthenticated,
+  });
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -199,6 +237,12 @@ export default function Home() {
 
       {/* Decorative bottom gradient */}
       <div className="fixed bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white dark:from-gray-900 to-transparent pointer-events-none z-0" />
+
+      {/* Keyboard Shortcuts Modal */}
+      <KeyboardShortcutsModal
+        isOpen={showShortcutsModal}
+        onClose={() => setShowShortcutsModal(false)}
+      />
     </div>
   );
 }

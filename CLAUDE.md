@@ -23,6 +23,225 @@
 | **Phase 2** | Sprint 2.4 | ✅ Complete | Performance & Load Testing |
 | **Phase 3** | Sprint 3.1 | ✅ Complete | API Versioning & Documentation |
 | **Phase 3** | Sprint 3.2 | ✅ Complete | Database Scalability |
+| **Phase 3** | Sprint 3.3 | ✅ Complete | Service Architecture Improvements |
+| **Phase 3** | Sprint 3.4 | ✅ Complete | Monitoring & Alerting |
+| **Phase 4** | Sprint 4.1 | ✅ Complete | Custom Claude Skills |
+| **Phase 4** | Sprint 4.2 | ✅ Complete | Frontend Enhancements |
+
+### Sprint 4.2 Tasks (Week 14) - Frontend Enhancements ✅
+
+| Task | Status | Description |
+|------|--------|-------------|
+| 4.2.1 | ✅ DONE | Mobile Responsiveness |
+| 4.2.2 | ✅ DONE | Accessibility (a11y) |
+| 4.2.3 | ✅ DONE | UX Improvements |
+| 4.2.4 | ✅ DONE | Dark Mode - Core Implementation |
+| 4.2.5-4.2.25 | ✅ DONE | Dark Mode - All Components |
+
+**Sprint 4.2.1 Features Completed (Mobile Responsiveness):**
+- **Responsive Navigation** - Mobile-friendly tab bar with horizontal scroll
+- **Touch-Friendly Targets** - All buttons min 44x44px touch targets
+- **Mobile Optimized Cards** - Stacked layouts on small screens
+- **Mobile Stats Panel** - 2-column grid on mobile, 4-column on desktop
+- **Mobile Calendar** - Compact day cells, swipe-friendly month navigation
+- **Mobile Forms** - Full-width inputs, native date pickers
+- **Mobile Agent Chat** - Full-height chat, sticky input
+- **Breakpoint Utilities** - `sm:`, `md:`, `lg:` responsive classes throughout
+
+**Sprint 4.2.2 Features Completed (Accessibility):**
+- **Skip Link** - Skip to main content link for keyboard users
+- **Focus Management** - Enhanced focus-visible styles, focus rings
+- **Screen Reader Support** - Live regions for announcements
+- **ARIA Labels** - Proper roles, labels, and descriptions
+- **Semantic HTML** - section, article, nav elements
+- **Keyboard Navigation** - Arrow key support for filter tabs (roving tabindex)
+- **Reduced Motion** - prefers-reduced-motion media query support
+- **Color Contrast** - WCAG AA compliant color combinations
+
+**Sprint 4.2.3 Features Completed (UX Improvements):**
+- **Loading Skeletons** - Shimmer animations during data loading
+- **Optimistic Updates** - Instant feedback for delete operations with rollback
+- **Keyboard Shortcuts** (`frontend/src/hooks/useKeyboardShortcuts.ts`)
+  - `Ctrl+1-4` - Switch between views (list, calendar, cards, agent)
+  - `Ctrl+D` - Toggle dark mode
+  - `Shift+?` - Show keyboard shortcuts modal
+- **Keyboard Shortcuts Modal** (`frontend/src/components/KeyboardShortcutsModal.tsx`)
+  - Beautiful glass-card modal with categorized shortcuts
+  - Platform-aware key display (⌘ on Mac, Ctrl on Windows)
+- **Toast Notifications** - Success/error toasts for user feedback
+- **Confirmation Dialogs** - Delete confirmation with clear actions
+
+**Sprint 4.2.4-4.2.25 Features Completed (Dark Mode):**
+- **Tailwind CSS v4 Dark Mode Configuration**
+  - `@custom-variant dark (&:where(.dark, .dark *));` for class-based dark mode
+  - Removed system preference dependency - user toggle only
+- **Theme Context** (`frontend/src/lib/theme-context.tsx`)
+  - Simple light/dark toggle with localStorage persistence
+  - No flash of wrong theme with inline script in layout.tsx
+- **Global Styles** (`frontend/src/app/globals.css`)
+  - Glass-card dark mode with rgba colors
+  - Shimmer animation dark mode
+  - btn-glass and input-glass dark mode
+- **All Components Updated:**
+  - Header, StatsPanel, Main Page Tabs
+  - AgentChat, SubscriptionList, CardsDashboard
+  - PaymentCalendar (CalendarDay cells)
+  - AddSubscriptionModal, EditSubscriptionModal
+  - ImportExportModal, CurrencySelector
+  - Login/Register pages, Toast notifications
+  - Loading states, Empty states, Scrollbars
+
+### Sprint 4.1 Tasks (Week 13) - Custom Claude Skills ✅
+
+| Task | Status | Description |
+|------|--------|-------------|
+| 4.1.1 | ✅ DONE | Financial Analysis Skill (spending analysis, budget comparison, trends, anomalies) |
+| 4.1.2 | ✅ DONE | Payment Reminder Skill (urgency classification, multi-channel, scheduling) |
+| 4.1.3 | ✅ DONE | Debt Management Skill (avalanche/snowball strategies, interest calculations) |
+| 4.1.4 | ✅ DONE | Savings Goal Skill (goal tracking, contribution recommendations, milestones) |
+| 4.1.5 | ✅ DONE | Skill Testing & Documentation (32 unit tests, README) |
+
+**Sprint 4.1 Features Completed:**
+- Custom Claude Skills directory structure (`skills/`)
+- **Financial Analysis Skill** (`skills/financial-analysis/`)
+  - `SKILL.md` - Skill definition with XML patterns, response templates, examples
+  - `examples/analysis_examples.json` - Sample inputs/outputs
+  - Capabilities: Monthly summaries, budget comparison, trend detection, anomaly alerts
+- **Payment Reminder Skill** (`skills/payment-reminder/`)
+  - `SKILL.md` - Urgency classification, scheduling logic, multi-channel support
+  - `templates/notification_templates.json` - In-app, email, push, SMS templates
+  - Capabilities: Smart reminders, daily/weekly digests, personalization
+- **Debt Management Skill** (`skills/debt-management/`)
+  - `SKILL.md` - Payoff strategies, interest calculations, progress tracking
+  - `calculators/interest_calculator.py` - Python module with 400+ lines of calculations
+  - Capabilities: Avalanche vs Snowball comparison, windfall impact, debt-free projections
+- **Savings Goal Skill** (`skills/savings-goal/`)
+  - `SKILL.md` - Goal tracking, milestones, contribution scenarios
+  - `projections/savings_calculator.py` - Python module for projections
+  - Capabilities: Progress tracking, on-track checks, milestone celebrations
+- **32 new unit tests** (`tests/unit/test_skills.py`)
+  - Interest calculations, payoff strategies, windfall impact
+  - Savings progress, contribution requirements, achievement projections
+  - Milestone tracking, on-track status checks
+- **Total unit tests: 487** (455 previous + 32 new)
+
+### Sprint 3.4 Tasks (Week 12) - Monitoring & Alerting ✅
+
+| Task | Status | Description |
+|------|--------|-------------|
+| 3.4.1 | ✅ DONE | Prometheus Setup (Docker, scrape config, exporters) |
+| 3.4.2 | ✅ DONE | Grafana Dashboards (API, DB, AI agent dashboards) |
+| 3.4.3 | ✅ DONE | Alerting Rules (Alertmanager, critical alerts) |
+| 3.4.4 | ✅ DONE | Log Aggregation (Loki + Promtail) |
+
+**Sprint 3.4 Features Completed:**
+- Prometheus setup (`monitoring/prometheus/`)
+  - `prometheus.yml` - scrape config for backend, postgres, redis, node exporters
+  - `rules/alerts.yml` - alerting rules for API, DB, Redis, AI agent, infrastructure
+  - Scrapes backend /metrics endpoint every 10s
+- Grafana dashboards (`monitoring/grafana/`)
+  - `provisioning/datasources/` - auto-configure Prometheus, Alertmanager, Loki
+  - `provisioning/dashboards/` - auto-load dashboards from JSON
+  - `dashboards/api-performance.json` - request rate, error rate, latency, status codes
+- Alertmanager configuration (`monitoring/alertmanager/`)
+  - `alertmanager.yml` - route config, receivers, inhibition rules
+  - Critical/warning severity routing
+- Log aggregation (`monitoring/loki/`, `monitoring/promtail/`)
+  - `loki-config.yml` - log storage with 7-day retention
+  - `promtail-config.yml` - Docker container log scraping
+- Docker Compose monitoring services
+  - `prometheus:9090` - metrics collection
+  - `grafana:3003` - visualization (admin/admin)
+  - `alertmanager:9093` - alert routing
+  - `postgres-exporter:9187` - PostgreSQL metrics
+  - `redis-exporter:9121` - Redis metrics
+  - `node-exporter:9100` - host metrics
+  - `loki:3100` - log aggregation
+  - `promtail` - log shipping agent
+
+### Sprint 3.3 Tasks (Week 11) - Service Architecture Improvements ✅
+
+| Task | Status | Description |
+|------|--------|-------------|
+| 3.3.1 | ✅ DONE | Dependency Injection (dependency-injector, service container) |
+| 3.3.2 | ✅ DONE | Error Handling Standardization (custom exceptions, global handler) |
+| 3.3.3 | ✅ DONE | Resilience Patterns (circuit breaker, retry, timeouts) |
+| 3.3.4 | ✅ DONE | Async Task Queue (ARQ for background tasks) |
+
+**Sprint 3.3.1 Features Completed:**
+- Dependency injection container (`src/core/container.py`)
+  - `dependency-injector>=4.41.0` library
+  - DeclarativeContainer with Configuration provider
+  - Singleton providers: db_session_factory, currency_service, anthropic_client
+  - Resource provider: redis_client (with lifecycle cleanup)
+  - `init_container()` - initializes container from Pydantic settings
+  - `get_container()` - returns global container instance
+  - `reset_container()` - clears singletons for test isolation
+- FastAPI dependency functions (`src/core/dependencies.py`)
+  - `get_db()` - async session with commit/rollback management
+  - `get_subscription_service()` - creates SubscriptionService with user_id
+  - `get_user_service()` - creates UserService
+  - `get_payment_card_service()` - creates PaymentCardService
+  - `get_currency_service()` - singleton CurrencyService
+- Container initialization at startup (`src/main.py`)
+- Container tests (`tests/unit/test_container.py`) - 24 tests
+
+**Sprint 3.3.3 Features Completed:**
+- Resilience module (`src/core/resilience.py`)
+  - `tenacity>=8.2.0` library for retry patterns
+  - `ResilienceConfig` - configurable retry, circuit breaker, timeout settings
+  - `retry_with_backoff` decorator - exponential backoff retry
+  - `circuit_breaker` decorator - circuit breaker pattern with states (CLOSED, OPEN, HALF_OPEN)
+  - `with_timeout` function - async timeout wrapper
+  - `resilient` decorator - combines retry + circuit breaker + timeout
+  - `resilient_call` function - programmatic resilience for one-off calls
+  - `CircuitOpenError` exception for open circuits
+  - `get_all_circuits()` - returns status of all circuit breakers
+  - `reset_circuit()` - resets circuit to closed state
+- Circuit breaker status in health endpoint (`src/api/health.py`)
+  - `CircuitBreakerStatus` model
+  - `/health/ready` now includes circuit breaker states
+- Resilience tests (`tests/unit/test_resilience.py`) - 20 tests
+
+**Sprint 3.3.4 Features Completed:**
+- Background task queue (`src/core/tasks.py`)
+  - `arq>=0.25.0` library (Async Redis Queue)
+  - `@task` decorator for registering background tasks
+  - `TaskInfo` model for task status tracking
+  - `enqueue_task()` - enqueue tasks with optional delay
+  - `get_task_status()` - check task execution status
+  - `get_queue_info()` - queue statistics
+  - `WorkerSettings` - ARQ worker configuration
+  - Built-in tasks: health_check_task, cleanup_expired_sessions, send_payment_reminders
+  - Lifecycle hooks: startup and shutdown
+  - Cron job support for scheduled tasks
+- Task queue tests (`tests/unit/test_tasks.py`) - 19 tests
+
+**Sprint 3.3.2 Features Completed:**
+- Centralized exception hierarchy (`src/core/exceptions.py`)
+  - Base `MoneyFlowError` with status_code, error_code, details
+  - Validation errors (422): ValidationError, InvalidInputError, MissingFieldError, PasswordWeakError
+  - Authentication errors (401): AuthenticationError, InvalidCredentialsError, TokenExpiredError, TokenInvalidError, AccountLockedError, AccountInactiveError
+  - Authorization errors (403): AuthorizationError, InsufficientPermissionsError
+  - Not Found errors (404): NotFoundError, SubscriptionNotFoundError, UserNotFoundError, CardNotFoundError
+  - Conflict errors (409): ConflictError, DuplicateEntryError, AlreadyExistsError, UserAlreadyExistsError
+  - Rate Limit errors (429): RateLimitError
+  - External Service errors (503): ExternalServiceError, ClaudeAPIError, DatabaseConnectionError, CacheConnectionError, VectorStoreError
+  - Business Logic errors (400): BusinessLogicError, OperationFailedError, InsufficientBalanceError
+- Global exception handler (`src/middleware/exception_handler.py`)
+  - MoneyFlowError handler with automatic status code mapping
+  - SQLAlchemyError handler for database errors
+  - PasswordStrengthError handler for password validation
+  - JWTTokenError handler for token validation
+- Updated services to use centralized exceptions
+  - `src/services/user_service.py` - uses AccountLockedError, InvalidCredentialsError, etc.
+  - `src/services/subscription_service.py` - uses SubscriptionNotFoundError
+- Simplified API routes (`src/api/auth.py`)
+  - Removed try/catch blocks, exceptions propagate to global handler
+  - Cleaner code, consistent error responses
+- Added ErrorCode constants (`src/schemas/response.py`)
+  - ACCOUNT_LOCKED, ACCOUNT_INACTIVE error codes
+- Exception tests (`tests/unit/test_exceptions.py`) - 38 tests
 
 ### Sprint 3.2 Tasks (Week 10) - Database Scalability ✅
 
@@ -404,8 +623,8 @@
 ```
 Phase 1: Foundation & Security  [Weeks 1-4]   ██████████ 100% ✅ COMPLETE
 Phase 2: Quality & Testing      [Weeks 5-8]   ██████████ 100% ✅ COMPLETE
-Phase 3: Architecture           [Weeks 9-12]  █████░░░░░ 50%  🔄 IN PROGRESS (3.1, 3.2 done)
-Phase 4: Features & Polish      [Weeks 13-16] ░░░░░░░░░░ 0%
+Phase 3: Architecture           [Weeks 9-12]  ██████████ 100% ✅ COMPLETE
+Phase 4: Features & Polish      [Weeks 13-16] ░░░░░░░░░░ 0%   🔜 NEXT
 ```
 
 ### Phase 1 Completion Checklist ✅
@@ -912,10 +1131,11 @@ This ensures context is preserved for future development.
 
 ---
 
-**Last Updated**: 2025-12-15
-**Version**: 3.2.0 (Phase 3 In Progress)
-**Current Phase**: Phase 3 - Architecture & Performance (50% complete)
-**Current Sprint**: 3.2 - Database Scalability ✅ COMPLETE
-**Next Sprint**: 3.3 - Monitoring & Alerting
-**Upcoming Feature**: Settings Page - See [Settings Roadmap](docs/SETTINGS_ROADMAP.md)
+**Last Updated**: 2025-12-17
+**Version**: 4.2.0 (Sprint 4.2 Complete)
+**Current Phase**: Phase 4 - Features & Polish
+**Current Sprint**: 4.2 - Frontend Enhancements ✅ Complete
+**Completed Phases**: Phase 1 ✅, Phase 2 ✅, Phase 3 ✅
+**Completed Sprints in Phase 4**: Sprint 4.1 ✅ (Custom Skills), Sprint 4.2 ✅ (Frontend Enhancements)
+**Upcoming Sprint**: Sprint 4.3 - Mobile App / PWA
 **For Questions**: Check [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md) or [.claude/CHANGELOG.md](.claude/CHANGELOG.md)
