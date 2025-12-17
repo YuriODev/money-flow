@@ -15,16 +15,17 @@ Note:
     This module intentionally does NOT use `from __future__ import annotations`
     because it causes FastAPI to misidentify Pydantic body parameters as query
     parameters during OpenAPI schema generation.
+
+    Exceptions from services are allowed to propagate to the global exception
+    handler which converts them to standardized error responses.
 """
 
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth.dependencies import get_current_active_user
-from src.auth.jwt import TokenError, TokenExpiredError, TokenInvalidError
-from src.auth.security import PasswordStrengthError
 from src.core.config import settings
 from src.core.dependencies import get_db
 from src.models.user import User
@@ -39,14 +40,7 @@ from src.schemas.user import (
     UserUpdate,
 )
 from src.security.rate_limit import limiter, rate_limit_auth, rate_limit_get, rate_limit_write
-from src.services.user_service import (
-    AccountInactiveError,
-    AccountLockedError,
-    InvalidCredentialsError,
-    UserAlreadyExistsError,
-    UserNotFoundError,
-    UserService,
-)
+from src.services.user_service import UserService
 
 logger = logging.getLogger(__name__)
 
@@ -79,7 +73,8 @@ async def register(
         Created user profile.
 
     Raises:
-        HTTPException 400: If email already exists or password too weak.
+        UserAlreadyExistsError: If email already exists.
+        PasswordStrengthError: If password doesn't meet requirements.
 
     Example:
         POST /auth/register
@@ -90,23 +85,7 @@ async def register(
         }
     """
     service = UserService(db)
-
-    try:
-        user = await service.create_user(user_data)
-    except UserAlreadyExistsError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered",
-        )
-    except PasswordStrengthError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail={
-                "message": e.message,
-                "errors": e.errors,
-            },
-        )
-
+    user = await service.create_user(user_data)
     logger.info(f"New user registered: {user.email}")
     return UserResponse.model_validate(user)
 
@@ -136,7 +115,9 @@ async def login(
         User profile and JWT tokens.
 
     Raises:
-        HTTPException 401: If credentials invalid or account locked.
+        InvalidCredentialsError: If credentials are invalid.
+        AccountLockedError: If account is locked.
+        AccountInactiveError: If account is inactive.
 
     Example:
         POST /auth/login
@@ -146,27 +127,10 @@ async def login(
         }
     """
     service = UserService(db)
-
-    try:
-        user, access_token, refresh_token = await service.authenticate(
-            email=login_data.email,
-            password=login_data.password,
-        )
-    except InvalidCredentialsError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password",
-        )
-    except AccountLockedError as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Account locked until {e.locked_until.isoformat()}",
-        )
-    except AccountInactiveError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Account is inactive",
-        )
+    user, access_token, refresh_token = await service.authenticate(
+        email=login_data.email,
+        password=login_data.password,
+    )
 
     return LoginResponse(
         user=UserResponse.model_validate(user),
@@ -204,7 +168,10 @@ async def refresh_token(
         New access and refresh tokens.
 
     Raises:
-        HTTPException 401: If refresh token invalid or expired.
+        TokenExpiredError: If refresh token is expired.
+        TokenInvalidError: If refresh token is invalid.
+        UserNotFoundError: If user no longer exists.
+        AccountInactiveError: If account is inactive.
 
     Example:
         POST /auth/refresh
@@ -213,29 +180,7 @@ async def refresh_token(
         }
     """
     service = UserService(db)
-
-    try:
-        access_token, new_refresh_token = await service.refresh_tokens(refresh_data.refresh_token)
-    except TokenExpiredError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Refresh token has expired",
-        )
-    except (TokenInvalidError, TokenError) as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=str(e),
-        )
-    except UserNotFoundError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found",
-        )
-    except AccountInactiveError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Account is inactive",
-        )
+    access_token, new_refresh_token = await service.refresh_tokens(refresh_data.refresh_token)
 
     return TokenResponse(
         access_token=access_token,
@@ -333,7 +278,8 @@ async def change_password(
         db: Database session.
 
     Raises:
-        HTTPException 400: If current password wrong or new password weak.
+        InvalidCredentialsError: If current password is incorrect.
+        PasswordStrengthError: If new password doesn't meet requirements.
 
     Example:
         POST /auth/change-password
@@ -344,23 +290,8 @@ async def change_password(
         }
     """
     service = UserService(db)
-
-    try:
-        await service.change_password(
-            user_id=current_user.id,
-            current_password=password_data.current_password,
-            new_password=password_data.new_password,
-        )
-    except InvalidCredentialsError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Current password is incorrect",
-        )
-    except PasswordStrengthError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail={
-                "message": e.message,
-                "errors": e.errors,
-            },
-        )
+    await service.change_password(
+        user_id=current_user.id,
+        current_password=password_data.current_password,
+        new_password=password_data.new_password,
+    )

@@ -54,6 +54,14 @@ class PoolStatus(BaseModel):
     pool_type: str
 
 
+class CircuitBreakerStatus(BaseModel):
+    """Circuit breaker status."""
+
+    state: str
+    failure_count: int
+    last_failure_time: float
+
+
 class HealthResponse(BaseModel):
     """Complete health check response."""
 
@@ -61,6 +69,7 @@ class HealthResponse(BaseModel):
     version: str = "1.0.0"
     checks: dict[str, ComponentHealth] = {}
     pool: PoolStatus | None = None
+    circuits: dict[str, CircuitBreakerStatus] = {}
 
 
 router = APIRouter(tags=["health"])
@@ -284,10 +293,17 @@ async def readiness_probe() -> HealthResponse:
     # Get pool status
     pool_status = get_pool_status()
 
+    # Get circuit breaker status
+    from src.core.resilience import get_all_circuits
+
+    circuits_raw = get_all_circuits()
+    circuits = {name: CircuitBreakerStatus(**status) for name, status in circuits_raw.items()}
+
     return HealthResponse(
         status=overall_status,
         checks=checks,
         pool=PoolStatus(**pool_status),
+        circuits=circuits,
     )
 
 

@@ -28,6 +28,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.api import agent, analytics, auth, calendar, cards, health, insights, search, subscriptions
 from src.api.v1 import v1_router
 from src.core.config import settings
+from src.core.container import init_container
 from src.core.logging import configure_logging, get_logger
 from src.core.metrics import setup_metrics
 from src.core.sentry import init_sentry
@@ -67,6 +68,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         >>> app = FastAPI(lifespan=lifespan)
     """
     # Startup
+    # Initialize dependency injection container
+    init_container()
+    logger.info("Dependency injection container initialized")
+
     # Validate secrets configuration (logs warnings, blocks in production if invalid)
     secrets_result = validate_secrets()
     if not secrets_result.is_valid and not settings.debug:

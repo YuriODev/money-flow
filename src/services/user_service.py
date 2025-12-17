@@ -19,6 +19,13 @@ from src.auth.security import (
     validate_password_strength,
     verify_password,
 )
+from src.core.exceptions import (
+    AccountInactiveError,
+    AccountLockedError,
+    InvalidCredentialsError,
+    UserAlreadyExistsError,
+    UserNotFoundError,
+)
 
 # Note: Direct imports from src.auth.jwt and src.auth.security
 # to avoid circular imports through src.auth.__init__.py
@@ -33,79 +40,15 @@ MAX_FAILED_ATTEMPTS = 5
 LOCKOUT_DURATION_MINUTES = 15
 
 
-class UserNotFoundError(Exception):
-    """Raised when a user is not found.
-
-    Attributes:
-        identifier: The identifier that was not found (email or ID).
-    """
-
-    def __init__(self, identifier: str) -> None:
-        """Initialize the error.
-
-        Args:
-            identifier: The user identifier that was not found.
-        """
-        super().__init__(f"User '{identifier}' not found")
-        self.identifier = identifier
-
-
-class UserAlreadyExistsError(Exception):
-    """Raised when attempting to create a user that already exists.
-
-    Attributes:
-        email: The email that already exists.
-    """
-
-    def __init__(self, email: str) -> None:
-        """Initialize the error.
-
-        Args:
-            email: The email that already exists.
-        """
-        super().__init__(f"User with email '{email}' already exists")
-        self.email = email
-
-
-class InvalidCredentialsError(Exception):
-    """Raised when login credentials are invalid."""
-
-    def __init__(self, message: str = "Invalid email or password") -> None:
-        """Initialize the error.
-
-        Args:
-            message: Error message.
-        """
-        super().__init__(message)
-
-
-class AccountLockedError(Exception):
-    """Raised when account is locked due to too many failed attempts.
-
-    Attributes:
-        locked_until: When the lockout expires.
-    """
-
-    def __init__(self, locked_until: datetime) -> None:
-        """Initialize the error.
-
-        Args:
-            locked_until: When the lockout expires.
-        """
-        super().__init__(f"Account locked until {locked_until}")
-        self.locked_until = locked_until
-
-
-class AccountInactiveError(Exception):
-    """Raised when attempting to authenticate an inactive account."""
-
-    def __init__(self, message: str = "Account is inactive") -> None:
-        """Initialize the error.
-
-        Args:
-            message: Error message.
-        """
-        super().__init__(message)
+# Re-export exceptions for backwards compatibility
+__all__ = [
+    "UserService",
+    "UserNotFoundError",
+    "UserAlreadyExistsError",
+    "InvalidCredentialsError",
+    "AccountLockedError",
+    "AccountInactiveError",
+]
 
 
 class UserService:
@@ -261,7 +204,11 @@ class UserService:
 
         # Check if account is locked
         if user.is_locked:
-            raise AccountLockedError(user.locked_until)
+            locked_until_str = user.locked_until.isoformat() if user.locked_until else None
+            raise AccountLockedError(
+                message=f"Account locked until {user.locked_until}",
+                locked_until=locked_until_str,
+            )
 
         # Verify password
         if not verify_password(password, user.hashed_password):

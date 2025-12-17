@@ -19,6 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from src.core.config import settings
+from src.core.exceptions import SubscriptionNotFoundError
 from src.models.subscription import Frequency, PaymentType, Subscription
 from src.schemas.subscription import (
     SubscriptionCreate,
@@ -33,22 +34,8 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-
-class SubscriptionNotFoundError(Exception):
-    """Raised when a subscription is not found.
-
-    Attributes:
-        subscription_id: The ID that was not found.
-    """
-
-    def __init__(self, subscription_id: str) -> None:
-        """Initialize the error.
-
-        Args:
-            subscription_id: The subscription ID that was not found.
-        """
-        super().__init__(f"Subscription '{subscription_id}' not found")
-        self.subscription_id = subscription_id
+# Re-export for backwards compatibility
+__all__ = ["SubscriptionService", "SubscriptionNotFoundError"]
 
 
 class SubscriptionService:

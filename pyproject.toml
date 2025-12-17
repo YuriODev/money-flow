@@ -35,6 +35,12 @@ dependencies = [
     "structlog>=24.1.0",  # Structured logging
     "sentry-sdk[fastapi]>=1.40.0",  # Error tracking
     "prometheus-fastapi-instrumentator>=6.1.0",  # Prometheus metrics
+    # Dependency injection
+    "dependency-injector>=4.41.0",
+    # Resilience patterns
+    "tenacity>=8.2.0",
+    # Background task queue
+    "arq>=0.25.0",
 ]
 
 [project.optional-dependencies]
