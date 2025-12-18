@@ -11,18 +11,21 @@ import {
   Settings,
   Shield,
   HelpCircle,
+  FolderOpen,
 } from "lucide-react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ProfileSettings } from "@/components/settings/ProfileSettings";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
 import { PreferencesSettings } from "@/components/settings/PreferencesSettings";
+import CategoriesSettings from "@/components/settings/CategoriesSettings";
 
-type SettingsTab = "profile" | "preferences" | "notifications" | "cards" | "security" | "help";
+type SettingsTab = "profile" | "preferences" | "notifications" | "categories" | "cards" | "security" | "help";
 
 const tabs: { id: SettingsTab; label: string; icon: React.ReactNode; available: boolean }[] = [
   { id: "profile", label: "Profile", icon: <User className="w-5 h-5" />, available: true },
   { id: "preferences", label: "Preferences", icon: <Settings className="w-5 h-5" />, available: true },
   { id: "notifications", label: "Notifications", icon: <Bell className="w-5 h-5" />, available: true },
+  { id: "categories", label: "Categories", icon: <FolderOpen className="w-5 h-5" />, available: true },
   { id: "cards", label: "Payment Cards", icon: <CreditCard className="w-5 h-5" />, available: false },
   { id: "security", label: "Security", icon: <Shield className="w-5 h-5" />, available: false },
   { id: "help", label: "Help & Support", icon: <HelpCircle className="w-5 h-5" />, available: false },
@@ -40,6 +43,12 @@ function SettingsContent() {
         return <PreferencesSettings />;
       case "notifications":
         return <NotificationSettings />;
+      case "categories":
+        return (
+          <div className="p-6">
+            <CategoriesSettings />
+          </div>
+        );
       case "cards":
         return (
           <div className="flex items-center justify-center h-64 text-gray-500 dark:text-gray-400">

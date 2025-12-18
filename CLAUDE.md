@@ -29,8 +29,107 @@
 | **Phase 4** | Sprint 4.2 | ✅ Complete | Frontend Enhancements |
 | **Phase 4** | Sprint 4.3 | ✅ Complete | Payment Reminders & Telegram Bot |
 | **Phase 4** | Sprint 4.4 | ✅ Complete | Documentation & Security |
-| **Phase 5** | Sprints 5.1-5.7 | 🔜 Upcoming | Settings & AI Features (~240h) |
+| **Phase 5** | Sprint 5.1 | ✅ Complete | Profile & Preferences |
+| **Phase 5** | Sprint 5.2 | 🔄 In Progress | Cards & Categories |
+| **Phase 5** | Sprints 5.3-5.7 | 🔜 Upcoming | Settings & AI Features (~200h remaining) |
 | **Phase 6** | Sprint 6.1 | 🔜 Upcoming | Production Launch (~15h) |
+
+### Sprint 5.2 Tasks (Week 19) - Cards & Categories 🔄
+
+| Task | Status | Description |
+|------|--------|-------------|
+| 5.2.2.1 | ✅ DONE | Category model and migration |
+| 5.2.2.2 | ✅ DONE | Category CRUD API endpoints |
+| 5.2.2.3 | ✅ DONE | Category UI with color/icon picker |
+| 5.2.2.4 | ✅ DONE | Budget limits per category |
+| 5.2.3.1 | ✅ DONE | Update subscription model with category_id |
+| 5.2.3.2 | 🔜 Pending | Category selection in subscription forms |
+| 5.2.3.3 | 🔜 Pending | Auto-categorization suggestions (AI) |
+| 5.2.4 | ✅ DONE | Category unit tests (45 tests) |
+
+**Sprint 5.2 Features Completed:**
+- **Category Model** (`src/models/category.py`)
+  - User-owned categories with custom colors and icons
+  - Optional budget amount per category
+  - System categories flag for defaults
+- **Category Migration** (`e86b93e0cf9a_add_categories_table.py`)
+  - `categories` table with all fields
+  - `category_id` column added to `subscriptions` table
+  - Performance indexes for user_id and name
+- **Category Schemas** (`src/schemas/category.py`)
+  - CategoryCreate, CategoryUpdate, CategoryResponse
+  - CategoryWithStats (includes subscription count, monthly total)
+  - CategoryBudgetSummary for budget overview
+  - AssignCategoryRequest, BulkAssignCategoryRequest
+- **Category Service** (`src/services/category_service.py`)
+  - Full CRUD operations with user ownership
+  - Budget tracking and over-budget detection
+  - Default categories creation (8 common categories)
+  - Subscription assignment and bulk assignment
+- **Category API** (`src/api/categories.py`)
+  - GET /api/v1/categories - List categories
+  - GET /api/v1/categories/with-stats - With subscription counts
+  - GET /api/v1/categories/budget-summary - Budget overview
+  - POST /api/v1/categories - Create category
+  - POST /api/v1/categories/defaults - Create defaults
+  - PATCH /api/v1/categories/:id - Update
+  - DELETE /api/v1/categories/:id - Delete
+  - POST /api/v1/categories/assign - Assign subscription
+  - POST /api/v1/categories/bulk-assign - Bulk assign
+- **Categories Settings UI** (`frontend/src/components/settings/CategoriesSettings.tsx`)
+  - Grid view of categories with stats
+  - Color picker with 16 preset colors + custom
+  - Icon picker with emoji selection
+  - Budget progress bar visualization
+  - Create, edit, delete modals
+  - Default categories creation button
+- **Frontend API** (`frontend/src/lib/api.ts`)
+  - Category types and interfaces
+  - categoriesApi with all endpoints
+- **Unit Tests** (`tests/unit/test_categories.py`)
+  - 45 tests covering model, schemas, service
+- **Total unit tests: 599** (554 previous + 45 new)
+
+### Sprint 5.1 Tasks (Week 17) - Profile & Preferences ✅
+
+| Task | Status | Description |
+|------|--------|-------------|
+| 5.1.1.1 | ✅ DONE | Edit user info (name, email) |
+| 5.1.1.2 | ✅ DONE | Change password with verification |
+| 5.1.2.1 | ✅ DONE | Currency selection (14 currencies) |
+| 5.1.2.2 | ✅ DONE | Date format preferences (5 formats) |
+| 5.1.2.3 | ✅ DONE | Default view preference |
+| 5.1.2.4 | ✅ DONE | Theme selection (light/dark/system) |
+| 5.1.3.1 | ✅ DONE | PATCH /api/auth/profile endpoint |
+| 5.1.3.2 | ✅ DONE | GET/PUT /api/v1/users/preferences |
+| 5.1.4 | ✅ DONE | 30 unit tests |
+
+**Sprint 5.1 Features Completed:**
+- **Profile Settings** (`frontend/src/components/settings/ProfileSettings.tsx`)
+  - Edit name and email with API integration
+  - Password change with current password verification
+  - React Query mutations with optimistic updates
+- **Preferences Settings** (`frontend/src/components/settings/PreferencesSettings.tsx`)
+  - Currency selection (GBP, USD, EUR, UAH + 10 more)
+  - Date format (DD/MM/YYYY, MM/DD/YYYY, YYYY-MM-DD, etc.)
+  - Number format (1,234.56, 1.234,56, 1 234.56)
+  - Theme (light/dark/system with auto-detection)
+  - Default view (list/calendar/cards/agent)
+  - Compact mode toggle
+  - Week start (Monday/Sunday)
+  - Timezone selection
+  - Language preference
+- **Backend APIs** (`src/api/users.py`)
+  - GET /api/v1/users/preferences - Fetch user preferences
+  - PUT /api/v1/users/preferences - Update preferences (partial)
+- **Settings Page** (`frontend/src/app/settings/page.tsx`)
+  - Profile and Preferences tabs
+  - Responsive layout with glass-card styling
+- **Auth Context** (`frontend/src/lib/auth-context.tsx`)
+  - Added `refreshUser()` function for profile updates
+- **Unit Tests** (`tests/unit/test_user_preferences.py`)
+  - 30 tests covering schemas, parsing, and API endpoints
+- **Total unit tests: 554** (524 previous + 30 new)
 
 ### Sprint 4.4 Tasks (Week 16) - Documentation & Security ✅
 

@@ -1268,67 +1268,105 @@ pip install dependency-injector
 > **Detailed Plan**: See [Settings Roadmap](../SETTINGS_ROADMAP.md) for comprehensive feature specifications.
 > **Total Effort**: ~240 hours across 7 sprints
 
-## Sprint 5.1: Profile & Preferences (Weeks 17-18) 🔜
+## Sprint 5.1: Profile & Preferences (Weeks 17-18) ✅ COMPLETE
 
 ### Overview
 Implement core user settings with Profile and Preferences tabs.
 
-| Task ID | Task Name | Priority | Hours | Dependencies | Deliverable |
-|---------|-----------|----------|-------|--------------|-------------|
-| **5.1.1** | **Profile Tab** | 🔴 | 8h | None | Profile management |
-| 5.1.1.1 | Edit user info (name, email, avatar) | 🔴 | 3h | - | Profile form |
-| 5.1.1.2 | Change password with current verification | 🔴 | 2h | - | Password change |
-| 5.1.1.3 | Two-factor authentication setup | 🟠 | 3h | - | 2FA with TOTP |
-| **5.1.2** | **Preferences Tab** | 🔴 | 8h | None | User preferences |
-| 5.1.2.1 | Currency selection (GBP, USD, EUR, UAH) | 🔴 | 2h | - | Currency selector |
-| 5.1.2.2 | Date format preferences | 🟡 | 1h | - | Date formatting |
-| 5.1.2.3 | Default view (list/calendar/cards) | 🟡 | 2h | - | View preferences |
-| 5.1.2.4 | Theme selection (light/dark/system) | 🟡 | 3h | - | Theme system |
-| **5.1.3** | **Backend APIs** | 🔴 | 8h | 5.1.1, 5.1.2 | Settings APIs |
-| 5.1.3.1 | PATCH /api/auth/profile endpoint | 🔴 | 2h | - | Profile update |
-| 5.1.3.2 | PUT /api/users/preferences endpoint | 🔴 | 2h | - | Preferences update |
-| 5.1.3.3 | POST /api/auth/2fa/setup endpoint | 🟠 | 2h | - | 2FA setup |
-| 5.1.3.4 | POST /api/auth/2fa/verify endpoint | 🟠 | 2h | - | 2FA verification |
-| **5.1.4** | **Tests** | 🔴 | 4h | 5.1.3 | Test coverage |
+| Task ID | Task Name | Priority | Hours | Dependencies | Status |
+|---------|-----------|----------|-------|--------------|--------|
+| **5.1.1** | **Profile Tab** | 🔴 | 8h | None | ✅ DONE |
+| 5.1.1.1 | Edit user info (name, email) | 🔴 | 3h | - | ✅ DONE |
+| 5.1.1.2 | Change password with current verification | 🔴 | 2h | - | ✅ DONE |
+| 5.1.1.3 | Two-factor authentication setup | 🟡 | 3h | - | 🔜 Deferred to 5.4 |
+| **5.1.2** | **Preferences Tab** | 🔴 | 8h | None | ✅ DONE |
+| 5.1.2.1 | Currency selection (GBP, USD, EUR, UAH) | 🔴 | 2h | - | ✅ DONE |
+| 5.1.2.2 | Date format preferences | 🟡 | 1h | - | ✅ DONE |
+| 5.1.2.3 | Default view (list/calendar/cards) | 🟡 | 2h | - | ✅ DONE |
+| 5.1.2.4 | Theme selection (light/dark/system) | 🟡 | 3h | - | ✅ DONE |
+| **5.1.3** | **Backend APIs** | 🔴 | 8h | 5.1.1, 5.1.2 | ✅ DONE |
+| 5.1.3.1 | PATCH /api/auth/profile endpoint | 🔴 | 2h | - | ✅ DONE |
+| 5.1.3.2 | GET/PUT /api/v1/users/preferences endpoints | 🔴 | 2h | - | ✅ DONE |
+| 5.1.3.3 | POST /api/auth/2fa/setup endpoint | 🟡 | 2h | - | 🔜 Deferred to 5.4 |
+| 5.1.3.4 | POST /api/auth/2fa/verify endpoint | 🟡 | 2h | - | 🔜 Deferred to 5.4 |
+| **5.1.4** | **Tests** | 🔴 | 4h | 5.1.3 | ✅ DONE |
 
-**Sprint 5.1 Deliverables:**
-- 📦 Profile management with avatar upload
-- 📦 Password change functionality
-- 📦 Optional 2FA with authenticator apps
-- 📦 User preferences (currency, date, theme)
-- ⏱️ **Total: ~28 hours**
+**Sprint 5.1 Completed Features:**
+- ✅ Profile management (name, email editing)
+- ✅ Password change with current password verification
+- ✅ User preferences API (GET/PUT /api/v1/users/preferences)
+- ✅ Currency selection (GBP, USD, EUR, UAH + 10 more)
+- ✅ Date format preferences (5 formats)
+- ✅ Number format preferences (3 formats)
+- ✅ Theme selection (light/dark/system)
+- ✅ Default view preference (list/calendar/cards/agent)
+- ✅ Compact mode toggle
+- ✅ Week start preference (Monday/Sunday)
+- ✅ Timezone selection
+- ✅ Language preference
+- ✅ 30 unit tests for user preferences
+- ⏱️ **Actual: ~20 hours** (2FA deferred)
+
+**Files Created/Modified:**
+- `src/api/users.py` - User preferences API endpoints
+- `src/schemas/user.py` - UserPreferencesResponse, UserPreferencesUpdate schemas
+- `frontend/src/components/settings/ProfileSettings.tsx` - Profile form with password change
+- `frontend/src/components/settings/PreferencesSettings.tsx` - Full preferences UI
+- `frontend/src/app/settings/page.tsx` - Settings page with tabs
+- `frontend/src/lib/auth-context.tsx` - Added refreshUser function
+- `tests/unit/test_user_preferences.py` - 30 unit tests
 
 ---
 
-## Sprint 5.2: Cards & Categories (Weeks 19-20) 🔜
+## Sprint 5.2: Cards & Categories (Weeks 19-20) 🔄 IN PROGRESS
 
 ### Overview
 Enhance payment card management and implement custom categories with budgets.
 
-| Task ID | Task Name | Priority | Hours | Dependencies | Deliverable |
-|---------|-----------|----------|-------|--------------|-------------|
-| **5.2.1** | **Enhanced Cards Tab** | 🔴 | 6h | None | Card management |
-| 5.2.1.1 | Card list with spending breakdown | 🔴 | 2h | - | Card list view |
-| 5.2.1.2 | Card color customization | 🟡 | 1h | - | Color picker |
-| 5.2.1.3 | Card balance display | 🟠 | 2h | - | Balance aggregation |
-| 5.2.1.4 | Default card selection | 🟡 | 1h | - | Default card |
-| **5.2.2** | **Categories Tab** | 🔴 | 10h | None | Category system |
-| 5.2.2.1 | Category model and migration | 🔴 | 2h | - | `categories` table |
-| 5.2.2.2 | Category CRUD API endpoints | 🔴 | 3h | 5.2.2.1 | Category APIs |
-| 5.2.2.3 | Category UI with color/icon picker | 🔴 | 3h | 5.2.2.2 | Category form |
-| 5.2.2.4 | Budget limits per category | 🟠 | 2h | 5.2.2.2 | Budget tracking |
-| **5.2.3** | **Category Assignment** | 🟠 | 6h | 5.2.2 | Auto-categorization |
-| 5.2.3.1 | Update subscription model with category_id | 🔴 | 1h | - | Schema update |
-| 5.2.3.2 | Category selection in subscription forms | 🔴 | 2h | 5.2.3.1 | Form integration |
-| 5.2.3.3 | Auto-categorization suggestions (AI) | 🟡 | 3h | 5.2.3.2 | Smart suggestions |
-| **5.2.4** | **Tests** | 🔴 | 4h | 5.2.3 | Test coverage |
+| Task ID | Task Name | Priority | Hours | Dependencies | Status |
+|---------|-----------|----------|-------|--------------|--------|
+| **5.2.1** | **Enhanced Cards Tab** | 🔴 | 6h | None | 🔜 Next |
+| 5.2.1.1 | Card list with spending breakdown | 🔴 | 2h | - | ✅ Already exists |
+| 5.2.1.2 | Card color customization | 🟡 | 1h | - | ✅ Already exists |
+| 5.2.1.3 | Card balance display | 🟠 | 2h | - | ✅ Already exists |
+| 5.2.1.4 | Default card selection | 🟡 | 1h | - | 🔜 Pending |
+| **5.2.2** | **Categories Tab** | 🔴 | 10h | None | ✅ DONE |
+| 5.2.2.1 | Category model and migration | 🔴 | 2h | - | ✅ DONE |
+| 5.2.2.2 | Category CRUD API endpoints | 🔴 | 3h | 5.2.2.1 | ✅ DONE |
+| 5.2.2.3 | Category UI with color/icon picker | 🔴 | 3h | 5.2.2.2 | ✅ DONE |
+| 5.2.2.4 | Budget limits per category | 🟠 | 2h | 5.2.2.2 | ✅ DONE |
+| **5.2.3** | **Category Assignment** | 🟠 | 6h | 5.2.2 | 🔜 Pending |
+| 5.2.3.1 | Update subscription model with category_id | 🔴 | 1h | - | ✅ DONE |
+| 5.2.3.2 | Category selection in subscription forms | 🔴 | 2h | 5.2.3.1 | 🔜 Pending |
+| 5.2.3.3 | Auto-categorization suggestions (AI) | 🟡 | 3h | 5.2.3.2 | 🔜 Pending |
+| **5.2.4** | **Tests** | 🔴 | 4h | 5.2.3 | ✅ DONE |
+
+**Sprint 5.2 Completed Features:**
+- ✅ Category model (`src/models/category.py`)
+- ✅ Category table migration (`e86b93e0cf9a_add_categories_table.py`)
+- ✅ Category schemas (`src/schemas/category.py`)
+- ✅ Category service (`src/services/category_service.py`)
+- ✅ Category API endpoints (`src/api/categories.py`)
+  - GET /api/v1/categories - List categories
+  - GET /api/v1/categories/with-stats - List with subscription counts
+  - GET /api/v1/categories/budget-summary - Budget summary
+  - POST /api/v1/categories - Create category
+  - POST /api/v1/categories/defaults - Create default categories
+  - PATCH /api/v1/categories/:id - Update category
+  - DELETE /api/v1/categories/:id - Delete category
+  - POST /api/v1/categories/assign - Assign subscription to category
+  - POST /api/v1/categories/bulk-assign - Bulk assign
+- ✅ Categories settings tab (`frontend/src/components/settings/CategoriesSettings.tsx`)
+- ✅ Frontend API functions (`frontend/src/lib/api.ts`)
+- ✅ Category unit tests (`tests/unit/test_categories.py`) - 45 tests
+- ✅ category_id column added to subscriptions table
 
 **Sprint 5.2 Deliverables:**
 - 📦 Enhanced card management with spending breakdown
 - 📦 Custom categories with colors and icons
 - 📦 Budget limits per category with alerts
 - 📦 AI-powered category suggestions
-- ⏱️ **Total: ~26 hours**
+- ⏱️ **Total: ~26 hours** (~15h completed)
 
 ---
 

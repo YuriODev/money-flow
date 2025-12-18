@@ -26,6 +26,7 @@ from src.api import (
     auth,
     calendar,
     cards,
+    categories,
     insights,
     search,
     subscriptions,
@@ -44,6 +45,7 @@ v1_router.include_router(search.router, prefix="/search", tags=["search"])
 v1_router.include_router(insights.router, prefix="/insights", tags=["insights"])
 v1_router.include_router(analytics.router, prefix="/analytics", tags=["analytics"])
 v1_router.include_router(cards.router, tags=["cards"])
+v1_router.include_router(categories.router, tags=["categories"])
 v1_router.include_router(users.router, prefix="/users", tags=["users"])
 
 __all__ = ["v1_router"]

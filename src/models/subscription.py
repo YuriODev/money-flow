@@ -225,6 +225,11 @@ class Subscription(Base):
         String(36), ForeignKey("payment_cards.id", ondelete="SET NULL"), nullable=True, index=True
     )
 
+    # Category link (user-defined category for organization)
+    category_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("categories.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+
     # User ownership (for multi-user support)
     user_id: Mapped[str | None] = mapped_column(
         String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True
@@ -241,6 +246,9 @@ class Subscription(Base):
     )
     payment_card: Mapped["PaymentCard | None"] = relationship(  # noqa: F821
         "PaymentCard", back_populates="subscriptions", lazy="selectin"
+    )
+    category_rel: Mapped["Category | None"] = relationship(  # noqa: F821
+        "Category", back_populates="subscriptions", lazy="selectin"
     )
     user: Mapped["User | None"] = relationship(  # noqa: F821
         "User", back_populates="subscriptions", lazy="selectin"

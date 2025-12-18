@@ -129,6 +129,14 @@ class User(Base):
         lazy="selectin",
     )
 
+    # User's custom categories
+    categories: Mapped[list["Category"]] = relationship(  # noqa: F821
+        "Category",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+
     def __repr__(self) -> str:
         """Return string representation of user.
 

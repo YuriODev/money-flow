@@ -751,3 +751,127 @@ export const userApi = {
     return data;
   },
 };
+
+// Category types
+export interface Category {
+  id: string;
+  name: string;
+  description: string | null;
+  color: string;
+  icon: string | null;
+  budget_amount: string | null;
+  budget_currency: string;
+  sort_order: number;
+  is_active: boolean;
+  is_system: boolean;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CategoryWithStats extends Category {
+  subscription_count: number;
+  total_monthly: string;
+  budget_used_percentage: number | null;
+  is_over_budget: boolean | null;
+}
+
+export interface CategoryCreate {
+  name: string;
+  description?: string;
+  color?: string;
+  icon?: string;
+  budget_amount?: number;
+  budget_currency?: string;
+  sort_order?: number;
+}
+
+export interface CategoryUpdate {
+  name?: string;
+  description?: string;
+  color?: string;
+  icon?: string;
+  budget_amount?: number | null;
+  budget_currency?: string;
+  is_active?: boolean;
+  sort_order?: number;
+}
+
+export interface CategoryBudgetSummary {
+  categories: CategoryWithStats[];
+  total_budgeted: string;
+  total_spent: string;
+  categories_over_budget: number;
+}
+
+export const categoriesApi = {
+  // Get all categories
+  getAll: async (includeInactive = false): Promise<Category[]> => {
+    const { data } = await api.get("/categories", {
+      params: { include_inactive: includeInactive },
+    });
+    return data;
+  },
+
+  // Get categories with stats
+  getWithStats: async (currency = "GBP", includeInactive = false): Promise<CategoryWithStats[]> => {
+    const { data } = await api.get("/categories/with-stats", {
+      params: { currency, include_inactive: includeInactive },
+    });
+    return data;
+  },
+
+  // Get budget summary
+  getBudgetSummary: async (currency = "GBP"): Promise<CategoryBudgetSummary> => {
+    const { data } = await api.get("/categories/budget-summary", {
+      params: { currency },
+    });
+    return data;
+  },
+
+  // Get category by ID
+  getById: async (id: string): Promise<Category> => {
+    const { data } = await api.get(`/categories/${id}`);
+    return data;
+  },
+
+  // Create category
+  create: async (category: CategoryCreate): Promise<Category> => {
+    const { data } = await api.post("/categories", category);
+    return data;
+  },
+
+  // Create default categories
+  createDefaults: async (): Promise<Category[]> => {
+    const { data } = await api.post("/categories/defaults");
+    return data;
+  },
+
+  // Update category
+  update: async (id: string, category: CategoryUpdate): Promise<Category> => {
+    const { data } = await api.patch(`/categories/${id}`, category);
+    return data;
+  },
+
+  // Delete category
+  delete: async (id: string): Promise<void> => {
+    await api.delete(`/categories/${id}`);
+  },
+
+  // Assign subscription to category
+  assignSubscription: async (subscriptionId: string, categoryId: string | null): Promise<void> => {
+    await api.post("/categories/assign", {
+      subscription_id: subscriptionId,
+      category_id: categoryId,
+    });
+  },
+
+  // Bulk assign subscriptions to category
+  bulkAssign: async (subscriptionIds: string[], categoryId: string | null): Promise<{ updated: number }> => {
+    const { data } = await api.post("/categories/bulk-assign", {
+      subscription_ids: subscriptionIds,
+      category_id: categoryId,
+    });
+    return data;
+  },
+};

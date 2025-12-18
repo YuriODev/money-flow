@@ -1,5 +1,14 @@
 """Pydantic schemas for request/response validation."""
 
+from src.schemas.category import (
+    AssignCategoryRequest,
+    BulkAssignCategoryRequest,
+    CategoryBudgetSummary,
+    CategoryCreate,
+    CategoryResponse,
+    CategoryUpdate,
+    CategoryWithStats,
+)
 from src.schemas.subscription import (
     SubscriptionCreate,
     SubscriptionResponse,
@@ -18,6 +27,14 @@ from src.schemas.user import (
 )
 
 __all__ = [
+    # Category schemas
+    "AssignCategoryRequest",
+    "BulkAssignCategoryRequest",
+    "CategoryBudgetSummary",
+    "CategoryCreate",
+    "CategoryResponse",
+    "CategoryUpdate",
+    "CategoryWithStats",
     # Subscription schemas
     "SubscriptionCreate",
     "SubscriptionUpdate",
