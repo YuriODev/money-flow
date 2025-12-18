@@ -12,6 +12,8 @@ setup("authenticate", async ({ page }) => {
   const testEmail = process.env.E2E_TEST_EMAIL || "test@example.com";
   const testPassword = process.env.E2E_TEST_PASSWORD || "TestPassword123!";
 
+  console.log(`Attempting login with email: ${testEmail}`);
+
   // Navigate to login page
   await page.goto("/login");
   await page.waitForLoadState("networkidle");
@@ -20,11 +22,38 @@ setup("authenticate", async ({ page }) => {
   await page.getByLabel("Email address").fill(testEmail);
   await page.getByLabel("Password").fill(testPassword);
 
-  // Click login button (button text is "Sign in")
+  // Listen for any API response to debug
+  page.on("response", (response) => {
+    if (response.url().includes("/api/")) {
+      console.log(`API Response: ${response.url()} - ${response.status()}`);
+    }
+  });
+
+  // Click login button
   await page.getByRole("button", { name: "Sign in" }).click();
 
-  // Wait for redirect to dashboard
-  await expect(page).toHaveURL("/", { timeout: 15000 });
+  // Wait for navigation or error message
+  try {
+    await expect(page).toHaveURL("/", { timeout: 15000 });
+  } catch {
+    // Check if there's an error message on the page
+    const errorMessage = await page
+      .locator('[class*="error"], [class*="red"], [role="alert"]')
+      .first()
+      .textContent()
+      .catch(() => null);
+    if (errorMessage) {
+      console.error(`Login error message: ${errorMessage}`);
+    }
+
+    // Take a screenshot for debugging
+    await page.screenshot({ path: "e2e/test-results/login-failure.png" });
+
+    // Re-throw to fail the test with more context
+    throw new Error(
+      `Login failed. Error message: ${errorMessage || "Unknown error"}. Check login-failure.png for details.`
+    );
+  }
 
   // Verify we're logged in by checking for dashboard content
   await expect(page.getByText(/Money Flow/i).first()).toBeVisible({
@@ -33,4 +62,5 @@ setup("authenticate", async ({ page }) => {
 
   // Save the authenticated state
   await page.context().storageState({ path: authFile });
+  console.log("Authentication successful, state saved.");
 });

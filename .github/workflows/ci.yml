@@ -342,29 +342,48 @@ jobs:
         run: |
           python -c "
           import asyncio
+          import sys
           from src.db.database import async_session_maker
           from src.models.user import User
           from src.auth.security import get_password_hash
 
           async def create_test_user():
-              async with async_session_maker() as session:
-                  # Check if user exists
-                  from sqlalchemy import select
-                  result = await session.execute(
-                      select(User).where(User.email == 'test@example.com')
-                  )
-                  if not result.scalar_one_or_none():
-                      user = User(
-                          email='test@example.com',
-                          hashed_password=get_password_hash('TestPassword123!'),
-                          is_active=True,
-                          is_verified=True,
+              try:
+                  async with async_session_maker() as session:
+                      from sqlalchemy import select
+                      # Check if user exists
+                      result = await session.execute(
+                          select(User).where(User.email == 'test@example.com')
                       )
-                      session.add(user)
-                      await session.commit()
-                      print('Test user created')
-                  else:
-                      print('Test user already exists')
+                      existing_user = result.scalar_one_or_none()
+                      if not existing_user:
+                          user = User(
+                              email='test@example.com',
+                              hashed_password=get_password_hash('TestPassword123!'),
+                              is_active=True,
+                              is_verified=True,
+                          )
+                          session.add(user)
+                          await session.commit()
+                          print('Test user created successfully')
+                      else:
+                          print(f'Test user already exists: id={existing_user.id}, is_active={existing_user.is_active}')
+
+                      # Verify user can be found
+                      verify_result = await session.execute(
+                          select(User).where(User.email == 'test@example.com')
+                      )
+                      verified_user = verify_result.scalar_one_or_none()
+                      if verified_user:
+                          print(f'Verified: User exists with id={verified_user.id}, is_active={verified_user.is_active}, is_verified={verified_user.is_verified}')
+                      else:
+                          print('ERROR: User not found after creation!')
+                          sys.exit(1)
+              except Exception as e:
+                  print(f'ERROR creating test user: {e}')
+                  import traceback
+                  traceback.print_exc()
+                  sys.exit(1)
 
           asyncio.run(create_test_user())
           "
