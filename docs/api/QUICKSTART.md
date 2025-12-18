@@ -194,9 +194,52 @@ curl -X POST http://localhost:8001/api/v1/auth/refresh \
   }'
 ```
 
+## Step 7: Enable Telegram Notifications (Optional)
+
+Connect your Telegram account for payment reminders:
+
+```bash
+# 1. Initiate Telegram linking
+curl -X POST http://localhost:8001/api/v1/notifications/telegram/link \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+Response:
+```json
+{
+  "verification_code": "A3F2B1",
+  "bot_username": "MoneyFlowBot",
+  "bot_link": "https://t.me/MoneyFlowBot",
+  "expires_in_minutes": 10,
+  "instructions": "..."
+}
+```
+
+```bash
+# 2. Send the code to @MoneyFlowBot on Telegram
+
+# 3. Test your connection
+curl -X POST http://localhost:8001/api/v1/notifications/test \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+## Step 8: Configure Notification Preferences
+
+```bash
+curl -X PUT http://localhost:8001/api/v1/notifications/preferences \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -d '{
+    "reminder_enabled": true,
+    "reminder_days_before": 3,
+    "weekly_digest": true
+  }'
+```
+
 ## Next Steps
 
 - Read [Authentication](AUTHENTICATION.md) for detailed auth flow
 - Check [Rate Limiting](RATE_LIMITING.md) for API limits
+- Set up [Notifications](NOTIFICATIONS.md) for payment reminders
 - Explore [OpenAPI docs](http://localhost:8001/docs) for all endpoints
 - Import [Postman collection](../postman/MoneyFlow.postman_collection.json)

@@ -5,6 +5,38 @@ All notable changes to the Money Flow API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this API adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2025-12-18
+
+### Added
+
+- **Notifications API**: Complete notification preferences management
+  - `GET/PUT /api/v1/notifications/preferences` - User notification settings
+  - `POST /api/v1/notifications/telegram/link` - Initiate Telegram linking
+  - `GET /api/v1/notifications/telegram/status` - Connection status
+  - `DELETE /api/v1/notifications/telegram/unlink` - Unlink account
+  - `POST /api/v1/notifications/test` - Test notification delivery
+  - `POST /api/v1/notifications/trigger` - Manual reminder trigger
+- **Telegram Integration**: Full Telegram bot support
+  - Verification code flow for account linking
+  - Payment reminders with customizable timing
+  - Daily and weekly digest messages
+  - Overdue payment alerts
+  - Quiet hours support
+- **Calendar API**: Payment calendar data
+  - `GET /api/v1/calendar/events` - Calendar event data
+- **Notification Preferences Model**: New database table
+  - Reminder settings (enabled, days before, time)
+  - Digest settings (daily, weekly with day selector)
+  - Quiet hours (start, end times)
+  - Telegram integration fields
+
+### Changed
+
+- **Documentation**: Added comprehensive Notifications API guide
+- **Health Endpoint**: Includes Telegram service status
+
+---
+
 ## [1.0.0] - 2024-12-15
 
 ### Added
@@ -188,6 +220,6 @@ and this API adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## Support
 
-- Current version: v1.0.0
+- Current version: v1.1.0
 - Supported versions: v1.x
 - End of life: See sunset dates in deprecation headers

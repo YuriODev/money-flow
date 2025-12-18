@@ -1,456 +1,608 @@
-# System Architecture
+# Money Flow - System Architecture
+
+> **Version**: 2.0.0 (Updated December 2025)
+> **Last Updated**: After Phase 4 completion
+
+---
 
 ## Overview
 
-Subscription Tracker is a modern, microservices-ready application built with a clean architecture pattern. The system follows Domain-Driven Design (DDD) principles and separates concerns into distinct layers.
+Money Flow is a production-ready, microservices-ready application for tracking recurring payments. Built with a clean architecture pattern following Domain-Driven Design (DDD) principles with 6 distinct layers.
 
 ## High-Level Architecture
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                   User Interface Layer                   │
-│                  (Next.js Frontend)                       │
-│              Port 3002 (localhost)                        │
-└─────────────────┬───────────────────────────────────────┘
-                  │ HTTP/REST API
-                  │ (Proxied via Next.js)
-┌─────────────────▼───────────────────────────────────────┐
-│                  API Gateway Layer                        │
-│                   (FastAPI Backend)                       │
-│                Port 8001 (localhost)                      │
-│                                                            │
-│  ┌──────────────────────────────────────────────────┐   │
-│  │           Route Handlers (API)                    │   │
-│  │  - /api/subscriptions  - /api/agent               │   │
-│  └────────────┬────────────────┬─────────────────────┘   │
-│               │                │                          │
-│  ┌────────────▼────────┐  ┌───▼──────────────────────┐  │
-│  │  Business Logic      │  │   Agentic Interface       │  │
-│  │  (Services)          │  │   (Parser/Executor)       │  │
-│  │  - Subscription Svc  │  │   - CommandParser         │  │
-│  │  - Currency Svc      │  │   - AgentExecutor         │  │
-│  └────────────┬─────────┘  │   - PromptLoader          │  │
-│               │             └───┬──────────────────────┘  │
-│               │                 │                          │
-│  ┌────────────▼─────────────────▼─────────────────────┐  │
-│  │           Data Access Layer (ORM)                   │  │
-│  │                SQLAlchemy 2.0                        │  │
-│  └────────────┬─────────────────────────────────────────┘ │
-└───────────────┼───────────────────────────────────────────┘
-                │
-┌───────────────▼───────────────────────────────────────────┐
-│                  Data Persistence Layer                    │
-│                  PostgreSQL Database                        │
-│                   Port 5433 (localhost)                     │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│                      User Interface Layer                            │
+│                     (Next.js 16 Frontend)                            │
+│                    Port 3001 (localhost)                             │
+└───────────────────────────┬─────────────────────────────────────────┘
+                            │ HTTP/REST API (v1)
+                            │ WebSocket (notifications)
+┌───────────────────────────▼─────────────────────────────────────────┐
+│                      API Gateway Layer                               │
+│                     (FastAPI Backend)                                │
+│                    Port 8001 (localhost)                             │
+│                                                                      │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │                    Middleware Stack                             │ │
+│  │  Security Headers → Rate Limiter → Auth → Logging → Deprecation │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+│                                                                      │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │              Route Handlers (API v1)                          │   │
+│  │  /api/v1/subscriptions  /api/v1/agent  /api/v1/auth          │   │
+│  │  /api/v1/cards          /api/v1/notifications                 │   │
+│  │  /api/v1/health         /api/v1/calendar                      │   │
+│  └─────────────┬─────────────────────┬───────────────────────────┘   │
+│                │                     │                               │
+│  ┌─────────────▼───────────┐  ┌─────▼──────────────────────────┐   │
+│  │   Business Logic        │  │   Agentic Interface            │   │
+│  │   (Services)            │  │   (RAG + Parser + Executor)    │   │
+│  │   - SubscriptionSvc     │  │   - CommandParser (AI+Regex)   │   │
+│  │   - UserService         │  │   - AgentExecutor              │   │
+│  │   - CardService         │  │   - RAGService (Vector Search) │   │
+│  │   - TelegramService     │  │   - PromptLoader (XML)         │   │
+│  │   - CurrencyService     │  │   - SkillsEngine               │   │
+│  └─────────────┬───────────┘  └─────┬──────────────────────────┘   │
+│                │                     │                               │
+│  ┌─────────────▼─────────────────────▼───────────────────────────┐  │
+│  │              Data Access Layer (Async ORM)                     │  │
+│  │                   SQLAlchemy 2.0                               │  │
+│  │  - Connection pooling (5+10 overflow)                         │  │
+│  │  - Async sessions with commit/rollback                        │  │
+│  └─────────────┬─────────────────────────────────────────────────┘  │
+└────────────────┼────────────────────────────────────────────────────┘
+                 │
+┌────────────────▼────────────────────────────────────────────────────┐
+│                     Data Layer (Multi-Store)                         │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐                  │
+│  │ PostgreSQL  │  │   Redis     │  │   Qdrant    │                  │
+│  │ Port 5433   │  │ Port 6379   │  │ Port 6333   │                  │
+│  │             │  │             │  │             │                  │
+│  │ - Users     │  │ - Sessions  │  │ - Vectors   │                  │
+│  │ - Subs      │  │ - Cache     │  │ - Semantic  │                  │
+│  │ - Cards     │  │ - Rate Lim  │  │   Search    │                  │
+│  │ - Prefs     │  │ - Blacklist │  │ - RAG       │                  │
+│  └─────────────┘  └─────────────┘  └─────────────┘                  │
+└─────────────────────────────────────────────────────────────────────┘
 
-┌─────────────────────────────────────────────────────────┐
-│                  External Services                        │
-│  - Anthropic Claude API (Haiku 4.5)                      │
-│  - Currency Exchange APIs (Future)                       │
-└─────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│                      External Services                               │
+│  ┌────────────────┐  ┌────────────────┐  ┌────────────────┐        │
+│  │ Anthropic API  │  │ Telegram API   │  │   Sentry       │        │
+│  │ (Claude Haiku) │  │ (Bot/Webhook)  │  │ (Error Track)  │        │
+│  └────────────────┘  └────────────────┘  └────────────────┘        │
+│                                                                      │
+│  ┌────────────────┐  ┌────────────────┐                             │
+│  │  Prometheus    │  │    Grafana     │                             │
+│  │  (Metrics)     │  │  (Dashboards)  │                             │
+│  └────────────────┘  └────────────────┘                             │
+└─────────────────────────────────────────────────────────────────────┘
 ```
+
+---
 
 ## Layer Breakdown
 
 ### 1. Presentation Layer (Frontend)
 
-**Technology**: Next.js 14 + TypeScript + Tailwind CSS
+**Technology**: Next.js 16 + TypeScript + Tailwind CSS v4
 
 **Responsibilities**:
 - User interface rendering
 - Client-side state management (React Query)
-- Form validation (client-side)
-- API communication
-- Route management
+- Form validation (client-side + Zod)
+- API communication via Axios
+- Route management (App Router)
+- Authentication state (Context API)
+- Theme management (light/dark)
 
 **Key Components**:
 ```
 frontend/src/
-├── app/                    # Next.js app router
-│   ├── page.tsx           # Main dashboard
-│   ├── layout.tsx         # Root layout
-│   └── providers.tsx      # React Query provider
-├── components/            # React components
-│   ├── Header.tsx
-│   ├── StatsPanel.tsx
-│   ├── SubscriptionList.tsx
+├── app/                       # Next.js app router
+│   ├── page.tsx              # Main dashboard
+│   ├── login/page.tsx        # Login page
+│   ├── register/page.tsx     # Registration page
+│   ├── layout.tsx            # Root layout
+│   ├── globals.css           # Tailwind styles
+│   └── providers.tsx         # React Query + Theme
+├── components/               # React components
+│   ├── Header.tsx            # Navigation + user menu
+│   ├── StatsPanel.tsx        # Statistics cards
+│   ├── SubscriptionList.tsx  # Payment list with filters
+│   ├── PaymentCalendar.tsx   # Calendar view
+│   ├── CardsDashboard.tsx    # Payment cards view
+│   ├── AgentChat.tsx         # AI chat interface
+│   ├── SettingsModal.tsx     # Settings (profile, notifications)
 │   ├── AddSubscriptionModal.tsx
-│   └── AgentChat.tsx
-├── lib/                   # Utilities
-│   ├── api.ts            # API client
-│   └── utils.ts          # Helper functions
-└── hooks/                # Custom hooks
-    └── useSubscriptions.ts
+│   ├── EditSubscriptionModal.tsx
+│   ├── ImportExportModal.tsx
+│   └── ErrorBoundary.tsx
+├── lib/                      # Utilities
+│   ├── api.ts               # API client (v1 endpoints)
+│   ├── auth-context.tsx     # Auth state management
+│   ├── theme-context.tsx    # Theme provider
+│   ├── service-icons.ts     # Service icon mappings
+│   └── utils.ts             # Helper functions
+└── hooks/                   # Custom hooks
+    ├── useSubscriptions.ts
+    └── useKeyboardShortcuts.ts
 ```
 
 **Design Patterns**:
 - Container/Presentational components
 - Custom hooks for reusable logic
-- React Query for server state
-- Context API for global UI state
+- React Query for server state (caching, refetch)
+- Context API for auth and theme
+- Protected routes with auto-redirect
 
 ### 2. API Layer (Backend - FastAPI)
 
-**Technology**: FastAPI + Pydantic
+**Technology**: FastAPI 0.104+ + Pydantic v2
 
 **Responsibilities**:
 - HTTP request/response handling
-- Request validation
+- Request validation (Pydantic schemas)
 - Response serialization
-- Error handling
-- API documentation (Swagger/OpenAPI)
+- Error handling (centralized)
+- API documentation (OpenAPI 3.0)
+- Rate limiting (slowapi + Redis)
+- API versioning (/api/v1/)
 
-**Key Endpoints**:
+**Route Structure**:
 ```
 src/api/
-├── subscriptions.py      # CRUD endpoints
-│   - GET    /api/subscriptions
-│   - POST   /api/subscriptions
-│   - GET    /api/subscriptions/{id}
-│   - PUT    /api/subscriptions/{id}
-│   - DELETE /api/subscriptions/{id}
-│   - GET    /api/subscriptions/summary
-│
-└── agent.py             # AI agent endpoints
-    - POST /api/agent/execute
+├── v1/                       # Versioned API
+│   ├── __init__.py          # v1 router aggregation
+│   └── (imports from parent)
+├── auth.py                   # Authentication endpoints
+│   - POST /api/v1/auth/register
+│   - POST /api/v1/auth/login
+│   - POST /api/v1/auth/refresh
+│   - POST /api/v1/auth/logout
+│   - GET  /api/v1/auth/me
+├── subscriptions.py          # Payment CRUD
+│   - GET    /api/v1/subscriptions
+│   - POST   /api/v1/subscriptions
+│   - GET    /api/v1/subscriptions/{id}
+│   - PUT    /api/v1/subscriptions/{id}
+│   - DELETE /api/v1/subscriptions/{id}
+│   - GET    /api/v1/subscriptions/summary
+│   - GET    /api/v1/subscriptions/upcoming
+├── cards.py                  # Payment cards
+│   - CRUD for payment cards
+├── agent.py                  # AI agent
+│   - POST /api/v1/agent/execute
+├── notifications.py          # Notification settings
+│   - GET/PUT /api/v1/notifications/preferences
+│   - POST /api/v1/notifications/telegram/link
+│   - DELETE /api/v1/notifications/telegram/unlink
+│   - POST /api/v1/notifications/test
+│   - POST /api/v1/notifications/trigger
+├── calendar.py               # Calendar exports
+│   - GET /api/v1/calendar/events
+├── health.py                 # Health checks
+│   - GET /health
+│   - GET /health/live
+│   - GET /health/ready
+└── telegram.py               # Telegram webhook
+    - POST /api/telegram/webhook
 ```
+
+**Middleware Stack** (order matters):
+1. `SecurityHeadersMiddleware` - CSP, HSTS, X-Frame-Options
+2. `RateLimitMiddleware` - slowapi rate limiting
+3. `CORSMiddleware` - Cross-origin requests
+4. `RequestLoggingMiddleware` - Structured request logs
+5. `APIVersionMiddleware` - Version header handling
+6. `DeprecationMiddleware` - Legacy endpoint warnings
 
 ### 3. Business Logic Layer (Services)
 
-**Technology**: Python 3.11+ (async)
+**Technology**: Python 3.11+ (async/await)
 
 **Responsibilities**:
 - Business rules implementation
-- Domain logic
+- Domain logic encapsulation
 - Data transformation
 - Inter-service communication
 - Transaction management
+- External API integration
 
 **Services**:
 ```
 src/services/
-├── subscription_service.py    # Subscription CRUD + analytics
-├── currency_service.py        # Currency conversion
-└── notification_service.py    # (Future) Email notifications
+├── subscription_service.py   # Payment CRUD + analytics
+│   - create, get_all, get_by_id, update, delete
+│   - get_summary, get_upcoming
+│   - User-scoped data isolation
+├── user_service.py          # User management
+│   - register, authenticate, update_profile
+│   - Password hashing (bcrypt)
+├── payment_card_service.py  # Card management
+│   - CRUD for payment cards
+│   - Card-subscription relationships
+├── currency_service.py      # Currency conversion
+│   - GBP, USD, EUR, UAH support
+│   - Exchange rate management
+├── telegram_service.py      # Telegram integration
+│   - send_message, send_reminder
+│   - send_daily_digest, send_weekly_digest
+│   - Long polling for local dev
+├── telegram_handler.py      # Bot command handling
+│   - /start, /status, /help commands
+│   - Verification code processing
+├── rag_service.py           # RAG implementation
+│   - Vector search (Qdrant)
+│   - Context retrieval
+│   - Session management
+└── cache_service.py         # Redis caching
+    - Response caching
+    - Embedding caching
+    - Session storage
 ```
 
-**Example Service Pattern**:
+**Service Pattern**:
 ```python
 class SubscriptionService:
-    def __init__(self, db: AsyncSession):
+    def __init__(self, db: AsyncSession, user_id: str):
         self.db = db
+        self.user_id = user_id  # Data isolation
 
     async def create(self, data: SubscriptionCreate) -> Subscription:
-        # 1. Validate data
+        # 1. Validate business rules
         # 2. Calculate next payment date
-        # 3. Create record
-        # 4. Return subscription
+        # 3. Create record (user_id enforced)
+        # 4. Invalidate cache
+        # 5. Return subscription
 
     async def get_summary(self) -> SubscriptionSummary:
-        # 1. Query all active subscriptions
-        # 2. Calculate totals by frequency
-        # 3. Group by category
-        # 4. Find upcoming payments
-        # 5. Return summary
+        # User-scoped aggregations
+        pass
 ```
 
 ### 4. Agentic Layer (AI Integration)
 
-**Technology**: Anthropic Claude Haiku 4.5 + XML Prompts
+**Technology**: Anthropic Claude Haiku 4.5 + XML Prompts + RAG
 
 **Responsibilities**:
 - Natural language understanding
-- Intent classification
-- Entity extraction
+- Intent classification (CREATE, READ, UPDATE, DELETE, SUMMARY, etc.)
+- Entity extraction (name, amount, frequency, currency, payment_type)
 - Command execution
+- Conversational context (RAG)
+- Semantic search
 
 **Components**:
 ```
 src/agent/
-├── prompts.xml          # XML-based prompt definitions
-├── prompt_loader.py     # XML parser and loader
-├── parser.py           # Command parsing (AI + regex)
-└── executor.py         # Command execution
+├── prompts.xml              # XML-based prompt definitions
+│   - System prompts
+│   - Intent classification
+│   - Entity extraction
+│   - Response templates
+├── prompt_loader.py         # XML parser and caching
+├── parser.py               # Command parsing
+│   - Primary: Claude AI parsing
+│   - Fallback: Regex patterns
+│   - Payment type detection
+├── executor.py             # Command execution
+│   - Intent routing
+│   - Service invocation
+│   - Response formatting
+└── classifier.py           # Intent classification
+    - 8 intents supported
+    - Confidence scoring
+
+src/services/rag_service.py  # RAG Implementation
+├── Vector storage (Qdrant)
+├── Embedding generation
+├── Semantic search
+├── Context retrieval
+└── Session management
+
+skills/                      # Custom Claude Skills
+├── financial-analysis/      # Spending analysis
+├── payment-reminder/        # Smart reminders
+├── debt-management/         # Payoff strategies
+└── savings-goal/           # Goal tracking
 ```
 
-**Flow**:
+**Agentic Flow**:
 ```
-User Command
+User Message
     ↓
-Parser (AI/Regex)
+RAG Context Retrieval (semantic search)
     ↓
-Intent + Entities
+Parser (Claude AI + regex fallback)
     ↓
-Executor
+Intent Classification + Entity Extraction
     ↓
-Service Layer
+Executor (intent routing)
     ↓
-Response
+Service Layer (business logic)
+    ↓
+Response + Context Storage
+    ↓
+User Response
 ```
 
 ### 5. Data Access Layer (ORM)
 
-**Technology**: SQLAlchemy 2.0 (async)
+**Technology**: SQLAlchemy 2.0 (async) + Alembic
 
 **Responsibilities**:
 - Database abstractions
-- Query building
+- Query building (async)
 - Relationship management
 - Transaction handling
+- Connection pooling
+- Migration management
 
 **Models**:
 ```
 src/models/
-├── subscription.py      # Subscription ORM model
-└── __init__.py
+├── user.py                  # User model
+│   - id, email, hashed_password
+│   - full_name, is_active, is_verified
+│   - preferences (JSONB)
+│   - created_at, updated_at
+├── subscription.py          # Subscription model
+│   - All payment types supported
+│   - user_id (FK), card_id (FK)
+│   - payment_type enum
+│   - Debt/Savings specific fields
+├── payment_card.py          # Payment card model
+│   - user_id (FK)
+│   - name, last_four_digits
+│   - card_type, is_default
+├── notification.py          # NotificationPreferences
+│   - user_id (one-to-one)
+│   - Telegram settings
+│   - Reminder settings
+│   - Digest settings
+├── payment_history.py       # Payment tracking
+└── conversation.py          # RAG conversations
 ```
 
-**Schemas** (Pydantic):
-```
-src/schemas/
-├── subscription.py      # Request/Response schemas
-│   - SubscriptionBase
-│   - SubscriptionCreate
-│   - SubscriptionUpdate
-│   - SubscriptionResponse
-│   - SubscriptionSummary
-└── __init__.py
+**Database Configuration**:
+```python
+# Connection Pool Settings
+pool_size = 5           # Persistent connections
+max_overflow = 10       # Additional on demand
+pool_timeout = 30       # Wait for connection
+pool_recycle = 1800     # Recycle after 30min
+pool_pre_ping = True    # Verify connections
 ```
 
-### 6. Database Layer
+### 6. Data Layer (Multi-Store)
 
-**Technology**: PostgreSQL 15
-
-**Responsibilities**:
-- Data persistence
+**PostgreSQL** (Port 5433):
+- Primary data store
 - ACID compliance
-- Indexing
-- Full-text search (future)
+- Performance indexes
+- Full-text search ready
 
-**Schema**:
-```sql
-CREATE TABLE subscriptions (
-    id VARCHAR(36) PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    amount NUMERIC(10, 2) NOT NULL,
-    currency VARCHAR(3) DEFAULT 'GBP',
-    frequency VARCHAR(20) NOT NULL,
-    frequency_interval INTEGER DEFAULT 1,
-    start_date DATE NOT NULL,
-    next_payment_date DATE NOT NULL,
-    category VARCHAR(100),
-    is_active BOOLEAN DEFAULT TRUE,
-    notes TEXT,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
-);
+**Redis** (Port 6379):
+- Session storage
+- Response caching (TTL-based)
+- Rate limit counters
+- Token blacklist
+- Embedding cache
 
-CREATE INDEX idx_subscriptions_active ON subscriptions(is_active);
-CREATE INDEX idx_subscriptions_next_payment ON subscriptions(next_payment_date);
-CREATE INDEX idx_subscriptions_category ON subscriptions(category);
-```
-
-## Cross-Cutting Concerns
-
-### 1. Configuration Management
-
-**File**: `src/core/config.py`
-
-```python
-class Settings(BaseSettings):
-    # Database
-    database_url: str
-
-    # API
-    api_host: str = "0.0.0.0"
-    api_port: int = 8000
-    debug: bool = False
-    cors_origins: list[str]
-
-    # External Services
-    anthropic_api_key: str
-
-    class Config:
-        env_file = ".env"
-```
-
-### 2. Error Handling
-
-**Strategy**: Hierarchical exception handling
-
-```
-ApplicationException (Base)
-├── ValidationException
-├── NotFoundException
-├── CurrencyConversionException
-└── AIParsingException
-```
-
-### 3. Logging
-
-**Configuration**: Structured logging with context
-
-```python
-logger = logging.getLogger(__name__)
-logger.info("Processing subscription", extra={
-    "subscription_id": sub.id,
-    "user_id": user.id
-})
-```
-
-### 4. Dependency Injection
-
-**Pattern**: FastAPI dependency injection
-
-```python
-async def get_db() -> AsyncGenerator[AsyncSession, None]:
-    async with async_session_maker() as session:
-        yield session
-
-@router.post("/subscriptions")
-async def create(
-    data: SubscriptionCreate,
-    db: AsyncSession = Depends(get_db)
-):
-    service = SubscriptionService(db)
-    return await service.create(data)
-```
-
-## Data Flow Examples
-
-### Example 1: Create Subscription via UI
-
-```
-1. User fills form in AddSubscriptionModal
-2. Form validates client-side
-3. React Query mutation calls api.subscriptions.create()
-4. Next.js proxies to http://backend:8000/api/subscriptions
-5. FastAPI validates request body (Pydantic)
-6. SubscriptionService.create() called
-7. Service calculates next_payment_date
-8. SQLAlchemy creates database record
-9. Response serialized to SubscriptionResponse
-10. Frontend updates cache and shows success
-```
-
-### Example 2: Natural Language Command
-
-```
-1. User types: "Add Netflix for £15.99 monthly"
-2. AgentChat sends to /api/agent/execute
-3. AgentExecutor creates CommandParser
-4. Parser loads XML prompts
-5. Claude Haiku 4.5 analyzes command
-6. Returns: {intent: "CREATE", entities: {...}}
-7. Executor calls SubscriptionService.create()
-8. Database record created
-9. Success message returned
-10. UI shows new subscription
-```
-
-## Security Architecture
-
-### 1. Input Validation
-
-- **Frontend**: Client-side validation (Zod/Yup)
-- **Backend**: Pydantic schemas (strict validation)
-- **Database**: SQL injection protection via ORM
-
-### 2. Authentication (Future)
-
-```
-Planned:
-- JWT tokens
-- OAuth2 with Password (and hashing)
-- API key authentication
-```
-
-### 3. CORS
-
-```python
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.cors_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-```
-
-## Scalability Considerations
-
-### Current (Monolith)
-
-```
-┌─────────────┐
-│  Frontend   │
-└──────┬──────┘
-       │
-┌──────▼──────┐
-│  Backend    │
-└──────┬──────┘
-       │
-┌──────▼──────┐
-│  Database   │
-└─────────────┘
-```
-
-### Future (Microservices)
-
-```
-┌─────────────┐
-│  Frontend   │
-└──────┬──────┘
-       │
-┌──────▼────────────────────┐
-│    API Gateway            │
-└─┬────┬────────┬──────────┘
-  │    │        │
-  ▼    ▼        ▼
-┌────┐┌────┐  ┌─────────┐
-│Sub ││Curr│  │ AI Agent│
-│Svc ││Svc │  │ Service │
-└─┬──┘└─┬──┘  └────┬────┘
-  │     │          │
-  ▼     ▼          ▼
-┌────────────────────┐
-│   Database Layer   │
-└────────────────────┘
-```
-
-## Performance Optimization
-
-### 1. Database
-
-- Indexes on frequently queried fields
-- Connection pooling (SQLAlchemy)
-- Query optimization
-- Read replicas (future)
-
-### 2. Caching
-
-- React Query cache (frontend)
-- Redis cache (future, backend)
-- Static generation (Next.js)
-
-### 3. Async Operations
-
-- All I/O is async
-- Concurrent request handling
-- Background jobs (future: Celery)
-
-## Monitoring & Observability
-
-### Planned
-
-1. **Metrics**: Prometheus + Grafana
-2. **Logging**: Structured logs → ELK stack
-3. **Tracing**: OpenTelemetry
-4. **Alerts**: PagerDuty integration
+**Qdrant** (Port 6333):
+- Vector embeddings
+- Semantic search
+- RAG context storage
+- User-isolated collections
 
 ---
 
-**Last Updated**: 2025-11-28
-**Version**: 1.0
-**Status**: Production-ready monolith, microservices-ready architecture
+## Cross-Cutting Concerns
+
+### 1. Authentication & Security
+
+**JWT Token System**:
+- Access tokens: 15 minutes
+- Refresh tokens: 7 days
+- Token blacklist on logout
+- Auto-refresh on frontend
+
+**Security Features**:
+- bcrypt password hashing
+- Rate limiting (slowapi)
+- Prompt injection protection
+- Input validation (Pydantic)
+- Security headers (CSP, HSTS)
+- CORS hardening
+
+### 2. Error Handling
+
+**Centralized Exception Hierarchy**:
+```
+MoneyFlowError (Base)
+├── ValidationError (422)
+├── AuthenticationError (401)
+├── AuthorizationError (403)
+├── NotFoundError (404)
+├── ConflictError (409)
+├── RateLimitError (429)
+├── ExternalServiceError (503)
+└── BusinessLogicError (400)
+```
+
+**Global Handler**: `src/middleware/exception_handler.py`
+- Automatic status code mapping
+- Structured error responses
+- Sentry integration
+
+### 3. Observability
+
+**Logging**:
+- Structured JSON logging (structlog)
+- Request ID tracking
+- User ID context
+- Sensitive data redaction
+
+**Metrics** (Prometheus):
+- HTTP request metrics
+- Business metrics
+- AI agent latency
+- RAG performance
+
+**Monitoring**:
+- Grafana dashboards
+- Alertmanager rules
+- Loki log aggregation
+
+### 4. Resilience
+
+**Patterns Implemented**:
+- Circuit breaker (tenacity)
+- Retry with backoff
+- Timeouts
+- Graceful degradation
+
+### 5. Background Tasks
+
+**ARQ (Async Redis Queue)**:
+- Payment reminders
+- Daily/weekly digests
+- Cleanup jobs
+- Cron scheduling
+
+---
+
+## Deployment Architecture
+
+### Docker Compose (Local Dev)
+
+```yaml
+services:
+  db:        PostgreSQL 15 (port 5433)
+  redis:     Redis 7 (port 6379)
+  qdrant:    Qdrant (port 6333)
+  backend:   FastAPI (port 8001)
+  frontend:  Next.js (port 3001)
+  prometheus: Metrics (port 9090)
+  grafana:   Dashboards (port 3003)
+```
+
+### Production (GCP Cloud Run)
+
+```
+┌─────────────────────────────────────────┐
+│              Cloud Run                   │
+│  ┌─────────────┐  ┌─────────────┐       │
+│  │  Backend    │  │  Frontend   │       │
+│  │  (FastAPI)  │  │  (Next.js)  │       │
+│  └──────┬──────┘  └──────┬──────┘       │
+└─────────┼────────────────┼──────────────┘
+          │                │
+┌─────────▼────────────────▼──────────────┐
+│           Cloud SQL (PostgreSQL)         │
+└──────────────────────────────────────────┘
+          │
+┌─────────▼────────────────────────────────┐
+│           Memorystore (Redis)            │
+└──────────────────────────────────────────┘
+```
+
+---
+
+## Data Flow Examples
+
+### 1. User Login Flow
+
+```
+Frontend                Backend                 Database
+   │                       │                       │
+   │──POST /auth/login────▶│                       │
+   │                       │──Query user──────────▶│
+   │                       │◀─────User data────────│
+   │                       │                       │
+   │                       │──Verify password      │
+   │                       │──Generate JWT         │
+   │◀──Access+Refresh─────│                       │
+   │                       │                       │
+   │──Store tokens         │                       │
+```
+
+### 2. AI Agent Command Flow
+
+```
+Frontend          Backend           AI Service        Database
+   │                 │                   │                │
+   │──"Add Netflix"─▶│                   │                │
+   │                 │──Get RAG context──│                │
+   │                 │──Parse command───▶│                │
+   │                 │◀──Intent+Entities─│                │
+   │                 │                   │                │
+   │                 │──Create sub──────────────────────▶│
+   │                 │◀─────────Subscription─────────────│
+   │                 │                   │                │
+   │                 │──Store context────│                │
+   │◀──"Added!"─────│                   │                │
+```
+
+### 3. Telegram Notification Flow
+
+```
+Backend              Telegram API       User's Telegram
+   │                      │                    │
+   │──ARQ task trigger    │                    │
+   │                      │                    │
+   │──Query upcoming subs │                    │
+   │                      │                    │
+   │──sendMessage────────▶│                    │
+   │                      │──Push notification─▶│
+   │◀──Message sent───────│                    │
+```
+
+---
+
+## Performance Considerations
+
+### Database
+- Connection pooling (5+10)
+- Composite indexes on common queries
+- User_id filtering for data isolation
+- Eager loading for relationships
+
+### Caching
+- Response cache (60-300s TTL)
+- Embedding cache (reduce AI calls)
+- Rate limit counters in Redis
+
+### API
+- Async throughout
+- Pagination for lists
+- Efficient serialization (Pydantic v2)
+- Response compression (gzip)
+
+---
+
+## Security Model
+
+### Authentication
+- JWT with short-lived access tokens
+- Refresh token rotation
+- Token blacklist on logout/password change
+
+### Authorization
+- User-scoped data (user_id filter)
+- No cross-user data access
+- Admin endpoints (future)
+
+### Data Protection
+- Passwords: bcrypt hashed
+- Tokens: Redis blacklist
+- API keys: Environment only
+- PII: Redacted in logs
+
+---
+
+*Last Updated: December 2025*
+*Architecture Version: 2.0.0*

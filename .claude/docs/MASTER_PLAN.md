@@ -2,17 +2,18 @@
 
 > **Comprehensive Roadmap for Production-Ready Enhancement**
 >
-> **Version**: 1.0.0
+> **Version**: 2.1.0
 > **Created**: December 13, 2025
+> **Updated**: December 18, 2025
 > **Project**: Money Flow (Subscription Tracker)
-> **Total Duration**: 16 Weeks (4 Phases)
-> **Estimated Effort**: ~400 hours
+> **Total Duration**: 36 Weeks (6 Phases)
+> **Estimated Effort**: ~655 hours (400 base + 240 Settings + 15 Launch)
 
 ---
 
 ## Executive Summary
 
-This master plan transforms Money Flow from a well-architected personal project into a production-ready, secure, and scalable application. The plan is organized into 4 phases across 16 weeks, with each phase building upon the previous.
+This master plan transforms Money Flow from a well-architected personal project into a production-ready, secure, and scalable application. The plan is organized into 6 phases across 36 weeks, with each phase building upon the previous.
 
 ### Phase Overview
 
@@ -21,7 +22,9 @@ This master plan transforms Money Flow from a well-architected personal project 
 | **Phase 1** | Foundation & Security | Weeks 1-4 | Auth, Security Hardening, CI/CD |
 | **Phase 2** | Quality & Testing | Weeks 5-8 | E2E Tests, Bug Fixes, Monitoring |
 | **Phase 3** | Architecture & Performance | Weeks 9-12 | Scalability, Caching, API Versioning |
-| **Phase 4** | Features & Polish | Weeks 13-16 | Custom Skills, Mobile, Advanced Features |
+| **Phase 4** | Features & Polish | Weeks 13-16 | Custom Skills, Telegram, Documentation |
+| **Phase 5** | Settings & AI Features | Weeks 17-34 | Settings UI, AI Import, Integrations |
+| **Phase 6** | Production Launch | Weeks 35-36 | Final deploy, verification, go-live |
 
 ### Success Metrics
 
@@ -46,6 +49,45 @@ This master plan transforms Money Flow from a well-architected personal project 
 - 🟢 **Low** - Nice to have
 - ⏱️ **Estimated Hours**
 - 📦 **Deliverable**
+
+### All Sprints Overview
+
+| Phase | Sprint | Name | Week(s) | Hours | Status |
+|-------|--------|------|---------|-------|--------|
+| **1** | 1.1 | Authentication System | 1 | 20h | ✅ Complete |
+| **1** | 1.2 | Security Hardening | 2 | 25h | ✅ Complete |
+| **1** | 1.3 | CI/CD Pipeline | 3 | 25h | ✅ Complete |
+| **1** | 1.4 | Logging & Observability | 4 | 30h | ✅ Complete |
+| **2** | 2.1 | E2E Testing Framework | 5 | 25h | ✅ Complete |
+| **2** | 2.2 | AI Agent E2E & Bug Fixes | 6 | 25h | ✅ Complete |
+| **2** | 2.3 | Integration & Contract Tests | 7 | 25h | ✅ Complete |
+| **2** | 2.4 | Performance & Load Testing | 8 | 25h | ✅ Complete |
+| **3** | 3.1 | API Versioning & Docs | 9 | 20h | ✅ Complete |
+| **3** | 3.2 | Database Scalability | 10 | 25h | ✅ Complete |
+| **3** | 3.3 | Service Architecture | 11 | 25h | ✅ Complete |
+| **3** | 3.4 | Monitoring & Alerting | 12 | 25h | ✅ Complete |
+| **4** | 4.1 | Custom Claude Skills | 13 | 25h | ✅ Complete |
+| **4** | 4.2 | Frontend Enhancements | 14 | 25h | ✅ Complete |
+| **4** | 4.3 | Payment Reminders & Telegram | 15 | 30h | ✅ Complete |
+| **4** | 4.4 | Documentation & Launch | 16 | 20h | ✅ Complete |
+| **5** | 5.1 | Profile & Preferences | 17-18 | 28h | 🔜 Not Started |
+| **5** | 5.2 | Cards & Categories | 19-20 | 26h | 🔜 Not Started |
+| **5** | 5.3 | Notifications & Export | 21-22 | 28h | 🔜 Not Started |
+| **5** | 5.4 | Icons & AI Settings | 23-24 | 27h | 🔜 Not Started |
+| **5** | 5.5 | Smart Import (AI) | 25-27 | 46h | 🔜 Not Started |
+| **5** | 5.6 | Integrations | 28-30 | 40h | 🔜 Not Started |
+| **5** | 5.7 | Open Banking | 31-34 | 46h | 🔜 Not Started |
+| **6** | 6.1 | Production Launch | 35-36 | 15h | 🔜 Not Started |
+
+**Phase Totals:**
+- Phase 1: ~100h ✅
+- Phase 2: ~100h ✅
+- Phase 3: ~95h ✅
+- Phase 4: ~100h ✅
+- Phase 5: ~241h 🔜
+- Phase 6: ~15h 🔜
+
+**Grand Total: ~639 hours**
 
 ---
 
@@ -972,48 +1014,79 @@ Polish the frontend with improved UX, accessibility, and mobile responsiveness.
 
 ---
 
-## Sprint 4.3: Advanced Features (Week 15)
+## Sprint 4.3: Payment Reminders & Telegram Bot (Week 15) ✅
 
 ### Overview
-Implement advanced features from the roadmap.
+Implement payment reminders with Telegram bot as the primary notification channel. Users can connect their Telegram account and receive payment reminders, daily/weekly digests, and overdue alerts.
 
 | Task ID | Task Name | Priority | Hours | Dependencies | Deliverable |
 |---------|-----------|----------|-------|--------------|-------------|
-| **4.3.1** | **Payment Reminders** | 🟠 | 8h | None | Reminders |
-| 4.3.1.1 | Create reminder settings model | 🟠 | 1h | - | Reminder model |
-| 4.3.1.2 | Add reminder preferences API | 🟠 | 1h | 4.3.1.1 | Reminder API |
-| 4.3.1.3 | Create reminder scheduling service | 🟠 | 2h | 4.3.1.2 | Scheduler |
-| 4.3.1.4 | Add email reminder template | 🟠 | 1h | 4.3.1.3 | Email template |
-| 4.3.1.5 | Add push notification support (future) | 🟡 | 1h | 4.3.1.3 | Push prep |
-| 4.3.1.6 | Create reminder settings UI | 🟠 | 1h | 4.3.1.2 | Settings UI |
-| 4.3.1.7 | Test reminder delivery | 🟠 | 1h | 4.3.1.4 | Delivery test |
-| **4.3.2** | **Budget Alerts** | 🟡 | 6h | None | Budgets |
-| 4.3.2.1 | Create budget model | 🟡 | 1h | - | Budget model |
-| 4.3.2.2 | Add budget CRUD API | 🟡 | 1h | 4.3.2.1 | Budget API |
-| 4.3.2.3 | Create budget tracking service | 🟡 | 1.5h | 4.3.2.2 | Tracking service |
-| 4.3.2.4 | Add budget alert generation | 🟡 | 1h | 4.3.2.3 | Alert generation |
-| 4.3.2.5 | Create budget UI component | 🟡 | 1h | 4.3.2.2 | Budget UI |
-| 4.3.2.6 | Add budget vs actual chart | 🟡 | 0.5h | 4.3.2.5 | Budget chart |
-| **4.3.3** | **Subscription Templates** | 🟡 | 5h | None | Templates |
-| 4.3.3.1 | Create template data structure | 🟡 | 0.5h | - | Template model |
-| 4.3.3.2 | Create popular services template library | 🟡 | 1.5h | 4.3.3.1 | Template library |
-| 4.3.3.3 | Add template search API | 🟡 | 1h | 4.3.3.2 | Search API |
-| 4.3.3.4 | Add template suggestions in add modal | 🟡 | 1h | 4.3.3.3 | Suggestions UI |
-| 4.3.3.5 | Auto-fill from template selection | 🟡 | 1h | 4.3.3.4 | Auto-fill |
-| **4.3.4** | **Insights Dashboard** | 🟡 | 6h | None | Insights |
-| 4.3.4.1 | Create insights page component | 🟡 | 1h | - | Insights page |
-| 4.3.4.2 | Add spending by category chart | 🟡 | 1h | 4.3.4.1 | Category chart |
-| 4.3.4.3 | Add spending trend chart | 🟡 | 1h | 4.3.4.1 | Trend chart |
-| 4.3.4.4 | Add upcoming payments forecast | 🟡 | 1h | 4.3.4.1 | Forecast |
-| 4.3.4.5 | Add debt payoff projection | 🟡 | 1h | 4.3.4.1 | Debt projection |
-| 4.3.4.6 | Add savings goal progress | 🟡 | 1h | 4.3.4.1 | Savings progress |
+| **4.3.1** | **NotificationPreferences Model** | ✅ | 3h | None | Model & Migration |
+| 4.3.1.1 | Create NotificationPreferences model | ✅ | 1h | - | `src/models/notification.py` |
+| 4.3.1.2 | Add Telegram fields (chat_id, username, verified) | ✅ | 0.5h | 4.3.1.1 | Telegram integration |
+| 4.3.1.3 | Add reminder settings (days_before, time) | ✅ | 0.5h | 4.3.1.1 | Reminder config |
+| 4.3.1.4 | Add digest settings (daily, weekly) | ✅ | 0.5h | 4.3.1.1 | Digest config |
+| 4.3.1.5 | Create Alembic migration | ✅ | 0.5h | 4.3.1.1 | Migration file |
+| **4.3.2** | **Telegram Bot Service** | ✅ | 4h | 4.3.1 | Telegram service |
+| 4.3.2.1 | Create TelegramService class | ✅ | 1h | - | `src/services/telegram_service.py` |
+| 4.3.2.2 | Implement send_message() | ✅ | 0.5h | 4.3.2.1 | Message sending |
+| 4.3.2.3 | Implement send_reminder() | ✅ | 0.5h | 4.3.2.1 | Payment reminders |
+| 4.3.2.4 | Implement send_daily_digest() | ✅ | 0.5h | 4.3.2.1 | Daily digest |
+| 4.3.2.5 | Implement send_weekly_digest() | ✅ | 0.5h | 4.3.2.1 | Weekly digest |
+| 4.3.2.6 | Add long polling support | ✅ | 0.5h | 4.3.2.1 | TelegramPoller class |
+| 4.3.2.7 | Add verification code flow | ✅ | 0.5h | 4.3.2.1 | Account linking |
+| **4.3.3** | **Notification API Endpoints** | ✅ | 3h | 4.3.2 | API routes |
+| 4.3.3.1 | GET /preferences | ✅ | 0.5h | - | Get preferences |
+| 4.3.3.2 | PUT /preferences | ✅ | 0.5h | 4.3.3.1 | Update preferences |
+| 4.3.3.3 | POST /telegram/link | ✅ | 0.5h | - | Initiate linking |
+| 4.3.3.4 | GET /telegram/status | ✅ | 0.25h | - | Check status |
+| 4.3.3.5 | DELETE /telegram/unlink | ✅ | 0.25h | - | Unlink account |
+| 4.3.3.6 | POST /test | ✅ | 0.5h | - | Test notification |
+| 4.3.3.7 | POST /trigger | ✅ | 0.5h | - | Manual trigger endpoint |
+| **4.3.4** | **Telegram Update Handler** | ✅ | 2h | 4.3.2 | Bot commands |
+| 4.3.4.1 | Create telegram_handler.py | ✅ | 0.5h | - | Handler module |
+| 4.3.4.2 | Handle /start command | ✅ | 0.25h | 4.3.4.1 | Welcome message |
+| 4.3.4.3 | Handle /status command | ✅ | 0.25h | 4.3.4.1 | Status check |
+| 4.3.4.4 | Handle /help command | ✅ | 0.25h | 4.3.4.1 | Help message |
+| 4.3.4.5 | Handle verification codes | ✅ | 0.5h | 4.3.4.1 | Account linking |
+| 4.3.4.6 | Add main.py lifespan integration | ✅ | 0.25h | 4.3.4.1 | Startup/shutdown |
+| **4.3.5** | **Background Reminder Tasks** | ✅ | 3h | 4.3.2 | Scheduled tasks |
+| 4.3.5.1 | Implement send_payment_reminders task | ✅ | 0.75h | - | Daily reminders |
+| 4.3.5.2 | Implement send_daily_digest task | ✅ | 0.5h | - | Daily digest |
+| 4.3.5.3 | Implement send_weekly_digest task | ✅ | 0.5h | - | Weekly digest |
+| 4.3.5.4 | Implement send_overdue_alerts task | ✅ | 0.5h | - | Overdue alerts |
+| 4.3.5.5 | Configure cron schedules | ✅ | 0.25h | - | WorkerSettings |
+| 4.3.5.6 | Add quiet hours support | ✅ | 0.5h | - | Respect user prefs |
+| **4.3.6** | **Settings Page Frontend** | ✅ | 3h | 4.3.3 | Settings UI |
+| 4.3.6.1 | Create /settings route | ✅ | 0.5h | - | Settings page |
+| 4.3.6.2 | Add Profile tab | ✅ | 0.5h | 4.3.6.1 | User info |
+| 4.3.6.3 | Add Notifications tab | ✅ | 1h | 4.3.6.1 | Notification prefs |
+| 4.3.6.4 | Add Telegram linking UI | ✅ | 0.5h | 4.3.6.3 | Verification flow |
+| 4.3.6.5 | Add test notification button | ✅ | 0.25h | 4.3.6.3 | Test button |
+| 4.3.6.6 | Update Header with Settings link | ✅ | 0.25h | 4.3.6.1 | Navigation |
+| **4.3.7** | **Unit Tests** | ✅ | 2h | All | Test coverage |
+| 4.3.7.1 | Test NotificationPreferences model | ✅ | 0.5h | - | Model tests |
+| 4.3.7.2 | Test TelegramService | ✅ | 0.5h | - | Service tests |
+| 4.3.7.3 | Test notification schemas | ✅ | 0.25h | - | Schema tests |
+| 4.3.7.4 | Test background tasks | ✅ | 0.5h | - | Task tests |
+| 4.3.7.5 | Test API endpoints | ✅ | 0.25h | - | API tests |
+
+**Sprint 4.3 Completion Summary:**
+- ✅ NotificationPreferences model with Telegram integration
+- ✅ TelegramService with long polling for local development
+- ✅ Complete notification API (7 endpoints)
+- ✅ Telegram bot commands (/start, /status, /help)
+- ✅ 4 background tasks with cron scheduling
+- ✅ Settings page with Profile and Notifications tabs
+- ✅ 37 new unit tests (524 total)
+- ✅ Manual trigger endpoint for testing reminders
 
 ---
 
-## Sprint 4.4: Documentation & Launch Prep (Week 16)
+## Sprint 4.4: Documentation & Security (Week 16) 🔄
 
 ### Overview
-Final documentation, testing, and production launch preparation.
+Documentation updates and security audit before Phase 5 begins.
 
 | Task ID | Task Name | Priority | Hours | Dependencies | Deliverable |
 |---------|-----------|----------|-------|--------------|-------------|
@@ -1024,7 +1097,7 @@ Final documentation, testing, and production launch preparation.
 | 4.4.1.4 | Create feature walkthrough | 🟠 | 1h | 4.4.1.1 | Walkthrough |
 | 4.4.1.5 | Create troubleshooting guide | 🟠 | 0.5h | - | Troubleshooting |
 | **4.4.2** | **Developer Documentation Update** | 🟠 | 4h | All sprints | Dev docs |
-| 4.4.2.1 | Update architecture documentation | 🟠 | 1h | - | Architecture docs |
+| 4.4.2.1 | Update architecture documentation | �� | 1h | - | Architecture docs |
 | 4.4.2.2 | Update API documentation | 🟠 | 1h | - | API docs |
 | 4.4.2.3 | Create deployment runbook | 🔴 | 1h | - | Runbook |
 | 4.4.2.4 | Create incident response playbook | 🟠 | 0.5h | - | Playbook |
@@ -1036,30 +1109,27 @@ Final documentation, testing, and production launch preparation.
 | 4.4.3.4 | Review data encryption | 🔴 | 0.5h | - | Encryption review |
 | 4.4.3.5 | Fix critical findings | 🔴 | 1h | 4.4.3.1 | Fix criticals |
 | 4.4.3.6 | Document security posture | 🟠 | 0.5h | 4.4.3.5 | Security docs |
-| **4.4.4** | **Production Launch Checklist** | 🔴 | 6h | All sprints | Launch ready |
-| 4.4.4.1 | Final staging environment test | 🔴 | 1h | - | Staging test |
-| 4.4.4.2 | Verify all environment variables | 🔴 | 0.5h | - | Env check |
-| 4.4.4.3 | Verify database migrations | 🔴 | 0.5h | - | Migration check |
-| 4.4.4.4 | Verify backup/restore | 🔴 | 0.5h | - | Backup check |
-| 4.4.4.5 | Verify monitoring/alerting | 🔴 | 0.5h | - | Monitoring check |
-| 4.4.4.6 | Load test production config | 🔴 | 1h | - | Load test |
-| 4.4.4.7 | Create rollback plan | 🔴 | 0.5h | - | Rollback plan |
-| 4.4.4.8 | Production deployment | 🔴 | 1h | 4.4.4.1-4.4.4.7 | Go live |
-| 4.4.4.9 | Post-deployment verification | 🔴 | 0.5h | 4.4.4.8 | Verification |
 
-**Phase 4 & Final Completion Checklist:**
+**Sprint 4.4 Deliverables:**
+- 📦 User documentation (guide, FAQ, walkthrough)
+- 📦 Developer documentation updated
+- 📦 Deployment runbook
+- 📦 Security audit completed
+- ⏱️ **Total: ~13 hours**
+
+**Phase 4 Completion Checklist:**
 ```
-□ Custom Claude Skills deployed
-□ Mobile responsive design complete
-□ Accessibility audit passed
-□ Dark mode implemented
-□ Payment reminders functional
-□ User documentation complete
-□ Security audit passed
-□ Production deployment successful
-□ Monitoring verified
-□ Rollback plan tested
+✅ Custom Claude Skills deployed (Sprint 4.1)
+✅ Mobile responsive design complete (Sprint 4.2)
+✅ Accessibility audit passed (Sprint 4.2)
+✅ Dark mode implemented (Sprint 4.2)
+✅ Payment reminders functional (Sprint 4.3)
+✅ Telegram bot integration (Sprint 4.3)
+□ User documentation complete (Sprint 4.4)
+□ Security audit passed (Sprint 4.4)
 ```
+
+> **Note**: Production deployment moved to Phase 6 (after Phase 5 Settings & AI features)
 
 ---
 
@@ -1081,21 +1151,30 @@ Final documentation, testing, and production launch preparation.
 | 10 | 3.2 | Database | Indexes, backups, connection pool |
 | 11 | 3.3 | Architecture | DI, error handling, resilience |
 | 12 | 3.4 | Monitoring | Prometheus, Grafana, alerting |
-| 13 | 4.1 | Custom Skills | Financial analysis, debt, savings |
-| 14 | 4.2 | Frontend | Mobile, a11y, dark mode |
-| 15 | 4.3 | Features | Reminders, budgets, templates |
-| 16 | 4.4 | Launch | Docs, security audit, go-live |
+| 13 | 4.1 | Custom Skills | Financial analysis, debt, savings ✅ |
+| 14 | 4.2 | Frontend | Mobile, a11y, dark mode ✅ |
+| 15 | 4.3 | Telegram Bot | Payment reminders, digests, settings ✅ |
+| 16 | 4.4 | Docs & Security | User docs, dev docs, security audit 🔄 |
+| 17-18 | 5.1 | Profile & Preferences | Settings UI, 2FA, theme |
+| 19-20 | 5.2 | Cards & Categories | Enhanced cards, budgets, AI suggestions |
+| 21-22 | 5.3 | Notifications & Export | Email/push, PDF reports, backups |
+| 23-24 | 5.4 | Icons & AI Settings | Icon APIs, AI assistant config |
+| 25-27 | 5.5 | Smart Import | Bank statements, email scanning |
+| 28-30 | 5.6 | Integrations | Calendar sync, webhooks, IFTTT |
+| 31-34 | 5.7 | Open Banking | Plaid/TrueLayer, auto-import |
+| 35-36 | 6.1 | Production Launch | Final deploy, monitoring, go-live |
 
 ## Effort Distribution
 
 | Phase | Hours | Percentage |
 |-------|-------|------------|
-| Phase 1: Foundation & Security | ~100h | 25% |
-| Phase 2: Quality & Testing | ~95h | 24% |
-| Phase 3: Architecture & Performance | ~105h | 26% |
-| Phase 4: Features & Polish | ~100h | 25% |
-| **Total (Main Roadmap)** | **~400h** | **100%** |
-| **Future: Settings & AI Features** | **~240h** | *(see [Settings Roadmap](../SETTINGS_ROADMAP.md))* |
+| Phase 1: Foundation & Security | ~100h | 15% |
+| Phase 2: Quality & Testing | ~100h | 15% |
+| Phase 3: Architecture & Performance | ~95h | 15% |
+| Phase 4: Features & Polish | ~88h | 14% |
+| Phase 5: Settings & AI Features | ~241h | 37% |
+| Phase 6: Production Launch | ~15h | 2% |
+| **Grand Total** | **~639h** | **100%** |
 
 ## Risk Register
 
@@ -1184,90 +1263,405 @@ pip install dependency-injector
 
 ---
 
-# FUTURE FEATURES: Settings & AI-Powered Features
+# PHASE 5: Settings & AI-Powered Features (Weeks 17-34)
 
 > **Detailed Plan**: See [Settings Roadmap](../SETTINGS_ROADMAP.md) for comprehensive feature specifications.
+> **Total Effort**: ~240 hours across 7 sprints
 
-## Overview
+## Sprint 5.1: Profile & Preferences (Weeks 17-18) 🔜
 
-After completing Phase 4, the next major feature set focuses on user settings, AI-powered features, and third-party integrations.
+### Overview
+Implement core user settings with Profile and Preferences tabs.
 
-### Settings Page (10 Tabs)
+| Task ID | Task Name | Priority | Hours | Dependencies | Deliverable |
+|---------|-----------|----------|-------|--------------|-------------|
+| **5.1.1** | **Profile Tab** | 🔴 | 8h | None | Profile management |
+| 5.1.1.1 | Edit user info (name, email, avatar) | 🔴 | 3h | - | Profile form |
+| 5.1.1.2 | Change password with current verification | 🔴 | 2h | - | Password change |
+| 5.1.1.3 | Two-factor authentication setup | 🟠 | 3h | - | 2FA with TOTP |
+| **5.1.2** | **Preferences Tab** | 🔴 | 8h | None | User preferences |
+| 5.1.2.1 | Currency selection (GBP, USD, EUR, UAH) | 🔴 | 2h | - | Currency selector |
+| 5.1.2.2 | Date format preferences | 🟡 | 1h | - | Date formatting |
+| 5.1.2.3 | Default view (list/calendar/cards) | 🟡 | 2h | - | View preferences |
+| 5.1.2.4 | Theme selection (light/dark/system) | 🟡 | 3h | - | Theme system |
+| **5.1.3** | **Backend APIs** | 🔴 | 8h | 5.1.1, 5.1.2 | Settings APIs |
+| 5.1.3.1 | PATCH /api/auth/profile endpoint | 🔴 | 2h | - | Profile update |
+| 5.1.3.2 | PUT /api/users/preferences endpoint | 🔴 | 2h | - | Preferences update |
+| 5.1.3.3 | POST /api/auth/2fa/setup endpoint | 🟠 | 2h | - | 2FA setup |
+| 5.1.3.4 | POST /api/auth/2fa/verify endpoint | 🟠 | 2h | - | 2FA verification |
+| **5.1.4** | **Tests** | 🔴 | 4h | 5.1.3 | Test coverage |
 
-| Tab | Purpose | Priority | Effort |
-|-----|---------|----------|--------|
-| **Profile** | User info, password, 2FA | P1 | 8h |
-| **Preferences** | Display settings, defaults | P1 | 8h |
-| **Payment Cards** | Card management (exists, enhance) | P1 | 6h |
-| **Categories** | Custom categories, budgets | P1 | 10h |
-| **Notifications** | Reminders, channels, reports | P2 | 12h |
-| **Icons & Branding** | Icon library, AI generation | P2 | 15h |
-| **AI Assistant** | NL preferences, smart features | P2 | 8h |
-| **Data Import** | Bank statements, email scanning | P2 | 30h |
-| **Data Export** | PDF reports, scheduled backups | P2 | 12h |
-| **Integrations** | Calendar, webhooks, Open Banking | P3 | 40h |
+**Sprint 5.1 Deliverables:**
+- 📦 Profile management with avatar upload
+- 📦 Password change functionality
+- 📦 Optional 2FA with authenticator apps
+- 📦 User preferences (currency, date, theme)
+- ⏱️ **Total: ~28 hours**
 
-### AI-Powered Features
+---
 
-| Feature | Description | Effort |
-|---------|-------------|--------|
-| **Bank Statement Import** | AI extracts recurring payments from PDF/CSV | 30h |
-| **Email Receipt Scanning** | Scan Gmail/Outlook for subscriptions | 20h |
-| **Icon Intelligence** | Auto-fetch from APIs + AI generation | 15h |
-| **Smart Suggestions** | Spending insights, savings opportunities | 12h |
+## Sprint 5.2: Cards & Categories (Weeks 19-20) 🔜
 
-### Implementation Timeline
+### Overview
+Enhance payment card management and implement custom categories with budgets.
 
-| Phase | Focus | Duration | Total Effort |
-|-------|-------|----------|--------------|
-| Settings Phase 1 | Profile + Preferences | 2 weeks | ~28h |
-| Settings Phase 2 | Cards + Categories | 2 weeks | ~26h |
-| Settings Phase 3 | Notifications + Export | 2 weeks | ~28h |
-| Settings Phase 4 | Icons + AI Settings | 2 weeks | ~27h |
-| Settings Phase 5 | Smart Import (AI) | 3 weeks | ~46h |
-| Settings Phase 6 | Integrations | 3 weeks | ~40h |
-| Settings Phase 7 | Open Banking | 4 weeks | ~46h |
+| Task ID | Task Name | Priority | Hours | Dependencies | Deliverable |
+|---------|-----------|----------|-------|--------------|-------------|
+| **5.2.1** | **Enhanced Cards Tab** | 🔴 | 6h | None | Card management |
+| 5.2.1.1 | Card list with spending breakdown | 🔴 | 2h | - | Card list view |
+| 5.2.1.2 | Card color customization | 🟡 | 1h | - | Color picker |
+| 5.2.1.3 | Card balance display | 🟠 | 2h | - | Balance aggregation |
+| 5.2.1.4 | Default card selection | 🟡 | 1h | - | Default card |
+| **5.2.2** | **Categories Tab** | 🔴 | 10h | None | Category system |
+| 5.2.2.1 | Category model and migration | 🔴 | 2h | - | `categories` table |
+| 5.2.2.2 | Category CRUD API endpoints | 🔴 | 3h | 5.2.2.1 | Category APIs |
+| 5.2.2.3 | Category UI with color/icon picker | 🔴 | 3h | 5.2.2.2 | Category form |
+| 5.2.2.4 | Budget limits per category | 🟠 | 2h | 5.2.2.2 | Budget tracking |
+| **5.2.3** | **Category Assignment** | 🟠 | 6h | 5.2.2 | Auto-categorization |
+| 5.2.3.1 | Update subscription model with category_id | 🔴 | 1h | - | Schema update |
+| 5.2.3.2 | Category selection in subscription forms | 🔴 | 2h | 5.2.3.1 | Form integration |
+| 5.2.3.3 | Auto-categorization suggestions (AI) | 🟡 | 3h | 5.2.3.2 | Smart suggestions |
+| **5.2.4** | **Tests** | 🔴 | 4h | 5.2.3 | Test coverage |
 
-**Total Estimated Effort**: ~240 hours (additional to main roadmap)
+**Sprint 5.2 Deliverables:**
+- 📦 Enhanced card management with spending breakdown
+- 📦 Custom categories with colors and icons
+- 📦 Budget limits per category with alerts
+- 📦 AI-powered category suggestions
+- ⏱️ **Total: ~26 hours**
 
-### Key Database Changes
+---
+
+## Sprint 5.3: Notifications & Export (Weeks 21-22) 🔜
+
+### Overview
+Advanced notification preferences and data export functionality (builds on Sprint 4.3 Telegram).
+
+| Task ID | Task Name | Priority | Hours | Dependencies | Deliverable |
+|---------|-----------|----------|-------|--------------|-------------|
+| **5.3.1** | **Enhanced Notifications Tab** | 🔴 | 8h | Sprint 4.3 | Extended notifications |
+| 5.3.1.1 | Email notification channel | 🟠 | 3h | - | Email reminders |
+| 5.3.1.2 | Push notification setup (PWA) | 🟡 | 3h | - | Push notifications |
+| 5.3.1.3 | Notification history view | 🟡 | 2h | - | History log |
+| **5.3.2** | **Scheduled Reports** | 🟠 | 8h | 5.3.1 | Automated reports |
+| 5.3.2.1 | Monthly spending report generation | 🟠 | 3h | - | Monthly report |
+| 5.3.2.2 | Scheduled report delivery (email/Telegram) | 🟠 | 3h | 5.3.2.1 | Report scheduling |
+| 5.3.2.3 | Report template customization | 🟡 | 2h | 5.3.2.2 | Custom templates |
+| **5.3.3** | **Data Export Tab** | 🔴 | 8h | None | Export functionality |
+| 5.3.3.1 | PDF report generation (ReportLab) | 🔴 | 4h | - | PDF export |
+| 5.3.3.2 | Scheduled backup to cloud storage | 🟠 | 2h | - | Auto backup |
+| 5.3.3.3 | Export history/audit log | 🟡 | 2h | - | Export log |
+| **5.3.4** | **Tests** | 🔴 | 4h | 5.3.3 | Test coverage |
+
+**Sprint 5.3 Deliverables:**
+- 📦 Multi-channel notifications (Telegram + Email + Push)
+- 📦 Automated monthly spending reports
+- 📦 PDF report generation
+- 📦 Scheduled cloud backups
+- ⏱️ **Total: ~28 hours**
+
+---
+
+## Sprint 5.4: Icons & AI Settings (Weeks 23-24) 🔜
+
+### Overview
+Intelligent icon management and AI assistant customization.
+
+| Task ID | Task Name | Priority | Hours | Dependencies | Deliverable |
+|---------|-----------|----------|-------|--------------|-------------|
+| **5.4.1** | **Icons & Branding Tab** | 🟠 | 12h | None | Icon system |
+| 5.4.1.1 | Icon cache model and storage | 🟠 | 2h | - | `icon_cache` table |
+| 5.4.1.2 | External icon fetching (Clearbit, Logo.dev) | 🟠 | 4h | 5.4.1.1 | Icon APIs |
+| 5.4.1.3 | AI icon generation (DALL-E/Stable Diffusion) | 🟡 | 4h | 5.4.1.2 | AI icons |
+| 5.4.1.4 | Icon browser and search UI | 🟠 | 2h | 5.4.1.2 | Icon picker |
+| **5.4.2** | **AI Assistant Tab** | 🟠 | 8h | None | AI settings |
+| 5.4.2.1 | Natural language parsing preferences | 🟠 | 2h | - | NL settings |
+| 5.4.2.2 | Smart categorization toggle | 🟠 | 1h | - | AI toggle |
+| 5.4.2.3 | Conversation history management | 🟠 | 2h | - | History controls |
+| 5.4.2.4 | AI model selection (if multiple) | 🟡 | 1h | - | Model selector |
+| 5.4.2.5 | Suggestion frequency settings | 🟡 | 2h | - | Suggestion config |
+| **5.4.3** | **Tests** | 🔴 | 5h | 5.4.2 | Test coverage |
+| 5.4.4 | Icon Service Tests | 🔴 | 3h | - | Icon tests |
+| 5.4.5 | AI Settings Tests | 🔴 | 2h | - | Settings tests |
+
+**Sprint 5.4 Deliverables:**
+- 📦 Smart icon fetching from brand APIs
+- 📦 AI-generated custom icons
+- 📦 AI assistant preference controls
+- 📦 Conversation history management
+- ⏱️ **Total: ~27 hours**
+
+---
+
+## Sprint 5.5: Smart Import - AI Features (Weeks 25-27) 🔜
+
+### Overview
+AI-powered data import from bank statements and email receipts.
+
+| Task ID | Task Name | Priority | Hours | Dependencies | Deliverable |
+|---------|-----------|----------|-------|--------------|-------------|
+| **5.5.1** | **Bank Statement Import** | 🟠 | 24h | None | Statement parser |
+| 5.5.1.1 | PDF text extraction (PyPDF2, pdfplumber) | 🟠 | 4h | - | PDF parsing |
+| 5.5.1.2 | CSV/OFX/QIF format support | 🟠 | 4h | - | Format support |
+| 5.5.1.3 | AI extraction of recurring patterns | 🟠 | 8h | 5.5.1.1 | Pattern detection |
+| 5.5.1.4 | Preview and confirm import UI | 🟠 | 4h | 5.5.1.3 | Import wizard |
+| 5.5.1.5 | Duplicate detection and merge | 🟠 | 4h | 5.5.1.4 | Deduplication |
+| **5.5.2** | **Email Receipt Scanning** | 🟡 | 16h | None | Email scanner |
+| 5.5.2.1 | Gmail OAuth integration | 🟡 | 4h | - | Gmail auth |
+| 5.5.2.2 | Email parsing for subscriptions | 🟡 | 6h | 5.5.2.1 | Email parsing |
+| 5.5.2.3 | Receipt template matching | 🟡 | 4h | 5.5.2.2 | Template matching |
+| 5.5.2.4 | Outlook support | 🟢 | 2h | 5.5.2.2 | Outlook auth |
+| **5.5.3** | **Tests** | 🔴 | 6h | 5.5.2 | Test coverage |
+
+**Sprint 5.5 Deliverables:**
+- 📦 Bank statement PDF/CSV import with AI extraction
+- 📦 Automatic recurring payment detection
+- 📦 Gmail/Outlook email scanning
+- 📦 Smart duplicate detection
+- ⏱️ **Total: ~46 hours**
+
+---
+
+## Sprint 5.6: Integrations (Weeks 28-30) 🔜
+
+### Overview
+Third-party calendar integration and webhook support.
+
+| Task ID | Task Name | Priority | Hours | Dependencies | Deliverable |
+|---------|-----------|----------|-------|--------------|-------------|
+| **5.6.1** | **Calendar Integration** | 🟠 | 16h | None | Calendar sync |
+| 5.6.1.1 | iCal feed generation | 🟠 | 4h | - | iCal endpoint |
+| 5.6.1.2 | Google Calendar OAuth | 🟠 | 6h | - | Google sync |
+| 5.6.1.3 | Apple Calendar support | 🟡 | 4h | - | Apple sync |
+| 5.6.1.4 | Two-way sync logic | 🟡 | 2h | 5.6.1.2 | Bidirectional |
+| **5.6.2** | **Webhooks** | 🟠 | 12h | None | Webhook system |
+| 5.6.2.1 | Webhook subscription model | 🟠 | 2h | - | `webhooks` table |
+| 5.6.2.2 | Webhook delivery service | 🟠 | 4h | 5.6.2.1 | Delivery queue |
+| 5.6.2.3 | Event types (payment due, completed, etc.) | 🟠 | 3h | 5.6.2.2 | Event system |
+| 5.6.2.4 | Webhook management UI | 🟠 | 3h | 5.6.2.3 | Webhook UI |
+| **5.6.3** | **IFTTT/Zapier** | 🟡 | 8h | 5.6.2 | Automation |
+| 5.6.3.1 | IFTTT trigger integration | 🟡 | 4h | - | IFTTT connect |
+| 5.6.3.2 | Zapier app publication | 🟡 | 4h | - | Zapier app |
+| **5.6.4** | **Tests** | 🔴 | 4h | 5.6.3 | Test coverage |
+
+**Sprint 5.6 Deliverables:**
+- 📦 iCal feed for calendar subscriptions
+- 📦 Google Calendar bidirectional sync
+- 📦 Webhook system for third-party integrations
+- 📦 IFTTT/Zapier compatibility
+- ⏱️ **Total: ~40 hours**
+
+---
+
+## Sprint 5.7: Open Banking (Weeks 31-34) 🔜
+
+### Overview
+Open Banking API integration for automatic transaction import (UK/EU focus).
+
+| Task ID | Task Name | Priority | Hours | Dependencies | Deliverable |
+|---------|-----------|----------|-------|--------------|-------------|
+| **5.7.1** | **Open Banking Setup** | 🟡 | 16h | None | Bank connections |
+| 5.7.1.1 | Plaid/TrueLayer integration research | 🟡 | 4h | - | API research |
+| 5.7.1.2 | Bank account linking flow | 🟡 | 6h | 5.7.1.1 | Link flow |
+| 5.7.1.3 | Consent management | 🟡 | 4h | 5.7.1.2 | Consent UI |
+| 5.7.1.4 | Secure credential storage | 🟡 | 2h | 5.7.1.2 | Credential vault |
+| **5.7.2** | **Transaction Sync** | 🟡 | 18h | 5.7.1 | Auto-import |
+| 5.7.2.1 | Transaction fetch and storage | 🟡 | 4h | - | Transaction API |
+| 5.7.2.2 | Recurring pattern detection (ML) | 🟡 | 8h | 5.7.2.1 | ML patterns |
+| 5.7.2.3 | Auto-subscription creation from transactions | 🟡 | 4h | 5.7.2.2 | Auto-create |
+| 5.7.2.4 | Transaction categorization | 🟡 | 2h | 5.7.2.3 | Auto-category |
+| **5.7.3** | **Multi-Bank Support** | 🟢 | 8h | 5.7.2 | Multiple banks |
+| 5.7.3.1 | Multiple account management | 🟢 | 4h | - | Multi-account |
+| 5.7.3.2 | Cross-bank duplicate detection | 🟢 | 4h | 5.7.3.1 | Deduplication |
+| **5.7.4** | **Tests** | 🔴 | 4h | 5.7.3 | Test coverage |
+
+**Sprint 5.7 Deliverables:**
+- 📦 Open Banking account linking (Plaid/TrueLayer)
+- 📦 Automatic transaction import
+- 📦 ML-powered recurring payment detection
+- 📦 Multi-bank account support
+- ⏱️ **Total: ~46 hours**
+
+---
+
+## Phase 5 Summary
+
+### Sprint Overview Table
+
+| Sprint | Focus | Weeks | Hours | Status |
+|--------|-------|-------|-------|--------|
+| **5.1** | Profile & Preferences | 17-18 | 28h | 🔜 Not Started |
+| **5.2** | Cards & Categories | 19-20 | 26h | 🔜 Not Started |
+| **5.3** | Notifications & Export | 21-22 | 28h | 🔜 Not Started |
+| **5.4** | Icons & AI Settings | 23-24 | 27h | 🔜 Not Started |
+| **5.5** | Smart Import (AI) | 25-27 | 46h | 🔜 Not Started |
+| **5.6** | Integrations | 28-30 | 40h | 🔜 Not Started |
+| **5.7** | Open Banking | 31-34 | 46h | 🔜 Not Started |
+
+**Phase 5 Total: ~241 hours across 18 weeks**
+
+### Key Database Changes for Phase 5
 
 ```sql
--- New tables required
-CREATE TABLE categories (user_id, name, color, icon, budget_amount);
-CREATE TABLE icon_cache (service_name, icon_url, brand_color, source);
-CREATE TABLE webhook_subscriptions (user_id, url, events[], secret);
+-- Sprint 5.2: Categories
+CREATE TABLE categories (
+    id UUID PRIMARY KEY,
+    user_id UUID REFERENCES users(id),
+    name VARCHAR(100) NOT NULL,
+    color VARCHAR(7),
+    icon VARCHAR(100),
+    budget_amount DECIMAL(10,2),
+    created_at TIMESTAMP DEFAULT NOW()
+);
 
--- User preferences enhancement
-ALTER TABLE users ADD COLUMN notification_preferences JSONB;
+-- Sprint 5.4: Icon Cache
+CREATE TABLE icon_cache (
+    id UUID PRIMARY KEY,
+    service_name VARCHAR(200) UNIQUE,
+    icon_url TEXT,
+    brand_color VARCHAR(7),
+    source VARCHAR(50),
+    cached_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Sprint 5.6: Webhooks
+CREATE TABLE webhook_subscriptions (
+    id UUID PRIMARY KEY,
+    user_id UUID REFERENCES users(id),
+    url TEXT NOT NULL,
+    events TEXT[] NOT NULL,
+    secret VARCHAR(64),
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Sprint 5.7: Bank Connections
+CREATE TABLE bank_connections (
+    id UUID PRIMARY KEY,
+    user_id UUID REFERENCES users(id),
+    provider VARCHAR(50),
+    institution_id VARCHAR(100),
+    access_token_encrypted TEXT,
+    consent_expires_at TIMESTAMP,
+    last_sync_at TIMESTAMP
+);
 ```
 
-### Key API Endpoints
+### Key API Endpoints for Phase 5
 
 ```
-Settings APIs:
+Settings APIs (Sprint 5.1):
 - PATCH /api/auth/profile
 - POST /api/auth/change-password
 - GET/PUT /api/users/preferences
+- POST /api/auth/2fa/setup
+- POST /api/auth/2fa/verify
 
-Category APIs:
+Category APIs (Sprint 5.2):
 - GET/POST/PUT/DELETE /api/categories
 - POST /api/categories/merge
+- GET /api/categories/suggestions
 
-Icon APIs:
+Icon APIs (Sprint 5.4):
 - GET /api/icons/search
 - GET /api/icons/service/{name}
 - POST /api/icons/generate (AI)
 
-Import APIs:
+Import APIs (Sprint 5.5):
 - POST /api/import/bank-statement
 - GET /api/import/bank-statement/{job_id}
+- POST /api/import/email/connect
+- GET /api/import/email/scan
 
-Integration APIs:
-- GET/POST/DELETE /api/webhooks
+Integration APIs (Sprint 5.6):
 - GET /api/calendar/ical
 - POST /api/calendar/sync/google
+- GET/POST/DELETE /api/webhooks
+- POST /api/webhooks/test
+
+Open Banking APIs (Sprint 5.7):
+- POST /api/banking/connect
+- GET /api/banking/accounts
+- POST /api/banking/sync
+- DELETE /api/banking/disconnect
 ```
+
+---
+
+# PHASE 6: Production Launch (Weeks 35-36)
+
+> **Final Phase**: Production deployment after all features are complete
+> **Total Effort**: ~15 hours
+
+## Sprint 6.1: Production Launch (Weeks 35-36) 🔜
+
+### Overview
+Final production deployment with full verification and go-live procedures.
+
+| Task ID | Task Name | Priority | Hours | Dependencies | Deliverable |
+|---------|-----------|----------|-------|--------------|-------------|
+| **6.1.1** | **Pre-Launch Verification** | 🔴 | 5h | Phase 5 | Launch ready |
+| 6.1.1.1 | Final staging environment test | 🔴 | 1h | - | Staging test |
+| 6.1.1.2 | Verify all environment variables | 🔴 | 0.5h | - | Env check |
+| 6.1.1.3 | Verify database migrations | 🔴 | 0.5h | - | Migration check |
+| 6.1.1.4 | Verify backup/restore procedures | 🔴 | 0.5h | - | Backup check |
+| 6.1.1.5 | Verify monitoring/alerting | 🔴 | 0.5h | - | Monitoring check |
+| 6.1.1.6 | Load test production config | 🔴 | 1h | - | Load test |
+| 6.1.1.7 | Create rollback plan | 🔴 | 0.5h | - | Rollback plan |
+| 6.1.1.8 | Security re-scan (if Phase 5 changes) | 🔴 | 0.5h | - | Security verify |
+| **6.1.2** | **Production Deployment** | 🔴 | 4h | 6.1.1 | Go live |
+| 6.1.2.1 | Deploy database migrations | 🔴 | 0.5h | - | DB migration |
+| 6.1.2.2 | Deploy backend services | 🔴 | 1h | 6.1.2.1 | Backend live |
+| 6.1.2.3 | Deploy frontend | 🔴 | 0.5h | 6.1.2.2 | Frontend live |
+| 6.1.2.4 | Configure production Telegram webhook | 🔴 | 0.5h | 6.1.2.2 | Webhook setup |
+| 6.1.2.5 | DNS and SSL verification | 🔴 | 0.5h | 6.1.2.3 | DNS/SSL check |
+| 6.1.2.6 | CDN configuration (if applicable) | 🟡 | 0.5h | 6.1.2.3 | CDN setup |
+| 6.1.2.7 | Production smoke tests | 🔴 | 0.5h | 6.1.2.5 | Smoke tests |
+| **6.1.3** | **Post-Launch** | 🔴 | 6h | 6.1.2 | Stable launch |
+| 6.1.3.1 | Monitor error rates (24h) | 🔴 | 2h | - | Error monitoring |
+| 6.1.3.2 | Monitor performance metrics | 🔴 | 1h | - | Performance check |
+| 6.1.3.3 | Address critical issues | 🔴 | 2h | 6.1.3.1 | Hotfixes |
+| 6.1.3.4 | Post-mortem documentation | 🟠 | 1h | 6.1.3.3 | Post-mortem |
+
+**Sprint 6.1 Deliverables:**
+- 📦 Production environment fully deployed
+- 📦 All services operational
+- 📦 Monitoring and alerting verified
+- 📦 Rollback plan tested
+- 📦 Post-launch stability confirmed
+- ⏱️ **Total: ~15 hours**
+
+**Phase 6 Completion Checklist:**
+```
+□ Staging environment passes all tests
+□ All environment variables configured
+□ Database migrations applied
+□ Backup/restore verified
+□ Monitoring dashboards live
+□ Rollback plan documented and tested
+□ Production deployment successful
+□ DNS/SSL configured
+□ Smoke tests passing
+□ 24h stability monitoring complete
+□ Post-mortem documented
+```
+
+---
+
+## Grand Summary
+
+### All Phases Overview
+
+| Phase | Name | Weeks | Hours | Status |
+|-------|------|-------|-------|--------|
+| **1** | Foundation & Security | 1-4 | ~100h | ✅ Complete |
+| **2** | Quality & Testing | 5-8 | ~100h | ✅ Complete |
+| **3** | Architecture & Performance | 9-12 | ~95h | ✅ Complete |
+| **4** | Features & Polish | 13-16 | ~88h | 🔄 In Progress |
+| **5** | Settings & AI Features | 17-34 | ~241h | 🔜 Not Started |
+| **6** | Production Launch | 35-36 | ~15h | 🔜 Not Started |
+
+**Grand Total: ~639 hours across 36 weeks**
 
 ---
 
