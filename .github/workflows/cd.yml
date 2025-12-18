@@ -197,7 +197,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-and-push
     if: github.event_name == 'release'
-    environment:
+    environment: # yamllint disable-line rule:truthy
       name: production
       url: ${{ steps.deploy.outputs.url }}
 
@@ -329,7 +329,7 @@ jobs:
     name: Rollback Production
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch'
-    environment:
+    environment: # yamllint disable-line rule:truthy
       name: production
 
     steps:
