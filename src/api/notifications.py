@@ -22,6 +22,8 @@ from src.schemas.notification import (
     TelegramUnlinkResponse,
     TestNotificationRequest,
     TestNotificationResponse,
+    TriggerRemindersRequest,
+    TriggerRemindersResponse,
     preferences_to_response,
 )
 from src.services.telegram_service import get_telegram_service
@@ -239,3 +241,188 @@ async def send_test_notification(
         message="Test notification sent successfully! Check your Telegram.",
         channel="telegram",
     )
+
+
+@router.post("/trigger", response_model=TriggerRemindersResponse)
+async def trigger_reminder_task(
+    request: TriggerRemindersRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> TriggerRemindersResponse:
+    """Manually trigger a reminder task for testing.
+
+    This endpoint allows testing reminder delivery without waiting for
+    scheduled cron jobs. Only triggers reminders for the current user.
+
+    Args:
+        request: Task type to trigger.
+
+    Returns:
+        TriggerRemindersResponse with task result.
+
+    Raises:
+        HTTPException: If Telegram is not linked or task fails.
+    """
+    from datetime import date, timedelta
+
+    from sqlalchemy import select
+    from sqlalchemy.orm import selectinload
+
+    from src.models.subscription import Subscription
+
+    prefs = await get_or_create_preferences(db, current_user.id)
+
+    if not prefs.is_telegram_linked:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Telegram is not linked. Please link your Telegram account first.",
+        )
+
+    telegram_service = get_telegram_service()
+    task_type = request.task_type
+    result: dict = {}
+
+    try:
+        if task_type == "reminders":
+            # Send reminders for upcoming payments
+            today = date.today()
+            target_date = today + timedelta(days=prefs.reminder_days_before)
+
+            stmt = (
+                select(Subscription)
+                .where(Subscription.user_id == current_user.id)
+                .where(Subscription.is_active.is_(True))
+                .where(Subscription.next_payment_date <= target_date)
+                .where(Subscription.next_payment_date >= today)
+                .options(selectinload(Subscription.payment_card))
+            )
+            subs_result = await db.execute(stmt)
+            subscriptions = list(subs_result.scalars().all())
+
+            reminders_sent = 0
+            for sub in subscriptions:
+                days_until = (sub.next_payment_date - today).days if sub.next_payment_date else 0
+                success = await telegram_service.send_reminder(
+                    chat_id=prefs.telegram_chat_id,
+                    subscription=sub,
+                    days_until=days_until,
+                )
+                if success:
+                    reminders_sent += 1
+
+            result = {
+                "subscriptions_found": len(subscriptions),
+                "reminders_sent": reminders_sent,
+            }
+            message = f"Sent {reminders_sent} payment reminder(s)"
+
+        elif task_type == "daily_digest":
+            # Send daily digest
+            today = date.today()
+            week_end = today + timedelta(days=7)
+
+            stmt = (
+                select(Subscription)
+                .where(Subscription.user_id == current_user.id)
+                .where(Subscription.is_active.is_(True))
+                .where(Subscription.next_payment_date >= today)
+                .where(Subscription.next_payment_date <= week_end)
+                .order_by(Subscription.next_payment_date)
+            )
+            subs_result = await db.execute(stmt)
+            subscriptions = list(subs_result.scalars().all())
+
+            currency = (
+                current_user.preferences.get("currency", "GBP")
+                if current_user.preferences
+                else "GBP"
+            )
+            success = await telegram_service.send_daily_digest(
+                chat_id=prefs.telegram_chat_id,
+                subscriptions=subscriptions,
+                currency=currency,
+            )
+
+            result = {"subscriptions_included": len(subscriptions), "sent": success}
+            message = "Daily digest sent" if success else "Failed to send daily digest"
+
+        elif task_type == "weekly_digest":
+            # Send weekly digest
+            today = date.today()
+            week_end = today + timedelta(days=7)
+
+            stmt = (
+                select(Subscription)
+                .where(Subscription.user_id == current_user.id)
+                .where(Subscription.is_active.is_(True))
+                .where(Subscription.next_payment_date >= today)
+                .where(Subscription.next_payment_date <= week_end)
+                .order_by(Subscription.next_payment_date)
+            )
+            subs_result = await db.execute(stmt)
+            subscriptions = list(subs_result.scalars().all())
+
+            currency = (
+                current_user.preferences.get("currency", "GBP")
+                if current_user.preferences
+                else "GBP"
+            )
+            success = await telegram_service.send_weekly_digest(
+                chat_id=prefs.telegram_chat_id,
+                subscriptions=subscriptions,
+                currency=currency,
+            )
+
+            result = {"subscriptions_included": len(subscriptions), "sent": success}
+            message = "Weekly digest sent" if success else "Failed to send weekly digest"
+
+        elif task_type == "overdue":
+            # Send overdue alerts
+            today = date.today()
+
+            stmt = (
+                select(Subscription)
+                .where(Subscription.user_id == current_user.id)
+                .where(Subscription.is_active.is_(True))
+                .where(Subscription.next_payment_date < today)
+            )
+            subs_result = await db.execute(stmt)
+            overdue_subscriptions = list(subs_result.scalars().all())
+
+            alerts_sent = 0
+            for sub in overdue_subscriptions:
+                days_overdue = (today - sub.next_payment_date).days if sub.next_payment_date else 0
+                success = await telegram_service.send_reminder(
+                    chat_id=prefs.telegram_chat_id,
+                    subscription=sub,
+                    days_until=-days_overdue,  # Negative = overdue
+                )
+                if success:
+                    alerts_sent += 1
+
+            result = {"overdue_found": len(overdue_subscriptions), "alerts_sent": alerts_sent}
+            message = f"Sent {alerts_sent} overdue alert(s)"
+
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Unknown task type: {task_type}. Valid types: reminders, daily_digest, weekly_digest, overdue",
+            )
+
+        logger.info(f"Triggered {task_type} task for user {current_user.id}: {result}")
+
+        return TriggerRemindersResponse(
+            success=True,
+            task_type=task_type,
+            message=message,
+            result=result,
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to trigger {task_type} task: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to trigger {task_type} task: {str(e)}",
+        )

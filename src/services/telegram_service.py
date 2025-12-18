@@ -1,11 +1,13 @@
 """Telegram bot service for payment notifications.
 
 This module provides the TelegramService class for sending payment reminders
-and handling Telegram bot interactions.
+and handling Telegram bot interactions. Supports both webhook and long-polling modes.
 """
 
+import asyncio
 import hmac
 import logging
+from collections.abc import Callable, Coroutine
 from datetime import date
 from decimal import Decimal
 from typing import Any
@@ -16,6 +18,9 @@ from src.core.config import settings
 from src.models.subscription import Subscription
 
 logger = logging.getLogger(__name__)
+
+# Type alias for update handler
+UpdateHandler = Callable[[dict[str, Any]], Coroutine[Any, Any, None]]
 
 # Currency symbols mapping
 CURRENCY_SYMBOLS = {
@@ -172,8 +177,8 @@ class TelegramService:
             message += f"🏷️ Type: {type_name}\n"
 
         # Add card info if available
-        if subscription.card:
-            message += f"💳 Card: {subscription.card.name}\n"
+        if subscription.payment_card:
+            message += f"💳 Card: {subscription.payment_card.name}\n"
 
         return await self.send_message(chat_id, message.strip())
 
@@ -413,6 +418,166 @@ If you received this message, your Telegram notifications are working correctly!
             logger.error(f"Failed to get bot info: {e}")
 
         return None
+
+    async def get_updates(
+        self,
+        offset: int | None = None,
+        timeout: int = 30,
+    ) -> list[dict[str, Any]]:
+        """Get updates from Telegram using long polling.
+
+        Args:
+            offset: Identifier of the first update to be returned.
+            timeout: Long polling timeout in seconds.
+
+        Returns:
+            List of update objects.
+        """
+        if not self.is_configured:
+            return []
+
+        params: dict[str, Any] = {
+            "timeout": timeout,
+            "allowed_updates": ["message"],
+        }
+        if offset is not None:
+            params["offset"] = offset
+
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    f"{self.api_url}/getUpdates",
+                    params=params,
+                    timeout=timeout + 10,  # HTTP timeout > long poll timeout
+                )
+                response.raise_for_status()
+                result = response.json()
+                if result.get("ok"):
+                    return result.get("result", [])
+        except httpx.HTTPError as e:
+            logger.error(f"Failed to get updates: {e}")
+
+        return []
+
+    async def delete_webhook(self) -> bool:
+        """Delete webhook to enable long polling mode.
+
+        Returns:
+            True if webhook was deleted successfully.
+        """
+        if not self.is_configured:
+            return False
+
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"{self.api_url}/deleteWebhook",
+                    json={"drop_pending_updates": False},
+                    timeout=10.0,
+                )
+                response.raise_for_status()
+                result = response.json()
+                return result.get("ok", False)
+        except httpx.HTTPError as e:
+            logger.error(f"Failed to delete webhook: {e}")
+            return False
+
+
+class TelegramPoller:
+    """Long polling handler for Telegram bot updates.
+
+    Runs a background task that polls for updates and processes them.
+
+    Attributes:
+        service: TelegramService instance.
+        handler: Async function to handle updates.
+        running: Whether the poller is currently running.
+        task: The background polling task.
+    """
+
+    def __init__(
+        self,
+        service: TelegramService,
+        handler: UpdateHandler,
+    ):
+        """Initialize TelegramPoller.
+
+        Args:
+            service: TelegramService instance.
+            handler: Async function to call for each update.
+        """
+        self.service = service
+        self.handler = handler
+        self.running = False
+        self.task: asyncio.Task | None = None
+        self._offset: int | None = None
+
+    async def start(self) -> None:
+        """Start the polling loop.
+
+        Deletes any existing webhook and starts polling for updates.
+        """
+        if self.running:
+            logger.warning("Telegram poller already running")
+            return
+
+        if not self.service.is_configured:
+            logger.warning("Telegram bot not configured, skipping poller start")
+            return
+
+        # Delete webhook to enable long polling
+        deleted = await self.service.delete_webhook()
+        if deleted:
+            logger.info("Deleted Telegram webhook, switching to long polling mode")
+
+        # Verify bot is working
+        bot_info = await self.service.get_me()
+        if bot_info:
+            logger.info(f"Telegram bot connected: @{bot_info.get('username')}")
+        else:
+            logger.error("Failed to connect to Telegram bot")
+            return
+
+        self.running = True
+        self.task = asyncio.create_task(self._poll_loop())
+        logger.info("Telegram long polling started")
+
+    async def stop(self) -> None:
+        """Stop the polling loop."""
+        self.running = False
+        if self.task:
+            self.task.cancel()
+            try:
+                await self.task
+            except asyncio.CancelledError:
+                pass
+            self.task = None
+        logger.info("Telegram long polling stopped")
+
+    async def _poll_loop(self) -> None:
+        """Main polling loop."""
+        while self.running:
+            try:
+                updates = await self.service.get_updates(
+                    offset=self._offset,
+                    timeout=30,
+                )
+
+                for update in updates:
+                    update_id = update.get("update_id")
+                    if update_id is not None:
+                        self._offset = update_id + 1
+
+                    try:
+                        await self.handler(update)
+                    except Exception as e:
+                        logger.error(f"Error handling update: {e}")
+
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                logger.error(f"Polling error: {e}")
+                await asyncio.sleep(5)  # Wait before retry
 
 
 # Singleton instance

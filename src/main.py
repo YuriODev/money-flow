@@ -41,6 +41,8 @@ from src.security.rate_limit import limiter
 from src.security.secrets_validator import validate_secrets
 from src.services.cache_service import close_cache_service, get_cache_service
 from src.services.rag_service import get_rag_service
+from src.services.telegram_handler import handle_telegram_update
+from src.services.telegram_service import TelegramPoller, get_telegram_service
 
 # Configure structured logging before anything else
 configure_logging()
@@ -55,8 +57,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan handler for startup and shutdown.
 
     Manages application lifecycle events:
-    - Startup: Validates secrets, initializes database tables
-    - Shutdown: Cleanup connections
+    - Startup: Validates secrets, initializes database tables, starts Telegram poller
+    - Shutdown: Cleanup connections, stop Telegram poller
 
     Args:
         app: FastAPI application instance.
@@ -90,10 +92,20 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         rag_service.set_cache(cache)
         logger.info("RAG service configured with cache")
 
+    # Start Telegram long polling (for local development)
+    telegram_poller: TelegramPoller | None = None
+    telegram_service = get_telegram_service()
+    if telegram_service.is_configured and settings.debug:
+        # Only use long polling in debug mode (production uses webhooks)
+        telegram_poller = TelegramPoller(telegram_service, handle_telegram_update)
+        await telegram_poller.start()
+
     logger.info("Application startup complete")
     yield
 
     # Shutdown - cleanup connections
+    if telegram_poller:
+        await telegram_poller.stop()
     await close_cache_service()
     logger.info("Application shutdown complete")
 

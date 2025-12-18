@@ -63,3 +63,5 @@ Thumbs.db
 
 # Alembic
 alembic/versions/*.pyc
+.hypothesis/
+logs.md

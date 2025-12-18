@@ -129,6 +129,21 @@ class TestNotificationResponse(BaseModel):
     channel: str = "telegram"
 
 
+class TriggerRemindersRequest(BaseModel):
+    """Schema for manually triggering reminder tasks."""
+
+    task_type: str = "reminders"  # reminders, daily_digest, weekly_digest, overdue
+
+
+class TriggerRemindersResponse(BaseModel):
+    """Schema for trigger reminders response."""
+
+    success: bool
+    task_type: str
+    message: str
+    result: dict | None = None
+
+
 # Helper function to build response from model
 def preferences_to_response(prefs) -> dict:
     """Convert NotificationPreferences model to response dict.
