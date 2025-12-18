@@ -56,7 +56,11 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Build arguments for environment variables
+# BACKEND_URL is used at build time for Next.js rewrites (baked into standalone output)
+ARG BACKEND_URL=http://backend:8000
 ARG NEXT_PUBLIC_API_URL=/api
+
+ENV BACKEND_URL=${BACKEND_URL}
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 ENV NEXT_TELEMETRY_DISABLED=1
 

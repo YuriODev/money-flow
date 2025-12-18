@@ -5,8 +5,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { subscriptionApi, cardsApi, type Subscription, type PaymentType, PAYMENT_TYPE_LABELS } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import { X, Save, Loader2, Calendar, CreditCard, Wallet, ChevronDown, Tag } from "lucide-react";
+import { X, Save, Loader2, Calendar, CreditCard, Wallet, ChevronDown, Tag, FolderOpen } from "lucide-react";
 import { toast } from "@/components/Toast";
+import { CategorySelector } from "@/components/CategorySelector";
 
 interface EditSubscriptionModalProps {
   isOpen: boolean;
@@ -47,6 +48,7 @@ export function EditSubscriptionModal({
   const [currency, setCurrency] = useState(subscription.currency);
   const [startDate, setStartDate] = useState(subscription.start_date);
   const [cardId, setCardId] = useState<string | null>(subscription.card_id || null);
+  const [categoryId, setCategoryId] = useState<string | null>(subscription.category_id || null);
   const [paymentType, setPaymentType] = useState<PaymentType>(subscription.payment_type);
   const [isCardDropdownOpen, setIsCardDropdownOpen] = useState(false);
   const [isPaymentTypeDropdownOpen, setIsPaymentTypeDropdownOpen] = useState(false);
@@ -65,11 +67,12 @@ export function EditSubscriptionModal({
     setCurrency(subscription.currency);
     setStartDate(subscription.start_date);
     setCardId(subscription.card_id || null);
+    setCategoryId(subscription.category_id || null);
     setPaymentType(subscription.payment_type);
   }, [subscription]);
 
   const updateMutation = useMutation({
-    mutationFn: (data: { amount: number; currency: string; start_date: string; card_id?: string | null; payment_type?: PaymentType }) =>
+    mutationFn: (data: { amount: number; currency: string; start_date: string; card_id?: string | null; category_id?: string | null; payment_type?: PaymentType }) =>
       subscriptionApi.update(subscription.id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
@@ -93,6 +96,7 @@ export function EditSubscriptionModal({
       currency,
       start_date: startDate,
       card_id: cardId,
+      category_id: categoryId,
       payment_type: paymentType,
     });
   };
@@ -286,6 +290,20 @@ export function EditSubscriptionModal({
                     />
                   )}
                 </div>
+              </div>
+
+              {/* Category Selector */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <div className="flex items-center gap-2">
+                    <FolderOpen className="w-4 h-4" />
+                    Category
+                  </div>
+                </label>
+                <CategorySelector
+                  value={categoryId}
+                  onChange={(newCategoryId) => setCategoryId(newCategoryId)}
+                />
               </div>
 
               {/* Payment Card Selector - Custom Dropdown */}

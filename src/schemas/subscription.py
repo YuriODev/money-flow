@@ -89,6 +89,7 @@ class SubscriptionBase(BaseModel):
     )
 
     category: str | None = Field(default=None, max_length=100, description="Subcategory name")
+    category_id: str | None = Field(default=None, description="Category UUID for organization")
     notes: str | None = Field(default=None, description="Optional notes")
 
     # Payment tracking fields
@@ -146,6 +147,12 @@ class SubscriptionBase(BaseModel):
     @classmethod
     def validate_card_id(cls, v: str | None) -> str | None:
         """Validate card_id is a valid UUID."""
+        return validate_uuid(v)
+
+    @field_validator("category_id")
+    @classmethod
+    def validate_category_id(cls, v: str | None) -> str | None:
+        """Validate category_id is a valid UUID."""
         return validate_uuid(v)
 
     @field_validator("creditor", "recipient")
@@ -232,6 +239,7 @@ class SubscriptionUpdate(BaseModel):
     payment_type: PaymentType | None = None
 
     category: str | None = Field(default=None, max_length=100)
+    category_id: str | None = None
     is_active: bool | None = None
     notes: str | None = None
 
@@ -294,6 +302,12 @@ class SubscriptionUpdate(BaseModel):
     @classmethod
     def validate_card_id(cls, v: str | None) -> str | None:
         """Validate card_id is a valid UUID."""
+        return validate_uuid(v)
+
+    @field_validator("category_id")
+    @classmethod
+    def validate_category_id(cls, v: str | None) -> str | None:
+        """Validate category_id is a valid UUID."""
         return validate_uuid(v)
 
     @field_validator("creditor", "recipient")

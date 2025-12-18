@@ -179,6 +179,7 @@ export interface Subscription {
   // Payment type classification (Money Flow)
   payment_type: PaymentType;
   category: string | null;
+  category_id: string | null;
   is_active: boolean;
   notes: string | null;
   payment_method: string | null;
@@ -221,6 +222,7 @@ export interface SubscriptionCreate {
   // Payment type classification (Money Flow)
   payment_type?: PaymentType;
   category?: string;
+  category_id?: string | null;
   notes?: string;
   // Debt-specific fields
   total_owed?: number;

@@ -16,7 +16,7 @@ import {
   Sparkles,
   Calendar,
   Coins,
-  Tag,
+  FolderOpen,
   Search,
   Check,
   CreditCard,
@@ -32,6 +32,7 @@ import {
 } from "@/lib/service-icons";
 import { cn } from "@/lib/utils";
 import { toast } from "@/components/Toast";
+import { CategorySelector } from "@/components/CategorySelector";
 
 interface AddSubscriptionModalProps {
   isOpen: boolean;
@@ -202,6 +203,7 @@ export function AddSubscriptionModal({
     start_date: new Date().toISOString().split("T")[0],
     payment_type: "subscription",
     category: "",
+    category_id: null,
     // Debt fields
     total_owed: undefined,
     remaining_balance: undefined,
@@ -279,6 +281,7 @@ export function AddSubscriptionModal({
         start_date: new Date().toISOString().split("T")[0],
         payment_type: "subscription",
         category: "",
+        category_id: null,
         total_owed: undefined,
         remaining_balance: undefined,
         creditor: undefined,
@@ -579,21 +582,19 @@ export function AddSubscriptionModal({
 
               {/* Category */}
               <div>
-                <label htmlFor="payment-category" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  <Tag className="w-4 h-4" aria-hidden="true" />
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FolderOpen className="w-4 h-4" aria-hidden="true" />
                   Category
                 </label>
-                <motion.input
-                  id="payment-category"
-                  type="text"
-                  value={formData.category}
-                  onChange={(e) =>
-                    setFormData({ ...formData, category: e.target.value })
+                <CategorySelector
+                  value={formData.category_id || null}
+                  onChange={(categoryId, categoryName) =>
+                    setFormData({
+                      ...formData,
+                      category_id: categoryId,
+                      category: categoryName || "",
+                    })
                   }
-                  variants={inputVariants}
-                  whileFocus="focus"
-                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-0 focus:border-blue-400 dark:focus:border-blue-500 focus:shadow-lg focus:shadow-blue-100 dark:focus:shadow-blue-900/50 transition-all duration-200"
-                  placeholder="Entertainment, Productivity, etc."
                 />
               </div>
 

@@ -1,17 +1,29 @@
 import { withSentryConfig } from "@sentry/nextjs";
 
+// Get backend URL at build time - for standalone mode this is baked in
+const BACKEND_URL = process.env.BACKEND_URL || 'http://backend:8000';
+
+console.log(`[next.config.mjs] BACKEND_URL: ${BACKEND_URL}`);
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
   reactStrictMode: true,
 
   async rewrites() {
+    // Rewrites are evaluated at build time in standalone mode
+    // The destination must be a full URL, not just the base
     return [
       {
         source: '/api/:path*',
-        destination: process.env.BACKEND_URL || 'http://backend:8000/api/:path*',
+        destination: `${BACKEND_URL}/api/:path*`,
       },
     ];
+  },
+
+  // Environment variables to expose to the browser
+  env: {
+    API_VERSION: 'v1',
   },
 };
 

@@ -397,11 +397,14 @@ jobs:
       - name: Build and Start Frontend
         working-directory: frontend
         env:
-          # Set BACKEND_URL for the Next.js build and runtime so rewrites point to local backend
+          # BACKEND_URL must be set BEFORE build for Next.js standalone rewrites
+          # In standalone mode, rewrites are baked in at build time
           BACKEND_URL: http://localhost:8001
         run: |
+          echo "Building frontend with BACKEND_URL=$BACKEND_URL"
           npm run build
-          BACKEND_URL=http://localhost:8001 npm run start -- -p 3001 &
+          echo "Starting frontend server on port 3001..."
+          npm run start -- -p 3001 &
           echo "Waiting for frontend to start..."
           sleep 10
 
@@ -418,17 +421,31 @@ jobs:
 
       - name: Test Login Endpoint
         run: |
-          echo "Testing login endpoint directly..."
+          echo "=== Testing login endpoint directly (backend:8001) ==="
           response=$(curl -s -w "\nHTTP_CODE:%{http_code}" -X POST http://localhost:8001/api/v1/auth/login \
             -H "Content-Type: application/json" \
             -d '{"email": "test@example.com", "password": "TestPassword123!"}')
           echo "$response"
           http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
           if [ "$http_code" != "200" ]; then
-            echo "Login failed with HTTP $http_code"
-            echo "Checking backend logs..."
-            # Try to get more info
+            echo "Direct backend login failed with HTTP $http_code"
             curl -s http://localhost:8001/health/ready || true
+          fi
+
+          echo ""
+          echo "=== Testing login via frontend proxy (frontend:3001 -> backend:8001) ==="
+          response=$(curl -s -w "\nHTTP_CODE:%{http_code}" -X POST http://localhost:3001/api/v1/auth/login \
+            -H "Content-Type: application/json" \
+            -d '{"email": "test@example.com", "password": "TestPassword123!"}')
+          echo "$response"
+          http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+          if [ "$http_code" = "404" ]; then
+            echo "ERROR: Frontend proxy returned 404 - rewrites not working!"
+            echo "This usually means BACKEND_URL was not set during 'npm run build'"
+            exit 1
+          fi
+          if [ "$http_code" != "200" ]; then
+            echo "Proxy login failed with HTTP $http_code (but rewrite is working)"
           fi
 
       - name: Run Playwright E2E Tests

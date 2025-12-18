@@ -54,9 +54,7 @@ def upgrade() -> None:
     op.create_index("ix_categories_user_active", "categories", ["user_id", "is_active"])
 
     # Add category_id to subscriptions
-    op.add_column(
-        "subscriptions", sa.Column("category_id", sa.String(length=36), nullable=True)
-    )
+    op.add_column("subscriptions", sa.Column("category_id", sa.String(length=36), nullable=True))
     op.create_index(
         op.f("ix_subscriptions_category_id"), "subscriptions", ["category_id"], unique=False
     )
