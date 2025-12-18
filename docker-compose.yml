@@ -33,6 +33,9 @@ services:
       - API_PORT=8000
       - CORS_ORIGINS=["http://localhost:3001","http://localhost:3002","http://localhost:8001","http://frontend:3000"]
       - REDIS_URL=redis://redis:6379/0
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_BOT_USERNAME=${TELEGRAM_BOT_USERNAME}
+      - TELEGRAM_WEBHOOK_SECRET=${TELEGRAM_WEBHOOK_SECRET}
     ports:
       - "8001:8000"
     volumes:
@@ -179,7 +182,7 @@ services:
     ports:
       - "9187:9187"
     environment:
-      - DATA_SOURCE_NAME=postgresql://subscriptions:localdev@db:5432/subscriptions?sslmode=disable
+      - DATA_SOURCE_NAME=postgresql://${POSTGRES_USER:-subscriptions}:${POSTGRES_PASSWORD:-localdev}@db:5432/${POSTGRES_DB:-subscriptions}?sslmode=disable
     networks:
       - subscription-network
     depends_on:
