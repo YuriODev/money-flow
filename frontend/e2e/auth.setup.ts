@@ -16,12 +16,12 @@ setup("authenticate", async ({ page }) => {
   await page.goto("/login");
   await page.waitForLoadState("networkidle");
 
-  // Fill in login form
-  await page.getByLabel(/email/i).fill(testEmail);
-  await page.getByLabel(/password/i).fill(testPassword);
+  // Fill in login form (labels are "Email address" and "Password")
+  await page.getByLabel("Email address").fill(testEmail);
+  await page.getByLabel("Password").fill(testPassword);
 
-  // Click login button
-  await page.getByRole("button", { name: /sign in|log in|login/i }).click();
+  // Click login button (button text is "Sign in")
+  await page.getByRole("button", { name: "Sign in" }).click();
 
   // Wait for redirect to dashboard
   await expect(page).toHaveURL("/", { timeout: 15000 });
