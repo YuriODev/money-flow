@@ -1318,27 +1318,27 @@ Implement core user settings with Profile and Preferences tabs.
 
 ---
 
-## Sprint 5.2: Cards & Categories (Weeks 19-20) 🔄 IN PROGRESS
+## Sprint 5.2: Cards & Categories (Weeks 19-20) ✅ COMPLETE
 
 ### Overview
 Enhance payment card management and implement custom categories with budgets.
 
 | Task ID | Task Name | Priority | Hours | Dependencies | Status |
 |---------|-----------|----------|-------|--------------|--------|
-| **5.2.1** | **Enhanced Cards Tab** | 🔴 | 6h | None | 🔜 Next |
+| **5.2.1** | **Enhanced Cards Tab** | 🔴 | 6h | None | ✅ DONE |
 | 5.2.1.1 | Card list with spending breakdown | 🔴 | 2h | - | ✅ Already exists |
 | 5.2.1.2 | Card color customization | 🟡 | 1h | - | ✅ Already exists |
 | 5.2.1.3 | Card balance display | 🟠 | 2h | - | ✅ Already exists |
-| 5.2.1.4 | Default card selection | 🟡 | 1h | - | 🔜 Pending |
+| 5.2.1.4 | Default card selection | 🟡 | 1h | - | ✅ DONE |
 | **5.2.2** | **Categories Tab** | 🔴 | 10h | None | ✅ DONE |
 | 5.2.2.1 | Category model and migration | 🔴 | 2h | - | ✅ DONE |
 | 5.2.2.2 | Category CRUD API endpoints | 🔴 | 3h | 5.2.2.1 | ✅ DONE |
 | 5.2.2.3 | Category UI with color/icon picker | 🔴 | 3h | 5.2.2.2 | ✅ DONE |
 | 5.2.2.4 | Budget limits per category | 🟠 | 2h | 5.2.2.2 | ✅ DONE |
-| **5.2.3** | **Category Assignment** | 🟠 | 6h | 5.2.2 | 🔜 Pending |
+| **5.2.3** | **Category Assignment** | 🟠 | 6h | 5.2.2 | ✅ DONE |
 | 5.2.3.1 | Update subscription model with category_id | 🔴 | 1h | - | ✅ DONE |
-| 5.2.3.2 | Category selection in subscription forms | 🔴 | 2h | 5.2.3.1 | 🔜 Pending |
-| 5.2.3.3 | Auto-categorization suggestions (AI) | 🟡 | 3h | 5.2.3.2 | 🔜 Pending |
+| 5.2.3.2 | Category selection in subscription forms | 🔴 | 2h | 5.2.3.1 | ✅ DONE |
+| 5.2.3.3 | Auto-categorization suggestions (AI) | 🟡 | 3h | 5.2.3.2 | 🔜 Future |
 | **5.2.4** | **Tests** | 🔴 | 4h | 5.2.3 | ✅ DONE |
 
 **Sprint 5.2 Completed Features:**
@@ -1360,13 +1360,18 @@ Enhance payment card management and implement custom categories with budgets.
 - ✅ Frontend API functions (`frontend/src/lib/api.ts`)
 - ✅ Category unit tests (`tests/unit/test_categories.py`) - 45 tests
 - ✅ category_id column added to subscriptions table
+- ✅ CategorySelector component (`frontend/src/components/CategorySelector.tsx`)
+- ✅ Category selection in Add/Edit subscription modals
+- ✅ Default card and category preferences (`src/schemas/user.py`, `src/api/users.py`)
+- ✅ Auto-populate default card/category in new subscriptions
 
 **Sprint 5.2 Deliverables:**
-- 📦 Enhanced card management with spending breakdown
-- 📦 Custom categories with colors and icons
-- 📦 Budget limits per category with alerts
-- 📦 AI-powered category suggestions
-- ⏱️ **Total: ~26 hours** (~15h completed)
+- ✅ Enhanced card management with spending breakdown
+- ✅ Custom categories with colors and icons
+- ✅ Budget limits per category with alerts
+- ✅ Default card and category selection
+- 🔜 AI-powered category suggestions (moved to future sprint)
+- ⏱️ **Total: ~26 hours** (complete)
 
 ---
 

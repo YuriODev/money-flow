@@ -30,21 +30,22 @@
 | **Phase 4** | Sprint 4.3 | ✅ Complete | Payment Reminders & Telegram Bot |
 | **Phase 4** | Sprint 4.4 | ✅ Complete | Documentation & Security |
 | **Phase 5** | Sprint 5.1 | ✅ Complete | Profile & Preferences |
-| **Phase 5** | Sprint 5.2 | 🔄 In Progress | Cards & Categories |
+| **Phase 5** | Sprint 5.2 | ✅ Complete | Cards & Categories |
 | **Phase 5** | Sprints 5.3-5.7 | 🔜 Upcoming | Settings & AI Features (~200h remaining) |
 | **Phase 6** | Sprint 6.1 | 🔜 Upcoming | Production Launch (~15h) |
 
-### Sprint 5.2 Tasks (Week 19) - Cards & Categories 🔄
+### Sprint 5.2 Tasks (Week 19) - Cards & Categories ✅
 
 | Task | Status | Description |
 |------|--------|-------------|
+| 5.2.1.4 | ✅ DONE | Default card selection |
 | 5.2.2.1 | ✅ DONE | Category model and migration |
 | 5.2.2.2 | ✅ DONE | Category CRUD API endpoints |
 | 5.2.2.3 | ✅ DONE | Category UI with color/icon picker |
 | 5.2.2.4 | ✅ DONE | Budget limits per category |
 | 5.2.3.1 | ✅ DONE | Update subscription model with category_id |
-| 5.2.3.2 | 🔜 Pending | Category selection in subscription forms |
-| 5.2.3.3 | 🔜 Pending | Auto-categorization suggestions (AI) |
+| 5.2.3.2 | ✅ DONE | Category selection in subscription forms |
+| 5.2.3.3 | 🔜 Future | Auto-categorization suggestions (AI) |
 | 5.2.4 | ✅ DONE | Category unit tests (45 tests) |
 
 **Sprint 5.2 Features Completed:**
@@ -83,9 +84,17 @@
   - Budget progress bar visualization
   - Create, edit, delete modals
   - Default categories creation button
+- **CategorySelector Component** (`frontend/src/components/CategorySelector.tsx`)
+  - Dropdown component for selecting categories
+  - Shows category colors and budget limits
+  - Used in Add/Edit subscription modals
+- **Default Card/Category Selection** (`src/schemas/user.py`, `src/api/users.py`)
+  - default_card_id and default_category_id in user preferences
+  - Auto-populate defaults when creating new subscriptions
 - **Frontend API** (`frontend/src/lib/api.ts`)
   - Category types and interfaces
   - categoriesApi with all endpoints
+  - UserPreferences with default_card_id/default_category_id
 - **Unit Tests** (`tests/unit/test_categories.py`)
   - 45 tests covering model, schemas, service
 - **Total unit tests: 599** (554 previous + 45 new)
