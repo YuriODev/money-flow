@@ -334,6 +334,7 @@ class TestBulkAssignCategoryRequest:
     def test_bulk_assign_max_length(self):
         """Test bulk assign has max limit."""
         import uuid
+
         cat_id = "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
         with pytest.raises(ValidationError):
             BulkAssignCategoryRequest(
