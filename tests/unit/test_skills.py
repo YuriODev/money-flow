@@ -453,9 +453,7 @@ class TestSavingsMilestones:
 
     def test_calculate_milestones_custom_percentages(self, sample_goal):
         """Test milestone calculation with custom percentages."""
-        milestones = calculate_milestones(
-            sample_goal, milestone_percentages=[25, 50, 75, 100]
-        )
+        milestones = calculate_milestones(sample_goal, milestone_percentages=[25, 50, 75, 100])
 
         assert len(milestones) == 4
 

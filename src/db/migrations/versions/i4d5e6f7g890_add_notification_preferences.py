@@ -70,6 +70,8 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Drop notification_preferences table."""
-    op.drop_index("ix_notification_preferences_telegram_chat_id", table_name="notification_preferences")
+    op.drop_index(
+        "ix_notification_preferences_telegram_chat_id", table_name="notification_preferences"
+    )
     op.drop_index("ix_notification_preferences_user_id", table_name="notification_preferences")
     op.drop_table("notification_preferences")
