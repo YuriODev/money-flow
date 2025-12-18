@@ -333,6 +333,8 @@ class TestDefaultPreferences:
             "timezone",
             "language",
             "show_currency_symbol",
+            "default_card_id",
+            "default_category_id",
         }
         assert set(DEFAULT_PREFERENCES.keys()) == required_keys
 
@@ -347,3 +349,11 @@ class TestDefaultPreferences:
     def test_default_view_is_list(self):
         """Test default view is list."""
         assert DEFAULT_PREFERENCES["default_view"] == "list"
+
+    def test_default_card_id_is_none(self):
+        """Test default card ID is None."""
+        assert DEFAULT_PREFERENCES["default_card_id"] is None
+
+    def test_default_category_id_is_none(self):
+        """Test default category ID is None."""
+        assert DEFAULT_PREFERENCES["default_category_id"] is None
