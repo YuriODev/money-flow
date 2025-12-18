@@ -8,21 +8,22 @@ import {
   User,
   Bell,
   CreditCard,
-  Palette,
+  Settings,
   Shield,
   HelpCircle,
 } from "lucide-react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ProfileSettings } from "@/components/settings/ProfileSettings";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
+import { PreferencesSettings } from "@/components/settings/PreferencesSettings";
 
-type SettingsTab = "profile" | "notifications" | "cards" | "appearance" | "security" | "help";
+type SettingsTab = "profile" | "preferences" | "notifications" | "cards" | "security" | "help";
 
 const tabs: { id: SettingsTab; label: string; icon: React.ReactNode; available: boolean }[] = [
   { id: "profile", label: "Profile", icon: <User className="w-5 h-5" />, available: true },
+  { id: "preferences", label: "Preferences", icon: <Settings className="w-5 h-5" />, available: true },
   { id: "notifications", label: "Notifications", icon: <Bell className="w-5 h-5" />, available: true },
   { id: "cards", label: "Payment Cards", icon: <CreditCard className="w-5 h-5" />, available: false },
-  { id: "appearance", label: "Appearance", icon: <Palette className="w-5 h-5" />, available: false },
   { id: "security", label: "Security", icon: <Shield className="w-5 h-5" />, available: false },
   { id: "help", label: "Help & Support", icon: <HelpCircle className="w-5 h-5" />, available: false },
 ];
@@ -35,18 +36,14 @@ function SettingsContent() {
     switch (activeTab) {
       case "profile":
         return <ProfileSettings />;
+      case "preferences":
+        return <PreferencesSettings />;
       case "notifications":
         return <NotificationSettings />;
       case "cards":
         return (
           <div className="flex items-center justify-center h-64 text-gray-500 dark:text-gray-400">
             <p>Payment Cards settings coming soon...</p>
-          </div>
-        );
-      case "appearance":
-        return (
-          <div className="flex items-center justify-center h-64 text-gray-500 dark:text-gray-400">
-            <p>Appearance settings coming soon...</p>
           </div>
         );
       case "security":

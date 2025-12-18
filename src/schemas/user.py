@@ -247,3 +247,147 @@ class PasswordChangeRequest(BaseModel):
     def validate_new_password(cls, v: str) -> str:
         """Validate new password strength."""
         return validate_password_strength(v)
+
+
+# User Preferences Schemas
+
+
+class UserPreferencesResponse(BaseModel):
+    """Schema for user preferences API responses.
+
+    Contains all configurable user preferences for the application.
+
+    Attributes:
+        currency: Default currency for display (ISO 4217 code).
+        date_format: Date format preference.
+        number_format: Number format preference.
+        theme: UI theme preference.
+        default_view: Default dashboard view.
+        week_start: First day of the week.
+        timezone: User's timezone (IANA format).
+        language: Preferred language (ISO 639-1).
+        compact_mode: Use compact UI layout.
+        show_currency_symbol: Display currency symbols.
+
+    Example:
+        >>> prefs = UserPreferencesResponse(
+        ...     currency="GBP",
+        ...     date_format="DD/MM/YYYY",
+        ...     theme="system"
+        ... )
+    """
+
+    model_config = ConfigDict(from_attributes=True)
+
+    # Display preferences
+    currency: str = Field(default="GBP", description="Default currency (ISO 4217)")
+    date_format: str = Field(default="DD/MM/YYYY", description="Date format preference")
+    number_format: str = Field(default="1,234.56", description="Number format preference")
+
+    # UI preferences
+    theme: str = Field(default="system", description="Theme: light, dark, or system")
+    default_view: str = Field(default="list", description="Default view: list, calendar, cards")
+    compact_mode: bool = Field(default=False, description="Use compact UI layout")
+
+    # Regional preferences
+    week_start: str = Field(default="monday", description="First day of week: sunday or monday")
+    timezone: str = Field(default="UTC", description="User timezone (IANA format)")
+    language: str = Field(default="en", description="Preferred language (ISO 639-1)")
+
+    # Currency display
+    show_currency_symbol: bool = Field(default=True, description="Show currency symbols")
+
+
+class UserPreferencesUpdate(BaseModel):
+    """Schema for updating user preferences.
+
+    All fields are optional for partial updates.
+
+    Attributes:
+        currency: Default currency (ISO 4217 code).
+        date_format: Date format preference.
+        number_format: Number format preference.
+        theme: UI theme preference.
+        default_view: Default dashboard view.
+        week_start: First day of the week.
+        timezone: User's timezone.
+        language: Preferred language.
+        compact_mode: Use compact UI layout.
+        show_currency_symbol: Display currency symbols.
+
+    Example:
+        >>> update = UserPreferencesUpdate(currency="USD", theme="dark")
+    """
+
+    # Display preferences
+    currency: str | None = Field(None, description="Default currency (ISO 4217)")
+    date_format: str | None = Field(None, description="Date format preference")
+    number_format: str | None = Field(None, description="Number format preference")
+
+    # UI preferences
+    theme: str | None = Field(None, description="Theme: light, dark, or system")
+    default_view: str | None = Field(None, description="Default view: list, calendar, cards")
+    compact_mode: bool | None = Field(None, description="Use compact UI layout")
+
+    # Regional preferences
+    week_start: str | None = Field(None, description="First day of week: sunday or monday")
+    timezone: str | None = Field(None, description="User timezone (IANA format)")
+    language: str | None = Field(None, description="Preferred language (ISO 639-1)")
+
+    # Currency display
+    show_currency_symbol: bool | None = Field(None, description="Show currency symbols")
+
+    @field_validator("currency")
+    @classmethod
+    def validate_currency(cls, v: str | None) -> str | None:
+        """Validate currency is a valid ISO 4217 code."""
+        if v is None:
+            return v
+        valid_currencies = {"GBP", "USD", "EUR", "UAH", "CAD", "AUD", "JPY", "CHF", "CNY", "INR"}
+        if v.upper() not in valid_currencies:
+            raise ValueError(f"Invalid currency. Supported: {', '.join(sorted(valid_currencies))}")
+        return v.upper()
+
+    @field_validator("theme")
+    @classmethod
+    def validate_theme(cls, v: str | None) -> str | None:
+        """Validate theme is valid."""
+        if v is None:
+            return v
+        valid_themes = {"light", "dark", "system"}
+        if v.lower() not in valid_themes:
+            raise ValueError(f"Invalid theme. Supported: {', '.join(valid_themes)}")
+        return v.lower()
+
+    @field_validator("default_view")
+    @classmethod
+    def validate_default_view(cls, v: str | None) -> str | None:
+        """Validate default view is valid."""
+        if v is None:
+            return v
+        valid_views = {"list", "calendar", "cards", "agent"}
+        if v.lower() not in valid_views:
+            raise ValueError(f"Invalid view. Supported: {', '.join(valid_views)}")
+        return v.lower()
+
+    @field_validator("date_format")
+    @classmethod
+    def validate_date_format(cls, v: str | None) -> str | None:
+        """Validate date format is valid."""
+        if v is None:
+            return v
+        valid_formats = {"DD/MM/YYYY", "MM/DD/YYYY", "YYYY-MM-DD"}
+        if v.upper() not in valid_formats:
+            raise ValueError(f"Invalid date format. Supported: {', '.join(valid_formats)}")
+        return v.upper()
+
+    @field_validator("week_start")
+    @classmethod
+    def validate_week_start(cls, v: str | None) -> str | None:
+        """Validate week start day is valid."""
+        if v is None:
+            return v
+        valid_days = {"sunday", "monday"}
+        if v.lower() not in valid_days:
+            raise ValueError(f"Invalid week start. Supported: {', '.join(valid_days)}")
+        return v.lower()

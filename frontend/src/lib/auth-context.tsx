@@ -48,6 +48,7 @@ interface AuthContextType {
   register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
   refreshToken: () => Promise<boolean>;
+  refreshUser: () => Promise<void>;
   clearError: () => void;
 }
 
@@ -269,6 +270,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const refreshUser = useCallback(async () => {
+    try {
+      const response = await api.get("/auth/me");
+      setUser(response.data);
+      setStoredUser(response.data);
+    } catch {
+      // If fetching user fails, the interceptor will handle token refresh
+    }
+  }, []);
+
   const clearError = useCallback(() => {
     setError(null);
   }, []);
@@ -284,6 +295,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         register,
         logout,
         refreshToken,
+        refreshUser,
         clearError,
       }}
     >

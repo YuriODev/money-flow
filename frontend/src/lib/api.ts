@@ -84,8 +84,18 @@ api.interceptors.response.use(
     if (error.response?.data) {
       const data = error.response.data;
 
+      // Handle plain text error responses (e.g., "Internal Server Error")
+      if (typeof data === "string") {
+        return Promise.reject(
+          new APIError(
+            data || `HTTP ${error.response.status} Error`,
+            "HTTP_ERROR"
+          )
+        );
+      }
+
       // Check for new error format
-      if (data.error) {
+      if (data && typeof data === "object" && data.error) {
         return Promise.reject(
           new APIError(
             data.error.message || "An error occurred",
@@ -97,7 +107,7 @@ api.interceptors.response.use(
       }
 
       // Check for old format with 'detail'
-      if ("detail" in data) {
+      if (data && typeof data === "object" && "detail" in data) {
         const detail = (data as Record<string, unknown>).detail;
         return Promise.reject(
           new APIError(
@@ -651,5 +661,93 @@ export const calendarApi = {
 
   deletePayment: async (subscriptionId: string, paymentDate: string): Promise<void> => {
     await api.delete(`/calendar/payments/${subscriptionId}/${paymentDate}`);
+  },
+};
+
+// User Profile types
+export interface UserProfile {
+  id: string;
+  email: string;
+  full_name: string | null;
+  role: "user" | "admin";
+  is_active: boolean;
+  is_verified: boolean;
+  avatar_url: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UserProfileUpdate {
+  full_name?: string;
+  avatar_url?: string;
+}
+
+export interface PasswordChangeRequest {
+  current_password: string;
+  new_password: string;
+}
+
+// User Preferences types
+export type Currency = "GBP" | "USD" | "EUR" | "UAH" | "CAD" | "AUD" | "JPY" | "CHF" | "CNY" | "INR";
+export type DateFormat = "DD/MM/YYYY" | "MM/DD/YYYY" | "YYYY-MM-DD";
+export type DefaultView = "list" | "calendar" | "cards" | "agent";
+export type ThemePreference = "light" | "dark" | "system";
+export type WeekStart = "sunday" | "monday";
+export type NumberFormat = "1,234.56" | "1.234,56";
+
+export interface UserPreferences {
+  currency: Currency;
+  date_format: DateFormat;
+  number_format: NumberFormat;
+  theme: ThemePreference;
+  default_view: DefaultView;
+  compact_mode: boolean;
+  week_start: WeekStart;
+  timezone: string;
+  language: string;
+  show_currency_symbol: boolean;
+}
+
+export interface UserPreferencesUpdate {
+  currency?: Currency;
+  date_format?: DateFormat;
+  number_format?: NumberFormat;
+  theme?: ThemePreference;
+  default_view?: DefaultView;
+  compact_mode?: boolean;
+  week_start?: WeekStart;
+  timezone?: string;
+  language?: string;
+  show_currency_symbol?: boolean;
+}
+
+export const userApi = {
+  // Get current user profile
+  getProfile: async (): Promise<UserProfile> => {
+    const { data } = await api.get("/auth/me");
+    return data;
+  },
+
+  // Update user profile
+  updateProfile: async (profile: UserProfileUpdate): Promise<UserProfile> => {
+    const { data } = await api.put("/auth/me", profile);
+    return data;
+  },
+
+  // Change password
+  changePassword: async (request: PasswordChangeRequest): Promise<void> => {
+    await api.post("/auth/change-password", request);
+  },
+
+  // Get user preferences
+  getPreferences: async (): Promise<UserPreferences> => {
+    const { data } = await api.get("/users/preferences");
+    return data;
+  },
+
+  // Update user preferences
+  updatePreferences: async (prefs: UserPreferencesUpdate): Promise<UserPreferences> => {
+    const { data } = await api.put("/users/preferences", prefs);
+    return data;
   },
 };
