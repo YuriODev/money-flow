@@ -159,17 +159,18 @@ export function StatsPanel() {
           animate="visible"
           whileHover={{ y: -4, transition: { duration: 0.2 } }}
           className={cn(
-            "relative overflow-hidden glass-card rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 border",
+            "relative glass-card rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 border",
             stat.borderColor
           )}
           aria-label={`${stat.label}: ${stat.value}`}
         >
-          {/* Background gradient decoration */}
+          {/* Background gradient decoration - positioned inside with proper clipping */}
           <div
             className={cn(
-              "absolute -right-8 -top-8 w-24 sm:w-32 h-24 sm:h-32 rounded-full opacity-20 blur-2xl",
+              "absolute right-0 top-0 w-20 sm:w-28 h-20 sm:h-28 rounded-full opacity-15 blur-2xl pointer-events-none",
               `bg-gradient-to-br ${stat.gradient}`
             )}
+            style={{ transform: "translate(30%, -30%)" }}
             aria-hidden="true"
           />
 
@@ -194,7 +195,8 @@ export function StatsPanel() {
               <motion.div
                 whileHover={{ scale: 1.1, rotate: 5 }}
                 className={cn(
-                  "w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg shrink-0",
+                  "w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center shrink-0",
+                  "shadow-[0_4px_14px_0_rgba(0,0,0,0.15)]",
                   `bg-gradient-to-br ${stat.gradient}`
                 )}
                 aria-hidden="true"
