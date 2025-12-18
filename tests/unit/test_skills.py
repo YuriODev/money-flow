@@ -16,7 +16,7 @@ skills_path = Path(__file__).parent.parent.parent / ".claude" / "skills"
 sys.path.insert(0, str(skills_path / "debt-management"))
 sys.path.insert(0, str(skills_path / "savings-goal"))
 
-from calculators import (
+from calculators import (  # noqa: E402, I001
     Debt,
     PayoffStrategy,
     calculate_minimum_viable_payment,
@@ -26,7 +26,7 @@ from calculators import (
     calculate_windfall_impact,
     compare_strategies,
 )
-from projections import (
+from projections import (  # noqa: E402
     ContributionFrequency,
     SavingsGoal,
     calculate_milestones,

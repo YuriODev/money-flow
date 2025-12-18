@@ -23,7 +23,6 @@ from src.schemas.notification import (
     preferences_to_response,
 )
 
-
 # =============================================================================
 # NotificationPreferences Model Tests
 # =============================================================================

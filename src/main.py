@@ -25,7 +25,19 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.api import agent, analytics, auth, calendar, cards, health, insights, notifications, search, subscriptions, telegram
+from src.api import (
+    agent,
+    analytics,
+    auth,
+    calendar,
+    cards,
+    health,
+    insights,
+    notifications,
+    search,
+    subscriptions,
+    telegram,
+)
 from src.api.v1 import v1_router
 from src.core.config import settings
 from src.core.container import init_container
