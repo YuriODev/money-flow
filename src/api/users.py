@@ -40,6 +40,8 @@ DEFAULT_PREFERENCES = {
     "timezone": "UTC",
     "language": "en",
     "show_currency_symbol": True,
+    "default_card_id": None,
+    "default_category_id": None,
 }
 
 

@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   subscriptionApi,
+  userApi,
   type SubscriptionCreate,
   type PaymentType,
   PAYMENT_TYPE_LABELS,
@@ -195,6 +196,13 @@ export function AddSubscriptionModal({
     null
   );
 
+  // Fetch user preferences for default card and category
+  const { data: preferences } = useQuery({
+    queryKey: ["user-preferences"],
+    queryFn: () => userApi.getPreferences(),
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+
   const [formData, setFormData] = useState<SubscriptionCreate>({
     name: "",
     amount: 0,
@@ -204,6 +212,7 @@ export function AddSubscriptionModal({
     payment_type: "subscription",
     category: "",
     category_id: null,
+    card_id: undefined,
     // Debt fields
     total_owed: undefined,
     remaining_balance: undefined,
@@ -213,6 +222,17 @@ export function AddSubscriptionModal({
     current_saved: undefined,
     recipient: undefined,
   });
+
+  // Apply default card and category when preferences load
+  useEffect(() => {
+    if (preferences && isOpen) {
+      setFormData((prev) => ({
+        ...prev,
+        card_id: prev.card_id || preferences.default_card_id || undefined,
+        category_id: prev.category_id || preferences.default_category_id || null,
+      }));
+    }
+  }, [preferences, isOpen]);
 
   // Filter services based on search
   const filteredServices = useMemo(() => {
@@ -272,16 +292,17 @@ export function AddSubscriptionModal({
       queryClient.invalidateQueries({ queryKey: ["calendar-events"] });
       toast.success("Payment added", `${formData.name} has been added to your payments.`);
       onClose();
-      // Reset form
+      // Reset form - defaults will be applied by useEffect when modal reopens
       setFormData({
         name: "",
         amount: 0,
-        currency: "GBP",
+        currency: preferences?.currency || "GBP",
         frequency: "monthly",
         start_date: new Date().toISOString().split("T")[0],
         payment_type: "subscription",
         category: "",
         category_id: null,
+        card_id: undefined,
         total_owed: undefined,
         remaining_balance: undefined,
         creditor: undefined,

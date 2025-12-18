@@ -708,6 +708,8 @@ export interface UserPreferences {
   timezone: string;
   language: string;
   show_currency_symbol: boolean;
+  default_card_id: string | null;
+  default_category_id: string | null;
 }
 
 export interface UserPreferencesUpdate {
@@ -721,6 +723,8 @@ export interface UserPreferencesUpdate {
   timezone?: string;
   language?: string;
   show_currency_symbol?: boolean;
+  default_card_id?: string | null;
+  default_category_id?: string | null;
 }
 
 export const userApi = {

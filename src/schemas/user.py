@@ -297,6 +297,10 @@ class UserPreferencesResponse(BaseModel):
     # Currency display
     show_currency_symbol: bool = Field(default=True, description="Show currency symbols")
 
+    # Default selections
+    default_card_id: str | None = Field(default=None, description="Default payment card ID")
+    default_category_id: str | None = Field(default=None, description="Default category ID")
+
 
 class UserPreferencesUpdate(BaseModel):
     """Schema for updating user preferences.
@@ -336,6 +340,10 @@ class UserPreferencesUpdate(BaseModel):
 
     # Currency display
     show_currency_symbol: bool | None = Field(None, description="Show currency symbols")
+
+    # Default selections
+    default_card_id: str | None = Field(None, description="Default payment card ID")
+    default_category_id: str | None = Field(None, description="Default category ID")
 
     @field_validator("currency")
     @classmethod
