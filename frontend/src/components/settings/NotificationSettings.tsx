@@ -16,7 +16,7 @@ import {
   CheckCircle2,
   Send,
 } from "lucide-react";
-import { notificationApi, NotificationPreferences, TelegramLinkResponse } from "@/lib/api";
+import { notificationApi, TelegramLinkResponse } from "@/lib/api";
 
 // Telegram icon component
 function TelegramIcon({ className }: { className?: string }) {

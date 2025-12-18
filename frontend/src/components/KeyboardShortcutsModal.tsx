@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Keyboard, Command } from "lucide-react";
-import { SHORTCUTS, getShortcutDisplay } from "@/hooks/useKeyboardShortcuts";
+import { X, Keyboard } from "lucide-react";
+import { SHORTCUTS } from "@/hooks/useKeyboardShortcuts";
 
 interface KeyboardShortcutsModalProps {
   isOpen: boolean;
