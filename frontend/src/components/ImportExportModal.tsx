@@ -37,6 +37,14 @@ export default function ImportExportModal({ isOpen, onClose }: ImportExportModal
     onError: (err: Error) => setError(err.message),
   });
 
+  const exportPdfMutation = useMutation({
+    mutationFn: () => importExportApi.exportPdf(includeInactive),
+    onSuccess: (blob) => {
+      downloadFile(blob, `money_flow_report_${formatDate()}.pdf`);
+    },
+    onError: (err: Error) => setError(err.message),
+  });
+
   const importJsonMutation = useMutation({
     mutationFn: (file: File) => importExportApi.importJson(file, skipDuplicates),
     onSuccess: (result) => {
@@ -103,6 +111,7 @@ export default function ImportExportModal({ isOpen, onClose }: ImportExportModal
   const isLoading =
     exportJsonMutation.isPending ||
     exportCsvMutation.isPending ||
+    exportPdfMutation.isPending ||
     importJsonMutation.isPending ||
     importCsvMutation.isPending;
 
@@ -166,20 +175,32 @@ export default function ImportExportModal({ isOpen, onClose }: ImportExportModal
               </label>
 
               {/* Export Buttons */}
-              <div className="flex space-x-3">
+              <div className="space-y-3">
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => exportJsonMutation.mutate()}
+                    disabled={isLoading}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {exportJsonMutation.isPending ? "Exporting..." : "Export as JSON"}
+                  </button>
+                  <button
+                    onClick={() => exportCsvMutation.mutate()}
+                    disabled={isLoading}
+                    className="flex-1 bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 text-white py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {exportCsvMutation.isPending ? "Exporting..." : "Export as CSV"}
+                  </button>
+                </div>
                 <button
-                  onClick={() => exportJsonMutation.mutate()}
+                  onClick={() => exportPdfMutation.mutate()}
                   disabled={isLoading}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-purple-600 hover:bg-purple-700 dark:bg-purple-600 dark:hover:bg-purple-700 text-white py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
                 >
-                  {exportJsonMutation.isPending ? "Exporting..." : "Export as JSON"}
-                </button>
-                <button
-                  onClick={() => exportCsvMutation.mutate()}
-                  disabled={isLoading}
-                  className="flex-1 bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 text-white py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {exportCsvMutation.isPending ? "Exporting..." : "Export as CSV"}
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <span>{exportPdfMutation.isPending ? "Generating Report..." : "Generate PDF Report"}</span>
                 </button>
               </div>
             </div>

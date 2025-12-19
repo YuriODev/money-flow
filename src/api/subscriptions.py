@@ -20,7 +20,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.auth.dependencies import get_current_active_user
 from src.core.config import settings
 from src.core.dependencies import get_db
-from src.models.subscription import Frequency, PaymentType
+from src.models.subscription import Frequency, PaymentMode, PaymentType
 from src.models.user import User
 from src.schemas.subscription import (
     ExportData,
@@ -47,7 +47,10 @@ async def list_subscriptions(
     is_active: bool | None = None,
     category: str | None = None,
     payment_type: PaymentType | None = Query(
-        default=None, description="Filter by payment type (subscription, debt, savings, etc.)"
+        default=None, description="Filter by payment type (deprecated, use payment_mode)"
+    ),
+    payment_mode: PaymentMode | None = Query(
+        default=None, description="Filter by payment mode (recurring, one_time, debt, savings)"
     ),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
@@ -55,13 +58,14 @@ async def list_subscriptions(
     """List all subscriptions/payments with optional filters.
 
     Retrieves all payments from the database with optional filtering
-    by active status, category, and payment type. Results are ordered
-    by next payment date.
+    by active status, category, payment type, and/or payment mode.
+    Results are ordered by next payment date.
 
     Args:
         is_active: Filter by active status. If not provided, returns all.
         category: Filter by subcategory name. If not provided, returns all categories.
-        payment_type: Filter by payment type (subscription, debt, savings, etc.).
+        payment_type: Filter by payment type (deprecated, use payment_mode).
+        payment_mode: Filter by payment mode (recurring, one_time, debt, savings).
         db: Database session (injected by dependency).
         current_user: Authenticated user (injected by dependency).
 
@@ -71,12 +75,15 @@ async def list_subscriptions(
     Example:
         GET /api/subscriptions
         GET /api/subscriptions?is_active=true
-        GET /api/subscriptions?payment_type=debt
+        GET /api/subscriptions?payment_mode=debt
         GET /api/subscriptions?category=entertainment
     """
     service = SubscriptionService(db, user_id=str(current_user.id))
     subscriptions = await service.get_all(
-        is_active=is_active, category=category, payment_type=payment_type
+        is_active=is_active,
+        category=category,
+        payment_type=payment_type,
+        payment_mode=payment_mode,
     )
     return [SubscriptionResponse.model_validate(s) for s in subscriptions]
 
@@ -327,6 +334,7 @@ async def export_subscriptions_json(
                 start_date=sub.start_date.isoformat(),
                 next_payment_date=sub.next_payment_date.isoformat(),
                 payment_type=sub.payment_type.value,
+                payment_mode=sub.payment_mode.value if sub.payment_mode else "recurring",
                 category=sub.category,
                 notes=sub.notes,
                 is_active=sub.is_active,
@@ -390,7 +398,7 @@ async def export_subscriptions_csv(
     output = io.StringIO()
     writer = csv.writer(output)
 
-    # Write header (Money Flow v2.0 format)
+    # Write header (Money Flow v2.1 format with payment_mode)
     writer.writerow(
         [
             "name",
@@ -401,6 +409,7 @@ async def export_subscriptions_csv(
             "start_date",
             "next_payment_date",
             "payment_type",
+            "payment_mode",
             "category",
             "notes",
             "is_active",
@@ -442,6 +451,7 @@ async def export_subscriptions_csv(
                 sub.start_date.isoformat(),
                 sub.next_payment_date.isoformat(),
                 sub.payment_type.value,
+                sub.payment_mode.value if sub.payment_mode else "recurring",
                 sub.category or "",
                 sub.notes or "",
                 str(sub.is_active).lower(),
@@ -470,6 +480,66 @@ async def export_subscriptions_csv(
     return Response(
         content=csv_content,
         media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/export/pdf")
+@limiter.limit(rate_limit_get)
+async def export_subscriptions_pdf(
+    request: Request,
+    include_inactive: bool = Query(default=False, description="Include inactive payments"),
+    payment_type: PaymentType | None = Query(default=None, description="Filter by payment type"),
+    page_size: str = Query(default="a4", description="Page size (a4 or letter)"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+) -> Response:
+    """Export all subscriptions/payments as a PDF report.
+
+    Generates a professional PDF report with:
+    - Summary statistics (monthly/yearly totals)
+    - Spending breakdown by category
+    - Upcoming payments (next 30 days)
+    - Complete payments table
+
+    Args:
+        include_inactive: Whether to include inactive payments.
+        payment_type: Optional filter for specific payment type.
+        page_size: Page size for the PDF ('a4' or 'letter').
+        db: Database session (injected by dependency).
+        current_user: Authenticated user (injected by dependency).
+
+    Returns:
+        PDF file download response.
+
+    Example:
+        GET /api/subscriptions/export/pdf
+        GET /api/subscriptions/export/pdf?include_inactive=true
+        GET /api/subscriptions/export/pdf?page_size=letter
+    """
+    from src.services.pdf_report_service import PDFReportService
+
+    service = SubscriptionService(db, user_id=str(current_user.id))
+    is_active = None if include_inactive else True
+    subscriptions = await service.get_all(is_active=is_active, payment_type=payment_type)
+
+    # Generate PDF report
+    pdf_service = PDFReportService(
+        page_size=page_size,
+        include_inactive=include_inactive,
+        currency=settings.default_currency,
+    )
+    pdf_content = pdf_service.generate_report(
+        subscriptions=subscriptions,
+        user_email=current_user.email,
+        report_title="Money Flow Report",
+    )
+
+    filename = f"money_flow_report_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.pdf"
+
+    return Response(
+        content=pdf_content,
+        media_type="application/pdf",
         headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
 
@@ -686,13 +756,21 @@ async def _import_subscriptions(
                 except InvalidOperation:
                     return None
 
-            # Parse payment_type (Money Flow v2.0 field)
+            # Parse payment_type (Money Flow v2.0 field, deprecated)
             payment_type_str = sub_data.get("payment_type", "subscription").lower()
             try:
                 payment_type_val = PaymentType(payment_type_str)
             except ValueError:
                 # Default to subscription for unknown types
                 payment_type_val = PaymentType.SUBSCRIPTION
+
+            # Parse payment_mode (Money Flow v2.1 field)
+            payment_mode_str = sub_data.get("payment_mode", "recurring").lower()
+            try:
+                payment_mode_val = PaymentMode(payment_mode_str)
+            except ValueError:
+                # Default to recurring for unknown modes
+                payment_mode_val = PaymentMode.RECURRING
 
             # Create subscription/payment
             create_data = SubscriptionCreate(
@@ -703,6 +781,7 @@ async def _import_subscriptions(
                 frequency_interval=int(sub_data.get("frequency_interval", 1)),
                 start_date=start_date_val,
                 payment_type=payment_type_val,
+                payment_mode=payment_mode_val,
                 category=sub_data.get("category") or None,
                 notes=sub_data.get("notes") or None,
                 payment_method=sub_data.get("payment_method") or None,

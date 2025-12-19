@@ -41,6 +41,12 @@ dependencies = [
     "tenacity>=8.2.0",
     # Background task queue
     "arq>=0.25.0",
+    # PDF report generation
+    "reportlab>=4.0.0",
+    # Email notifications
+    "aiosmtplib>=3.0.0",
+    # Push notifications (Web Push API)
+    "pywebpush>=1.14.0",
 ]
 
 [project.optional-dependencies]

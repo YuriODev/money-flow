@@ -128,7 +128,7 @@ api.interceptors.response.use(
   }
 );
 
-// Payment type enum for Money Flow
+// Payment type enum for Money Flow (DEPRECATED - use PaymentMode for filtering)
 export type PaymentType =
   | "subscription"
   | "housing"
@@ -140,7 +140,26 @@ export type PaymentType =
   | "transfer"
   | "one_time";
 
-// Payment type display names
+// Payment mode enum for Money Flow (NEW - for filtering and categorization)
+export type PaymentMode = "recurring" | "one_time" | "debt" | "savings";
+
+// Payment mode display names
+export const PAYMENT_MODE_LABELS: Record<PaymentMode, string> = {
+  recurring: "Recurring",
+  one_time: "One-Time",
+  debt: "Debt",
+  savings: "Savings",
+};
+
+// Payment mode icons
+export const PAYMENT_MODE_ICONS: Record<PaymentMode, string> = {
+  recurring: "🔄",
+  one_time: "📌",
+  debt: "💳",
+  savings: "🐷",
+};
+
+// Payment type display names (DEPRECATED)
 export const PAYMENT_TYPE_LABELS: Record<PaymentType, string> = {
   subscription: "Subscription",
   housing: "Housing",
@@ -153,7 +172,7 @@ export const PAYMENT_TYPE_LABELS: Record<PaymentType, string> = {
   one_time: "One-Time",
 };
 
-// Payment type icons (emoji for now, can be replaced with icons)
+// Payment type icons (emoji for now, can be replaced with icons) (DEPRECATED)
 export const PAYMENT_TYPE_ICONS: Record<PaymentType, string> = {
   subscription: "📺",
   housing: "🏠",
@@ -176,8 +195,10 @@ export interface Subscription {
   start_date: string;
   next_payment_date: string;
   last_payment_date: string | null;
-  // Payment type classification (Money Flow)
+  // Payment type classification (DEPRECATED - use payment_mode)
   payment_type: PaymentType;
+  // Payment mode classification (NEW)
+  payment_mode: PaymentMode;
   category: string | null;
   category_id: string | null;
   is_active: boolean;
@@ -219,8 +240,10 @@ export interface SubscriptionCreate {
   frequency: string;
   frequency_interval?: number;
   start_date: string;
-  // Payment type classification (Money Flow)
+  // Payment type classification (DEPRECATED - use payment_mode)
   payment_type?: PaymentType;
+  // Payment mode classification (NEW)
+  payment_mode?: PaymentMode;
   category?: string;
   category_id?: string | null;
   notes?: string;
@@ -253,6 +276,7 @@ export interface SubscriptionSummary {
   active_count: number;
   by_category: Record<string, number>;
   by_payment_type: Record<string, number>;
+  by_payment_mode: Record<string, number>;
   upcoming_week: Subscription[];
   currency: string;
   // Debt and savings totals (Money Flow)
@@ -262,8 +286,10 @@ export interface SubscriptionSummary {
 }
 
 export const subscriptionApi = {
-  getAll: async (paymentType?: PaymentType): Promise<Subscription[]> => {
-    const params = paymentType ? { payment_type: paymentType } : {};
+  getAll: async (paymentMode?: PaymentMode, paymentType?: PaymentType): Promise<Subscription[]> => {
+    const params: Record<string, string> = {};
+    if (paymentMode) params.payment_mode = paymentMode;
+    if (paymentType) params.payment_type = paymentType;
     const { data } = await api.get("/subscriptions", { params });
     return data;
   },
@@ -308,6 +334,7 @@ export interface CalendarEvent {
   currency: string;
   payment_date: string;
   payment_type: PaymentType;
+  payment_mode: PaymentMode;
   color: string;
   icon_url: string | null;
   category: string | null;
@@ -380,6 +407,7 @@ export interface SubscriptionExport {
   start_date: string;
   next_payment_date: string;
   payment_type: string;
+  payment_mode: string;
   category: string | null;
   notes: string | null;
   is_active: boolean;
@@ -420,6 +448,14 @@ export const importExportApi = {
   exportCsv: async (includeInactive = true): Promise<Blob> => {
     const response = await api.get("/subscriptions/export/csv", {
       params: { include_inactive: includeInactive },
+      responseType: "blob",
+    });
+    return response.data;
+  },
+
+  exportPdf: async (includeInactive = false, pageSize = "a4"): Promise<Blob> => {
+    const response = await api.get("/subscriptions/export/pdf", {
+      params: { include_inactive: includeInactive, page_size: pageSize },
       responseType: "blob",
     });
     return response.data;
