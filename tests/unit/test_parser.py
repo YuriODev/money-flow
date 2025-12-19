@@ -437,44 +437,54 @@ class TestPaymentModeDetection:
 
     def test_normalize_payment_mode_string(self):
         """Test normalizing payment_mode from string."""
-        result = self.parser._normalize_result({
-            "intent": "create",
-            "entities": {"payment_mode": "debt"},
-        })
+        result = self.parser._normalize_result(
+            {
+                "intent": "create",
+                "entities": {"payment_mode": "debt"},
+            }
+        )
         assert result["entities"]["payment_mode"] == PaymentMode.DEBT
 
     def test_normalize_payment_mode_one_time_variants(self):
         """Test normalizing one_time variants."""
         for variant in ["one_time", "one-time", "onetime"]:
-            result = self.parser._normalize_result({
-                "intent": "create",
-                "entities": {"payment_mode": variant},
-            })
+            result = self.parser._normalize_result(
+                {
+                    "intent": "create",
+                    "entities": {"payment_mode": variant},
+                }
+            )
             assert result["entities"]["payment_mode"] == PaymentMode.ONE_TIME
 
     def test_normalize_payment_mode_savings_variant(self):
         """Test normalizing savings/saving variants."""
         for variant in ["savings", "saving"]:
-            result = self.parser._normalize_result({
-                "intent": "create",
-                "entities": {"payment_mode": variant},
-            })
+            result = self.parser._normalize_result(
+                {
+                    "intent": "create",
+                    "entities": {"payment_mode": variant},
+                }
+            )
             assert result["entities"]["payment_mode"] == PaymentMode.SAVINGS
 
     def test_normalize_infers_payment_mode_from_payment_type(self):
         """Test payment_mode is inferred from payment_type when not set."""
-        result = self.parser._normalize_result({
-            "intent": "create",
-            "entities": {"payment_type": "debt"},
-        })
+        result = self.parser._normalize_result(
+            {
+                "intent": "create",
+                "entities": {"payment_type": "debt"},
+            }
+        )
         assert result["entities"]["payment_mode"] == PaymentMode.DEBT
 
     def test_normalize_default_payment_mode_is_recurring(self):
         """Test default payment_mode is RECURRING when neither mode nor type set."""
-        result = self.parser._normalize_result({
-            "intent": "create",
-            "entities": {},
-        })
+        result = self.parser._normalize_result(
+            {
+                "intent": "create",
+                "entities": {},
+            }
+        )
         assert result["entities"]["payment_mode"] == PaymentMode.RECURRING
 
 

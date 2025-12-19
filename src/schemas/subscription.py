@@ -90,7 +90,8 @@ class SubscriptionBase(BaseModel):
 
     # Payment mode classification (Money Flow) - NEW
     payment_mode: PaymentMode = Field(
-        default=PaymentMode.RECURRING, description="Payment mode: recurring, one_time, debt, savings"
+        default=PaymentMode.RECURRING,
+        description="Payment mode: recurring, one_time, debt, savings",
     )
 
     category: str | None = Field(default=None, max_length=100, description="Subcategory name")
@@ -542,7 +543,9 @@ class CalendarEvent(BaseModel):
     amount: Decimal = Field(..., description="Payment amount")
     currency: str = Field(..., description="Currency code")
     payment_date: date = Field(..., description="Payment date")
-    payment_type: PaymentType = Field(default=PaymentType.SUBSCRIPTION, description="Payment type (deprecated)")
+    payment_type: PaymentType = Field(
+        default=PaymentType.SUBSCRIPTION, description="Payment type (deprecated)"
+    )
     payment_mode: PaymentMode = Field(default=PaymentMode.RECURRING, description="Payment mode")
     color: str = Field(default="#3B82F6", description="Brand color")
     icon_url: str | None = Field(default=None, description="Service icon URL")

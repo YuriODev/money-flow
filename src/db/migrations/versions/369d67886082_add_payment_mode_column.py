@@ -18,17 +18,16 @@ Payment Mode Mapping (payment_type values are UPPERCASE in PostgreSQL):
 - ONE_TIME -> ONE_TIME
 """
 
-from typing import Sequence, Union
+from collections.abc import Sequence
 
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "369d67886082"
-down_revision: Union[str, Sequence[str], None] = "e86b93e0cf9a"
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | Sequence[str] | None = "e86b93e0cf9a"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 # Mapping from old payment_type to new payment_mode
 # Note: payment_type values in DB are UPPERCASE (PostgreSQL enum)
@@ -89,12 +88,7 @@ def upgrade() -> None:
         op.f("ix_subscriptions_payment_mode"), "subscriptions", ["payment_mode"], unique=False
     )
 
-    # 7. Remove the old index from categories (was incorrectly detected)
-    # Only drop if it exists
-    try:
-        op.drop_index(op.f("ix_categories_user_active"), table_name="categories")
-    except Exception:
-        pass  # Index may not exist
+    # Note: Index cleanup removed - categories table doesn't have is_active column
 
 
 def downgrade() -> None:
@@ -109,7 +103,4 @@ def downgrade() -> None:
     paymentmode_enum = sa.Enum("RECURRING", "ONE_TIME", "DEBT", "SAVINGS", name="paymentmode")
     paymentmode_enum.drop(op.get_bind(), checkfirst=True)
 
-    # Recreate the categories index if it was dropped
-    op.create_index(
-        op.f("ix_categories_user_active"), "categories", ["user_id", "is_active"], unique=False
-    )
+    # Note: Index recreation removed - categories table doesn't have is_active column

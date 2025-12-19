@@ -243,7 +243,14 @@ class TestTaskExecution:
         """Test send_payment_reminders returns expected format."""
         from src.core.tasks import send_payment_reminders
 
-        ctx = {}
+        # Mock the database session and queries
+        mock_session = AsyncMock()
+        mock_result = MagicMock()
+        mock_result.scalars.return_value.all.return_value = []  # No users with notifications
+        mock_session.execute.return_value = mock_result
+
+        # Provide mock session in context
+        ctx = {"db_session": mock_session}
         result = await send_payment_reminders(ctx, days_ahead=7)
 
         assert "reminders_sent" in result

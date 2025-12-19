@@ -8,8 +8,7 @@ import {
   type Subscription,
   type PaymentType,
   type PaymentMode,
-  type Category,
-  PAYMENT_TYPE_LABELS,
+  type Category as _Category,
   PAYMENT_MODE_LABELS,
 } from "@/lib/api";
 import { formatDate, getFrequencyLabel, cn } from "@/lib/utils";
@@ -61,8 +60,8 @@ const PAYMENT_MODE_ICON_COMPONENTS: Record<PaymentMode | "all" | "no_card", Luci
   no_card: AlertCircle,
 };
 
-// Keep old payment type icons for backwards compatibility
-const PAYMENT_TYPE_ICON_COMPONENTS: Record<PaymentType | "all" | "no_card", LucideIcon> = {
+// Keep old payment type icons for backwards compatibility (prefixed to silence unused warning)
+const _PAYMENT_TYPE_ICON_COMPONENTS: Record<PaymentType | "all" | "no_card", LucideIcon> = {
   all: LayoutGrid,
   subscription: Tv,
   housing: Home,
@@ -605,8 +604,8 @@ export function SubscriptionList({ initialFilter }: SubscriptionListProps) {
     );
   }, [paymentModeCounts]);
 
-  // Get visible category tabs
-  const visibleCategoryTabs = useMemo(() => {
+  // Get visible category tabs (prefixed for future use)
+  const _visibleCategoryTabs = useMemo(() => {
     const tabs: (string | "all" | "uncategorized")[] = ["all"];
     // Add categories that have subscriptions
     for (const cat of categories) {

@@ -61,6 +61,7 @@ def mock_subscriptions():
     sub1.start_date = date(2025, 1, 1)
     sub1.next_payment_date = date(2025, 2, 1)
     sub1.payment_type.value = "subscription"  # Money Flow field
+    sub1.payment_mode.value = "recurring"  # New payment mode field
     sub1.category = "entertainment"
     sub1.notes = "Streaming service"
     sub1.is_active = True
@@ -90,6 +91,7 @@ def mock_subscriptions():
     sub2.start_date = date(2025, 1, 15)
     sub2.next_payment_date = date(2025, 2, 15)
     sub2.payment_type.value = "subscription"  # Money Flow field
+    sub2.payment_mode.value = "recurring"  # New payment mode field
     sub2.category = "music"
     sub2.notes = None
     sub2.is_active = True
@@ -207,6 +209,7 @@ class TestExportCsvEndpoint:
                 "start_date",
                 "next_payment_date",
                 "payment_type",  # Money Flow field
+                "payment_mode",  # Money Flow v2.1 field
                 "category",
                 "notes",
                 "is_active",

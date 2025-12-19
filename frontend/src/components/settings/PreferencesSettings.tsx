@@ -57,7 +57,7 @@ const WEEK_STARTS = [
 
 export function PreferencesSettings() {
   const queryClient = useQueryClient();
-  const { theme: currentTheme, themePreference, setTheme: setAppTheme } = useTheme();
+  const { theme: currentTheme, themePreference: _themePreference, setTheme: setAppTheme } = useTheme();
 
   // Fetch preferences
   const { data: preferences, isLoading } = useQuery({
