@@ -1342,6 +1342,8 @@ Enhance payment card management and implement custom categories with budgets.
 | **5.2.4** | **Tests** | 🔴 | 4h | 5.2.3 | ✅ DONE |
 
 **Sprint 5.2 Completed Features:**
+
+*Category System:*
 - ✅ Category model (`src/models/category.py`)
 - ✅ Category table migration (`e86b93e0cf9a_add_categories_table.py`)
 - ✅ Category schemas (`src/schemas/category.py`)
@@ -1365,17 +1367,39 @@ Enhance payment card management and implement custom categories with budgets.
 - ✅ Default card and category preferences (`src/schemas/user.py`, `src/api/users.py`)
 - ✅ Auto-populate default card/category in new subscriptions
 
+*PaymentMode Refactor (2025-12-18):*
+- ✅ **PaymentMode enum** (`src/models/subscription.py`) - Functional classification:
+  - `recurring` - Regular recurring payment
+  - `one_time` - Single payment
+  - `debt` - Debt being paid off (with total_owed, remaining_balance, creditor)
+  - `savings` - Savings goal (with target_amount, current_saved, recipient)
+- ✅ **payment_mode column migration** (`369d67886082_add_payment_mode_column.py`)
+- ✅ **Backend schema updates** (`src/schemas/subscription.py`)
+- ✅ **Service layer updates** (`src/services/subscription_service.py`)
+- ✅ **Frontend PaymentMode type** with labels and icons (`frontend/src/lib/api.ts`)
+- ✅ **Filter toggle UI** - Mode vs Category filtering in SubscriptionList (`frontend/src/components/SubscriptionList.tsx`)
+- ✅ **Add/Edit modals** with PaymentMode selector (`AddSubscriptionModal.tsx`, `EditSubscriptionModal.tsx`)
+- ✅ **14 categories created** for Yurii with icons and colors:
+  - 💳 Financial (19), ⚡ Productivity (8), 🎬 Entertainment (5), 💪 Health & Fitness (5)
+  - 🔌 Utilities (5), 🏠 Housing (4), 🛒 Shopping (3), 💻 Technology (3)
+  - 💼 Business (2), ☁️ Cloud Storage (2), 🛡️ Insurance (2), ⚖️ Legal (2)
+  - 💬 Communication (1), 🖥️ Hosting (1)
+- ✅ **62 subscriptions categorized** - All existing subscriptions assigned to categories
+- 📋 **Refactor plan archived**: `.claude/plans/CATEGORY_REFACTOR_PLAN.md`
+
 **Sprint 5.2 Deliverables:**
 - ✅ Enhanced card management with spending breakdown
 - ✅ Custom categories with colors and icons
 - ✅ Budget limits per category with alerts
 - ✅ Default card and category selection
+- ✅ **PaymentMode system** - Separates functional modes from organizational categories
+- ✅ **Filter toggle** - Switch between Mode and Category filtering on dashboard
 - 🔜 AI-powered category suggestions (moved to future sprint)
 - ⏱️ **Total: ~26 hours** (complete)
 
 ---
 
-## Sprint 5.3: Notifications & Export (Weeks 21-22) 🔜
+## Sprint 5.3: Notifications & Export (Weeks 21-22) ✅ COMPLETE
 
 ### Overview
 Advanced notification preferences and data export functionality (builds on Sprint 4.3 Telegram).
@@ -1383,25 +1407,162 @@ Advanced notification preferences and data export functionality (builds on Sprin
 | Task ID | Task Name | Priority | Hours | Dependencies | Deliverable |
 |---------|-----------|----------|-------|--------------|-------------|
 | **5.3.1** | **Enhanced Notifications Tab** | 🔴 | 8h | Sprint 4.3 | Extended notifications |
-| 5.3.1.1 | Email notification channel | 🟠 | 3h | - | Email reminders |
-| 5.3.1.2 | Push notification setup (PWA) | 🟡 | 3h | - | Push notifications |
-| 5.3.1.3 | Notification history view | 🟡 | 2h | - | History log |
-| **5.3.2** | **Scheduled Reports** | 🟠 | 8h | 5.3.1 | Automated reports |
-| 5.3.2.1 | Monthly spending report generation | 🟠 | 3h | - | Monthly report |
-| 5.3.2.2 | Scheduled report delivery (email/Telegram) | 🟠 | 3h | 5.3.2.1 | Report scheduling |
-| 5.3.2.3 | Report template customization | 🟡 | 2h | 5.3.2.2 | Custom templates |
+| 5.3.1.1 | Email notification channel | ✅ DONE | 3h | - | Email reminders |
+| 5.3.1.2 | Push notification setup (PWA) | ✅ DONE | 3h | - | Push notifications |
+| 5.3.1.3 | Notification history view | ✅ DONE | 2h | - | History log |
+| **5.3.2** | **Scheduled Reports** | ✅ DONE | 8h | 5.3.1 | Automated reports |
+| 5.3.2.1 | Monthly spending report generation | ✅ DONE | 3h | - | Monthly report |
+| 5.3.2.2 | Scheduled report delivery (email/Telegram) | ✅ DONE | 3h | 5.3.2.1 | Report scheduling |
+| 5.3.2.3 | Report template customization | ✅ DONE | 2h | 5.3.2.2 | Custom templates |
 | **5.3.3** | **Data Export Tab** | 🔴 | 8h | None | Export functionality |
-| 5.3.3.1 | PDF report generation (ReportLab) | 🔴 | 4h | - | PDF export |
-| 5.3.3.2 | Scheduled backup to cloud storage | 🟠 | 2h | - | Auto backup |
-| 5.3.3.3 | Export history/audit log | 🟡 | 2h | - | Export log |
-| **5.3.4** | **Tests** | 🔴 | 4h | 5.3.3 | Test coverage |
+| 5.3.3.1 | PDF report generation (ReportLab) | ✅ DONE | 4h | - | PDF export |
+| 5.3.3.2 | Scheduled backup to cloud storage | ✅ DONE | 2h | - | Auto backup |
+| 5.3.3.3 | Export history/audit log | ✅ DONE | 2h | - | Export log |
+| **5.3.4** | **Tests** | ✅ DONE | 4h | 5.3.3 | Test coverage |
 
 **Sprint 5.3 Deliverables:**
-- 📦 Multi-channel notifications (Telegram + Email + Push)
-- 📦 Automated monthly spending reports
-- 📦 PDF report generation
-- 📦 Scheduled cloud backups
+- ✅ Multi-channel notifications (Telegram + Email + Push)
+- ✅ Automated monthly spending reports
+- ✅ PDF report generation (2025-12-18)
+- ✅ Scheduled cloud backups (2025-12-18)
+- ✅ Email notifications (2025-12-18)
+- ✅ 112 unit tests for Sprint 5.3 features (2025-12-19)
 - ⏱️ **Total: ~28 hours**
+
+*Sprint 5.3.3.1 Completed (2025-12-18):*
+- ✅ **PDFReportService** (`src/services/pdf_report_service.py`) - ReportLab-based PDF generation:
+  - Summary statistics (active/inactive counts, monthly/yearly totals)
+  - Spending breakdown by category (table with monthly/yearly amounts)
+  - Upcoming payments section (next 30 days with urgency highlighting)
+  - Complete payments table (sorted by category, with status)
+  - Currency symbol support (GBP, USD, EUR, UAH)
+  - Page size options (A4, Letter)
+  - User email personalization in header
+- ✅ **PDF Export API** (`src/api/subscriptions.py`) - `GET /api/subscriptions/export/pdf`
+  - Query params: `include_inactive`, `payment_type`, `page_size`
+  - Returns application/pdf with Content-Disposition header
+- ✅ **Frontend Integration** (`frontend/src/components/ImportExportModal.tsx`)
+  - "Generate PDF Report" button in Export tab
+  - Purple styling with document icon
+  - Loading state during generation
+- ✅ **API Client** (`frontend/src/lib/api.ts`) - `exportPdf()` function
+- ✅ **35 unit tests** (`tests/unit/test_pdf_report.py`)
+  - Service initialization, currency/page size config
+  - Monthly conversion calculations
+  - Report generation with various scenarios
+  - Edge cases (empty, long names, zero amounts)
+
+*Sprint 5.3.3.2 Completed (2025-12-18):*
+- ✅ **BackupService** (`src/services/backup_service.py`) - Cloud backup service:
+  - Google Cloud Storage (GCS) primary storage
+  - Local file storage fallback for development
+  - Compressed JSON backups (gzip)
+  - Subscription serialization with all Money Flow fields
+  - Backup metadata tracking (BackupMetadata model)
+  - Retention policy with configurable days (default 30)
+  - Backup listing and cleanup functionality
+- ✅ **Scheduled Backup Task** (`src/core/tasks.py`) - `scheduled_cloud_backup`
+  - Runs daily at 2 AM via ARQ cron
+  - Backs up all active users
+  - Logs success/failure counts
+  - Automatic old backup cleanup
+- ✅ **23 unit tests** (`tests/unit/test_backup_service.py`)
+  - BackupMetadata and BackupResult models
+  - Service initialization with custom options
+  - Subscription serialization (all field types)
+  - Local storage fallback
+  - Compression and data format
+
+*Sprint 5.3.1.1 Completed (2025-12-18):*
+- ✅ **EmailService** (`src/services/email_service.py`) - Email notification service:
+  - SMTP with TLS encryption via aiosmtplib
+  - HTML formatted emails with responsive styling
+  - Payment reminder emails with urgency classification (overdue, today, tomorrow, upcoming)
+  - Daily digest emails with payment summary
+  - Weekly digest emails with comprehensive overview
+  - Test notification for verifying email setup
+  - Currency symbol support (GBP, USD, EUR, UAH)
+  - Plain text fallback for all emails
+- ✅ **Email Tasks** (`src/core/tasks.py`) - Scheduled email notifications:
+  - `send_email_reminders` - Daily at 9:30 AM
+  - `send_email_daily_digest` - Daily at 8:30 AM
+  - `send_email_weekly_digest` - Daily at 8:30 AM (filters by user's preferred day)
+- ✅ **Config Settings** (`src/core/config.py`) - SMTP configuration:
+  - `smtp_host`, `smtp_port`, `smtp_user`, `smtp_password`
+  - `smtp_from_email`, `smtp_from_name`, `smtp_use_tls`
+- ✅ **Database Migration** - Added `email_enabled` field to NotificationPreferences
+- ✅ **28 unit tests** (`tests/unit/test_email_service.py`)
+  - Service initialization and configuration
+  - Email sending (success, failure, not configured)
+  - Reminder emails (upcoming, overdue, today)
+  - Digest emails (daily, weekly)
+  - HTML template generation
+  - Urgency classification
+
+*Sprint 5.3.1.2 Completed (2025-12-19):*
+- ✅ **PushService** (`src/services/push_service.py`) - Web Push notifications via VAPID:
+  - VAPID authentication with pywebpush library
+  - Push notification sending with title, body, icon, URL
+  - Payment reminder pushes with urgency levels
+  - Daily/weekly digest notifications
+  - Test notification for verification
+  - Currency symbol support
+- ✅ **Push API Endpoints** (`src/api/notifications.py`):
+  - `GET /api/v1/notifications/push/vapid-key` - Get VAPID public key
+  - `POST /api/v1/notifications/push/subscribe` - Subscribe to push
+  - `GET /api/v1/notifications/push/status` - Check subscription status
+  - `DELETE /api/v1/notifications/push/unsubscribe` - Unsubscribe
+  - `POST /api/v1/notifications/push/test` - Send test push
+- ✅ **Push Schemas** (`src/schemas/notification.py`):
+  - PushStatus, PushSubscriptionRequest, PushVapidKeyResponse
+- ✅ **Database Migration** (`9377d33097e1_add_push_notification_fields.py`):
+  - Added push_enabled, push_subscription, push_verified to NotificationPreferences
+- ✅ **Config Settings** (`src/core/config.py`):
+  - vapid_private_key, vapid_public_key, vapid_email
+- ✅ **26 unit tests** (`tests/unit/test_push_service.py`)
+
+*Sprint 5.3.1.3 Completed (2025-12-19):*
+- ✅ **NotificationHistory Model** (`src/models/notification_history.py`):
+  - Tracks all sent notifications for audit
+  - Enums: NotificationChannel (telegram, email, push, in_app)
+  - Enums: NotificationStatus (pending, sent, delivered, failed, read)
+  - Enums: NotificationType (payment_reminder, overdue_alert, daily_digest, etc.)
+  - Fields: user_id, subscription_id, channel, type, title, body, status, extra_data
+- ✅ **NotificationHistory API** (`src/api/notifications.py`):
+  - `GET /api/v1/notifications/history` - List with filters & pagination
+  - `GET /api/v1/notifications/history/{id}` - Get single notification
+  - `DELETE /api/v1/notifications/history/{id}` - Delete notification
+  - `DELETE /api/v1/notifications/history` - Clear all history
+- ✅ **Database Migration** (`d251356550ca_add_notification_history.py`)
+- ✅ **Notification History Schemas** (`src/schemas/notification.py`)
+
+*Sprint 5.3.2 Completed (2025-12-19):*
+- ✅ **ScheduledReportService** (`src/services/scheduled_report_service.py`):
+  - Daily report generation with subscription summary
+  - Weekly report with spending trends and category breakdown
+  - Monthly report with comprehensive analytics
+  - PDF attachment support via EmailService
+  - HTML email templates for each report type
+- ✅ **Report Settings** in NotificationPreferences:
+  - report_enabled, report_frequency, report_day, report_time, report_include_charts
+- ✅ **Database Migration** (`a054d78f2aa5_add_scheduled_report_settings.py`)
+
+*Sprint 5.3.3.3 Completed (2025-12-19):*
+- ✅ **ExportHistory Model** (`src/models/export_history.py`):
+  - Audit log for all export operations
+  - Enums: ExportFormat (json, csv, pdf)
+  - Enums: ExportType (full_backup, subscriptions, report, payment_history)
+  - Enums: ExportStatus (pending, completed, failed)
+  - Fields: user_id, export_type, format, filename, file_size, record_count, status
+  - Methods: mark_completed(), mark_failed(), duration_seconds property
+- ✅ **ExportHistory API** (`src/api/export_history.py`):
+  - `GET /api/v1/exports/history` - List exports with pagination
+  - `GET /api/v1/exports/history/stats` - Export statistics
+  - `GET /api/v1/exports/history/{id}` - Get single export
+  - `DELETE /api/v1/exports/history/{id}` - Delete export record
+  - `DELETE /api/v1/exports/history` - Clear export history
+- ✅ **Database Migration** (`36cdf62d465b_add_export_history.py`)
+- ✅ **Export Schemas** (`src/schemas/export.py`)
 
 ---
 

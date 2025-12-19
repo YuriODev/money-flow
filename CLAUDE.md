@@ -31,8 +31,50 @@
 | **Phase 4** | Sprint 4.4 | ✅ Complete | Documentation & Security |
 | **Phase 5** | Sprint 5.1 | ✅ Complete | Profile & Preferences |
 | **Phase 5** | Sprint 5.2 | ✅ Complete | Cards & Categories |
-| **Phase 5** | Sprints 5.3-5.7 | 🔜 Upcoming | Settings & AI Features (~200h remaining) |
+| **Phase 5** | Sprint 5.3 | ✅ Complete | Notifications & Export |
+| **Phase 5** | Sprints 5.4-5.7 | 🔜 Upcoming | Icons, AI & Integrations (~175h remaining) |
 | **Phase 6** | Sprint 6.1 | 🔜 Upcoming | Production Launch (~15h) |
+
+### Sprint 5.3 Tasks (Week 21) - Notifications & Export ✅
+
+| Task | Status | Description |
+|------|--------|-------------|
+| 5.3.1.1 | ✅ DONE | Email notification channel |
+| 5.3.1.2 | ✅ DONE | Push notification setup (PWA) |
+| 5.3.1.3 | ✅ DONE | Notification history view |
+| 5.3.2 | ✅ DONE | Scheduled Reports (daily/weekly/monthly) |
+| 5.3.3.1 | ✅ DONE | PDF report generation (ReportLab) |
+| 5.3.3.2 | ✅ DONE | Scheduled backup to cloud storage |
+| 5.3.3.3 | ✅ DONE | Export history/audit log |
+| 5.3.4 | ✅ DONE | 112 unit tests |
+
+**Sprint 5.3 Features Completed:**
+- **Email Notifications** (`src/services/email_service.py`)
+  - SMTP with TLS via aiosmtplib
+  - Payment reminders with urgency levels
+  - Daily/weekly digests
+- **Push Notifications** (`src/services/push_service.py`)
+  - VAPID authentication with pywebpush
+  - PWA push subscription management
+  - Push API endpoints in notifications.py
+- **Notification History** (`src/models/notification_history.py`)
+  - NotificationHistory model with channel/status/type enums
+  - CRUD API for viewing/clearing history
+- **Scheduled Reports** (`src/services/scheduled_report_service.py`)
+  - Daily, weekly, monthly report generation
+  - Email delivery with PDF attachments
+  - Report settings in NotificationPreferences
+- **PDF Reports** (`src/services/pdf_report_service.py`)
+  - ReportLab-based PDF generation
+  - Summary stats, category breakdown, upcoming payments
+- **Cloud Backups** (`src/services/backup_service.py`)
+  - Google Cloud Storage with local fallback
+  - Scheduled daily backups via ARQ
+- **Export History** (`src/models/export_history.py`)
+  - Audit log for all exports (JSON, CSV, PDF)
+  - ExportHistory CRUD API
+- **Unit Tests** - 112 tests for Sprint 5.3 features
+- **Total unit tests: ~711** (599 previous + 112 new)
 
 ### Sprint 5.2 Tasks (Week 19) - Cards & Categories ✅
 
