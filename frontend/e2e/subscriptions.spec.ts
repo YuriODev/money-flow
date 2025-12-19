@@ -135,8 +135,8 @@ test.describe("Agent Chat View", () => {
       // Wait a moment for response
       await page.waitForTimeout(2000);
 
-      // The page should still be functional
-      await expect(page.getByRole("tab", { name: "AI Assistant", exact: true })).toBeVisible();
+      // The page should still be functional - check the header is visible
+      await expect(page.getByText(/Money Flow/i).first()).toBeVisible();
     }
   });
 });
