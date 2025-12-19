@@ -7,7 +7,8 @@ with regex patterns as a fallback for reliability.
 Supported intents: CREATE, READ, UPDATE, DELETE, SUMMARY, UPCOMING, CONVERT
 
 Money Flow Support:
-- Payment types: subscription, housing, utility, professional_service, insurance, debt, savings, transfer
+- Payment modes: recurring, one_time, debt, savings (NEW - functional classification)
+- Payment types: subscription, housing, utility, professional_service, insurance, debt, savings, transfer (DEPRECATED)
 - Debt tracking: total_owed, remaining_balance, creditor
 - Savings tracking: target_amount, current_saved, recipient
 """
@@ -21,7 +22,7 @@ from typing import Any
 import anthropic
 
 from src.agent.prompt_loader import PromptLoader
-from src.models.subscription import Frequency, PaymentType
+from src.models.subscription import Frequency, PaymentMode, PaymentType
 
 logger = logging.getLogger(__name__)
 
@@ -289,7 +290,7 @@ class CommandParser:
                     except Exception:
                         pass
 
-        # Normalize payment_type
+        # Normalize payment_type (DEPRECATED - kept for backwards compatibility)
         if "payment_type" in entities:
             pt = entities["payment_type"].lower()
             pt_map = {
@@ -301,8 +302,37 @@ class CommandParser:
                 "debt": PaymentType.DEBT,
                 "savings": PaymentType.SAVINGS,
                 "transfer": PaymentType.TRANSFER,
+                "one_time": PaymentType.ONE_TIME,
             }
             entities["payment_type"] = pt_map.get(pt, PaymentType.SUBSCRIPTION)
+
+        # Normalize payment_mode (NEW - functional classification)
+        if "payment_mode" in entities:
+            pm = entities["payment_mode"].lower()
+            pm_map = {
+                "recurring": PaymentMode.RECURRING,
+                "one_time": PaymentMode.ONE_TIME,
+                "one-time": PaymentMode.ONE_TIME,
+                "onetime": PaymentMode.ONE_TIME,
+                "debt": PaymentMode.DEBT,
+                "savings": PaymentMode.SAVINGS,
+                "saving": PaymentMode.SAVINGS,
+            }
+            entities["payment_mode"] = pm_map.get(pm, PaymentMode.RECURRING)
+        else:
+            # Infer payment_mode from payment_type if not explicitly set
+            if "payment_type" in entities:
+                pt = entities["payment_type"]
+                if pt == PaymentType.DEBT:
+                    entities["payment_mode"] = PaymentMode.DEBT
+                elif pt == PaymentType.SAVINGS:
+                    entities["payment_mode"] = PaymentMode.SAVINGS
+                elif pt == PaymentType.ONE_TIME:
+                    entities["payment_mode"] = PaymentMode.ONE_TIME
+                else:
+                    entities["payment_mode"] = PaymentMode.RECURRING
+            else:
+                entities["payment_mode"] = PaymentMode.RECURRING
 
         # Ensure currency is set
         if "currency" not in entities:
@@ -498,6 +528,10 @@ class CommandParser:
         if intent == "create" and "payment_type" not in entities:
             entities["payment_type"] = self._detect_payment_type(command)
 
+        # Set payment_mode based on detected payment_type
+        if intent == "create" and "payment_mode" not in entities:
+            entities["payment_mode"] = self._infer_payment_mode(entities.get("payment_type"))
+
         # Handle payment_type from read/summary patterns
         if "payment_type" in groups and groups["payment_type"]:
             pt_text = groups["payment_type"].lower().rstrip("s")  # Remove trailing 's'
@@ -567,6 +601,43 @@ class CommandParser:
                     return payment_type
 
         return PaymentType.SUBSCRIPTION
+
+    def _infer_payment_mode(self, payment_type: PaymentType | None) -> PaymentMode:
+        """Infer payment mode from payment type.
+
+        Maps deprecated payment_type to new payment_mode for backwards
+        compatibility and automatic mode assignment.
+
+        Args:
+            payment_type: The detected PaymentType (may be None).
+
+        Returns:
+            Corresponding PaymentMode.
+
+        Example:
+            >>> parser._infer_payment_mode(PaymentType.DEBT)
+            PaymentMode.DEBT
+            >>> parser._infer_payment_mode(PaymentType.HOUSING)
+            PaymentMode.RECURRING
+        """
+        if payment_type is None:
+            return PaymentMode.RECURRING
+
+        # Map payment types to payment modes
+        mode_map = {
+            PaymentType.DEBT: PaymentMode.DEBT,
+            PaymentType.SAVINGS: PaymentMode.SAVINGS,
+            PaymentType.ONE_TIME: PaymentMode.ONE_TIME,
+            # All other types are recurring
+            PaymentType.SUBSCRIPTION: PaymentMode.RECURRING,
+            PaymentType.HOUSING: PaymentMode.RECURRING,
+            PaymentType.UTILITY: PaymentMode.RECURRING,
+            PaymentType.PROFESSIONAL_SERVICE: PaymentMode.RECURRING,
+            PaymentType.INSURANCE: PaymentMode.RECURRING,
+            PaymentType.TRANSFER: PaymentMode.RECURRING,
+        }
+
+        return mode_map.get(payment_type, PaymentMode.RECURRING)
 
     def _parse_date_period(self, period: str) -> dict[str, str] | None:
         """Parse a date period string into start and end dates.

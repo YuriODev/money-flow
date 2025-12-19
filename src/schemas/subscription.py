@@ -26,7 +26,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from src.models.subscription import Frequency, PaymentStatus, PaymentType
+from src.models.subscription import Frequency, PaymentMode, PaymentStatus, PaymentType
 from src.security.validators import (
     sanitize_name,
     validate_currency,
@@ -83,9 +83,14 @@ class SubscriptionBase(BaseModel):
     start_date: date = Field(..., description="Payment start date")
     end_date: date | None = Field(default=None, description="Payment end date (optional)")
 
-    # Payment type classification (Money Flow)
+    # Payment type classification (Money Flow) - DEPRECATED, use payment_mode
     payment_type: PaymentType = Field(
-        default=PaymentType.SUBSCRIPTION, description="Payment type classification"
+        default=PaymentType.SUBSCRIPTION, description="Payment type classification (deprecated)"
+    )
+
+    # Payment mode classification (Money Flow) - NEW
+    payment_mode: PaymentMode = Field(
+        default=PaymentMode.RECURRING, description="Payment mode: recurring, one_time, debt, savings"
     )
 
     category: str | None = Field(default=None, max_length=100, description="Subcategory name")
@@ -235,8 +240,11 @@ class SubscriptionUpdate(BaseModel):
     start_date: date | None = None
     end_date: date | None = None
 
-    # Payment type classification (Money Flow)
+    # Payment type classification (Money Flow) - DEPRECATED, use payment_mode
     payment_type: PaymentType | None = None
+
+    # Payment mode classification (Money Flow) - NEW
+    payment_mode: PaymentMode | None = None
 
     category: str | None = Field(default=None, max_length=100)
     category_id: str | None = None
@@ -414,7 +422,10 @@ class SubscriptionSummary(BaseModel):
     active_count: int = Field(..., description="Active payment count")
     by_category: dict[str, Decimal] = Field(..., description="Spending by subcategory")
     by_payment_type: dict[str, Decimal] = Field(
-        default_factory=dict, description="Spending by payment type"
+        default_factory=dict, description="Spending by payment type (deprecated)"
+    )
+    by_payment_mode: dict[str, Decimal] = Field(
+        default_factory=dict, description="Spending by payment mode"
     )
     upcoming_week: list[SubscriptionResponse] = Field(..., description="Due in 7 days")
     currency: str = Field(default="GBP", description="Currency code for totals")
@@ -531,7 +542,8 @@ class CalendarEvent(BaseModel):
     amount: Decimal = Field(..., description="Payment amount")
     currency: str = Field(..., description="Currency code")
     payment_date: date = Field(..., description="Payment date")
-    payment_type: PaymentType = Field(default=PaymentType.SUBSCRIPTION, description="Payment type")
+    payment_type: PaymentType = Field(default=PaymentType.SUBSCRIPTION, description="Payment type (deprecated)")
+    payment_mode: PaymentMode = Field(default=PaymentMode.RECURRING, description="Payment mode")
     color: str = Field(default="#3B82F6", description="Brand color")
     icon_url: str | None = Field(default=None, description="Service icon URL")
     category: str | None = Field(default=None, description="Subcategory")
@@ -590,7 +602,8 @@ class SubscriptionExport(BaseModel):
     start_date: str  # ISO format
     end_date: str | None = None  # ISO format
     next_payment_date: str  # ISO format
-    payment_type: str = "subscription"  # Payment type as string for JSON
+    payment_type: str = "subscription"  # Payment type as string for JSON (deprecated)
+    payment_mode: str = "recurring"  # Payment mode as string for JSON
     category: str | None = None
     notes: str | None = None
     is_active: bool = True

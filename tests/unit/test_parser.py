@@ -13,7 +13,7 @@ from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
 from src.agent.parser import CommandParser
-from src.models.subscription import Frequency
+from src.models.subscription import Frequency, PaymentMode, PaymentType
 
 
 class TestCommandParserInit:
@@ -373,3 +373,174 @@ class TestAIParsing:
 
             # Should fall back to regex
             assert result["intent"] == "READ"
+
+
+class TestPaymentModeDetection:
+    """Tests for PaymentMode inference and detection."""
+
+    def setup_method(self):
+        """Set up parser for testing."""
+        self.parser = CommandParser()
+
+    def test_infer_payment_mode_recurring_from_subscription(self):
+        """Test recurring mode inferred from subscription type."""
+        result = self.parser._infer_payment_mode(PaymentType.SUBSCRIPTION)
+        assert result == PaymentMode.RECURRING
+
+    def test_infer_payment_mode_recurring_from_housing(self):
+        """Test recurring mode inferred from housing type."""
+        result = self.parser._infer_payment_mode(PaymentType.HOUSING)
+        assert result == PaymentMode.RECURRING
+
+    def test_infer_payment_mode_recurring_from_utility(self):
+        """Test recurring mode inferred from utility type."""
+        result = self.parser._infer_payment_mode(PaymentType.UTILITY)
+        assert result == PaymentMode.RECURRING
+
+    def test_infer_payment_mode_debt_from_debt_type(self):
+        """Test debt mode inferred from debt type."""
+        result = self.parser._infer_payment_mode(PaymentType.DEBT)
+        assert result == PaymentMode.DEBT
+
+    def test_infer_payment_mode_savings_from_savings_type(self):
+        """Test savings mode inferred from savings type."""
+        result = self.parser._infer_payment_mode(PaymentType.SAVINGS)
+        assert result == PaymentMode.SAVINGS
+
+    def test_infer_payment_mode_one_time(self):
+        """Test one_time mode inferred from one_time type."""
+        result = self.parser._infer_payment_mode(PaymentType.ONE_TIME)
+        assert result == PaymentMode.ONE_TIME
+
+    def test_infer_payment_mode_default_recurring(self):
+        """Test default is recurring when type is None."""
+        result = self.parser._infer_payment_mode(None)
+        assert result == PaymentMode.RECURRING
+
+    def test_parse_create_sets_payment_mode_for_debt(self):
+        """Test CREATE command for debt sets payment_mode to DEBT."""
+        result = self.parser.parse("Add debt to John £500, paying £50 monthly")
+        assert result["intent"] == "CREATE"
+        assert result["entities"]["payment_mode"] == PaymentMode.DEBT
+
+    def test_parse_create_sets_payment_mode_for_savings(self):
+        """Test CREATE command for savings sets payment_mode to SAVINGS."""
+        result = self.parser.parse("Add savings goal Emergency Fund £1000, saving £100 monthly")
+        assert result["intent"] == "CREATE"
+        assert result["entities"]["payment_mode"] == PaymentMode.SAVINGS
+
+    def test_parse_create_sets_payment_mode_recurring_for_regular(self):
+        """Test CREATE command for regular subscription sets payment_mode to RECURRING."""
+        result = self.parser.parse("Add Netflix £15.99 monthly")
+        assert result["intent"] == "CREATE"
+        assert result["entities"]["payment_mode"] == PaymentMode.RECURRING
+
+    def test_normalize_payment_mode_string(self):
+        """Test normalizing payment_mode from string."""
+        result = self.parser._normalize_result({
+            "intent": "create",
+            "entities": {"payment_mode": "debt"},
+        })
+        assert result["entities"]["payment_mode"] == PaymentMode.DEBT
+
+    def test_normalize_payment_mode_one_time_variants(self):
+        """Test normalizing one_time variants."""
+        for variant in ["one_time", "one-time", "onetime"]:
+            result = self.parser._normalize_result({
+                "intent": "create",
+                "entities": {"payment_mode": variant},
+            })
+            assert result["entities"]["payment_mode"] == PaymentMode.ONE_TIME
+
+    def test_normalize_payment_mode_savings_variant(self):
+        """Test normalizing savings/saving variants."""
+        for variant in ["savings", "saving"]:
+            result = self.parser._normalize_result({
+                "intent": "create",
+                "entities": {"payment_mode": variant},
+            })
+            assert result["entities"]["payment_mode"] == PaymentMode.SAVINGS
+
+    def test_normalize_infers_payment_mode_from_payment_type(self):
+        """Test payment_mode is inferred from payment_type when not set."""
+        result = self.parser._normalize_result({
+            "intent": "create",
+            "entities": {"payment_type": "debt"},
+        })
+        assert result["entities"]["payment_mode"] == PaymentMode.DEBT
+
+    def test_normalize_default_payment_mode_is_recurring(self):
+        """Test default payment_mode is RECURRING when neither mode nor type set."""
+        result = self.parser._normalize_result({
+            "intent": "create",
+            "entities": {},
+        })
+        assert result["entities"]["payment_mode"] == PaymentMode.RECURRING
+
+
+class TestPaymentTypeDetection:
+    """Tests for PaymentType detection from command text."""
+
+    def setup_method(self):
+        """Set up parser for testing."""
+        self.parser = CommandParser()
+
+    def test_detect_housing_from_rent(self):
+        """Test detecting housing type from 'rent' keyword."""
+        result = self.parser._detect_payment_type("add my rent payment")
+        assert result == PaymentType.HOUSING
+
+    def test_detect_housing_from_mortgage(self):
+        """Test detecting housing type from 'mortgage' keyword."""
+        result = self.parser._detect_payment_type("add mortgage payment")
+        assert result == PaymentType.HOUSING
+
+    def test_detect_utility_from_electric(self):
+        """Test detecting utility type from 'electric' keyword."""
+        result = self.parser._detect_payment_type("add electric bill")
+        assert result == PaymentType.UTILITY
+
+    def test_detect_utility_from_internet(self):
+        """Test detecting utility type from 'internet' keyword."""
+        result = self.parser._detect_payment_type("add internet bill")
+        assert result == PaymentType.UTILITY
+
+    def test_detect_debt_from_owe(self):
+        """Test detecting debt type from 'owe' keyword."""
+        result = self.parser._detect_payment_type("I owe John money")
+        assert result == PaymentType.DEBT
+
+    def test_detect_debt_from_credit_card(self):
+        """Test detecting debt type from 'credit card' keyword."""
+        result = self.parser._detect_payment_type("add credit card payment")
+        assert result == PaymentType.DEBT
+
+    def test_detect_savings_from_save(self):
+        """Test detecting savings type from 'save' keyword."""
+        result = self.parser._detect_payment_type("save for vacation")
+        assert result == PaymentType.SAVINGS
+
+    def test_detect_savings_from_goal(self):
+        """Test detecting savings type from 'goal' keyword."""
+        result = self.parser._detect_payment_type("savings goal for car")
+        assert result == PaymentType.SAVINGS
+
+    def test_detect_insurance_from_insurance(self):
+        """Test detecting insurance type from 'insurance' keyword."""
+        result = self.parser._detect_payment_type("add health insurance")
+        assert result == PaymentType.INSURANCE
+
+    def test_detect_subscription_default(self):
+        """Test default is subscription for unrecognized keywords."""
+        result = self.parser._detect_payment_type("add something random")
+        assert result == PaymentType.SUBSCRIPTION
+
+    def test_detect_subscription_from_netflix(self):
+        """Test detecting subscription from 'netflix' keyword."""
+        result = self.parser._detect_payment_type("add netflix")
+        assert result == PaymentType.SUBSCRIPTION
+
+    def test_detect_subscription_from_spotify(self):
+        """Test detecting subscription from 'spotify' keyword."""
+        result = self.parser._detect_payment_type("add spotify premium")
+        assert result == PaymentType.SUBSCRIPTION

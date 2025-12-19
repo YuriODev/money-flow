@@ -22,7 +22,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.agent.parser import CommandParser
 from src.core.config import settings
-from src.models.subscription import PaymentType
+from src.models.subscription import PaymentMode, PaymentType
 from src.schemas.subscription import (
     SubscriptionCreate,
     SubscriptionResponse,
@@ -261,10 +261,15 @@ class AgentExecutor:
         currency = entities.get("currency", "GBP")
         symbol = CURRENCY_SYMBOLS.get(currency, "£")
 
-        # Get payment type
+        # Get payment type (deprecated, kept for backwards compatibility)
         payment_type = entities.get("payment_type", PaymentType.SUBSCRIPTION)
         if isinstance(payment_type, str):
             payment_type = PaymentType(payment_type.lower())
+
+        # Get payment mode (new functional classification)
+        payment_mode = entities.get("payment_mode", PaymentMode.RECURRING)
+        if isinstance(payment_mode, str):
+            payment_mode = PaymentMode(payment_mode.lower())
 
         # Build create data with all Money Flow fields
         data = SubscriptionCreate(
@@ -273,6 +278,7 @@ class AgentExecutor:
             currency=currency,
             frequency=entities.get("frequency"),
             payment_type=payment_type,
+            payment_mode=payment_mode,
             category=entities.get("category"),
             start_date=date.today(),
             # Debt-specific fields

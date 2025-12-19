@@ -17,28 +17,51 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.db.database import Base
 
 
-class PaymentType(str, enum.Enum):
-    """Payment type enumeration for Money Flow.
+class PaymentMode(str, enum.Enum):
+    """Payment mode enumeration for Money Flow.
 
-    Top-level classification of recurring payments to support different
-    financial tracking needs beyond just subscriptions.
+    Defines how a payment functions - affects special fields and behavior.
+    Use Categories for organizational grouping (Entertainment, Housing, etc.).
 
     Attributes:
-        SUBSCRIPTION: Digital services, streaming (Netflix, Spotify, etc.).
-        HOUSING: Rent, mortgage payments.
-        UTILITY: Electric, gas, water, internet, council tax.
-        PROFESSIONAL_SERVICE: Therapist, coach, trainer, tutor, barrister, lawyer.
-        INSURANCE: Health, device (AppleCare), vehicle, life.
-        DEBT: Credit cards, loans, personal debts to friends/family.
-        SAVINGS: Regular savings transfers, goals with targets.
-        TRANSFER: Family support, recurring gifts, partner transfers.
-        ONE_TIME: One-time payments that won't recur (legal fees, one-off services).
+        RECURRING: Regular recurring payment (subscriptions, rent, utilities, etc.).
+        ONE_TIME: Single payment that won't recur.
+        DEBT: Debt being paid off - has total_owed, remaining_balance, creditor.
+        SAVINGS: Savings goal - has target_amount, current_saved, recipient.
 
     Example:
-        >>> PaymentType.SUBSCRIPTION.value
-        'subscription'
-        >>> PaymentType("debt")
-        <PaymentType.DEBT: 'debt'>
+        >>> PaymentMode.RECURRING.value
+        'recurring'
+        >>> PaymentMode("debt")
+        <PaymentMode.DEBT: 'debt'>
+    """
+
+    RECURRING = "recurring"
+    ONE_TIME = "one_time"
+    DEBT = "debt"
+    SAVINGS = "savings"
+
+
+# DEPRECATED: Keep PaymentType for backwards compatibility during migration
+# Maps old payment types to new payment modes for migration
+PAYMENT_TYPE_TO_MODE_MAP = {
+    "subscription": PaymentMode.RECURRING,
+    "housing": PaymentMode.RECURRING,
+    "utility": PaymentMode.RECURRING,
+    "professional_service": PaymentMode.RECURRING,
+    "insurance": PaymentMode.RECURRING,
+    "debt": PaymentMode.DEBT,
+    "savings": PaymentMode.SAVINGS,
+    "transfer": PaymentMode.RECURRING,
+    "one_time": PaymentMode.ONE_TIME,
+}
+
+
+class PaymentType(str, enum.Enum):
+    """DEPRECATED: Use PaymentMode instead.
+
+    Kept for backwards compatibility during migration.
+    Will be removed in a future version.
     """
 
     SUBSCRIPTION = "subscription"
@@ -187,11 +210,18 @@ class Subscription(Base):
     next_payment_date: Mapped[date] = mapped_column(Date, nullable=False)
     last_payment_date: Mapped[date | None] = mapped_column(Date, nullable=True)
 
-    # Payment type classification (Money Flow)
+    # Payment mode - how the payment functions (recurring, one_time, debt, savings)
+    payment_mode: Mapped[PaymentMode] = mapped_column(
+        Enum(PaymentMode), nullable=False, default=PaymentMode.RECURRING, index=True
+    )
+
+    # DEPRECATED: payment_type - kept for backwards compatibility during migration
+    # Will be removed after migration is complete
     payment_type: Mapped[PaymentType] = mapped_column(
         Enum(PaymentType), nullable=False, default=PaymentType.SUBSCRIPTION, index=True
     )
 
+    # DEPRECATED: category string field - use category_id (FK to categories table) instead
     category: Mapped[str | None] = mapped_column(String(100), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -310,7 +340,8 @@ class Subscription(Base):
         Returns:
             Percentage paid (0-100), or None if not a debt or missing data.
         """
-        if self.payment_type != PaymentType.DEBT:
+        # Check both new payment_mode and legacy payment_type
+        if self.payment_mode != PaymentMode.DEBT and self.payment_type != PaymentType.DEBT:
             return None
         if self.total_owed is None or self.total_owed <= 0:
             return None
@@ -326,7 +357,8 @@ class Subscription(Base):
         Returns:
             Percentage saved (0-100+), or None if not savings or missing data.
         """
-        if self.payment_type != PaymentType.SAVINGS:
+        # Check both new payment_mode and legacy payment_type
+        if self.payment_mode != PaymentMode.SAVINGS and self.payment_type != PaymentType.SAVINGS:
             return None
         if self.target_amount is None or self.target_amount <= 0:
             return None

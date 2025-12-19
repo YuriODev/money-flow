@@ -20,7 +20,7 @@ from sqlalchemy.orm import selectinload
 
 from src.core.config import settings
 from src.core.exceptions import SubscriptionNotFoundError
-from src.models.subscription import Frequency, PaymentType, Subscription
+from src.models.subscription import Frequency, PaymentMode, PaymentType, Subscription
 from src.schemas.subscription import (
     SubscriptionCreate,
     SubscriptionResponse,
@@ -212,13 +212,14 @@ class SubscriptionService:
         is_active: bool | None = None,
         category: str | None = None,
         payment_type: PaymentType | None = None,
+        payment_mode: PaymentMode | None = None,
         include_card: bool = False,
     ) -> Sequence[Subscription]:
         """Get all subscriptions/payments with optional filters.
 
         Retrieves payments from the database with optional filtering
-        by active status, category, and/or payment type. Results are
-        ordered by next payment date (ascending).
+        by active status, category, payment type, and/or payment mode.
+        Results are ordered by next payment date (ascending).
 
         Automatically updates stale next_payment_date values for
         recurring payments where the date is in the past.
@@ -228,7 +229,9 @@ class SubscriptionService:
                 payments regardless of status.
             category: Filter by subcategory name. If None, returns all categories.
             payment_type: Filter by payment type (subscription, debt, etc.).
-                If None, returns all payment types.
+                If None, returns all payment types. (DEPRECATED - use payment_mode)
+            payment_mode: Filter by payment mode (recurring, one_time, debt, savings).
+                If None, returns all payment modes.
             include_card: If True, eagerly load the payment_card relationship
                 to avoid N+1 queries when accessing subscription.payment_card.
 
@@ -241,6 +244,7 @@ class SubscriptionService:
             - ix_subscriptions_user_active_next_payment (user_id, is_active, next_payment_date)
             - ix_subscriptions_user_payment_type_active (user_id, payment_type, is_active)
             - ix_subscriptions_user_category (user_id, category)
+            - ix_subscriptions_payment_mode (payment_mode)
 
         Example:
             >>> # Get all active subscriptions
@@ -250,8 +254,8 @@ class SubscriptionService:
             >>> # Get entertainment subscriptions
             >>> entertainment = await service.get_all(category="entertainment")
 
-            >>> # Get all debt payments
-            >>> debts = await service.get_all(payment_type=PaymentType.DEBT)
+            >>> # Get all debt payments (new way)
+            >>> debts = await service.get_all(payment_mode=PaymentMode.DEBT)
 
             >>> # Get subscriptions with card info (avoids N+1)
             >>> subs = await service.get_all(is_active=True, include_card=True)
@@ -272,6 +276,8 @@ class SubscriptionService:
             conditions.append(Subscription.category == category)
         if payment_type is not None:
             conditions.append(Subscription.payment_type == payment_type)
+        if payment_mode is not None:
+            conditions.append(Subscription.payment_mode == payment_mode)
 
         if conditions:
             query = query.where(and_(*conditions))
@@ -423,6 +429,7 @@ class SubscriptionService:
         total_monthly = Decimal("0")
         by_category: dict[str, Decimal] = {}
         by_payment_type: dict[str, Decimal] = {}
+        by_payment_mode: dict[str, Decimal] = {}
         total_debt = Decimal("0")
         total_savings_target = Decimal("0")
         total_current_saved = Decimal("0")
@@ -452,7 +459,7 @@ class SubscriptionService:
                 Decimal("0") if is_one_time else monthly
             )
 
-            # Group by payment type - show one-time as total amount, not monthly
+            # Group by payment type (deprecated) - show one-time as total amount, not monthly
             ptype = sub.payment_type.value
             if is_one_time:
                 # For one-time, show the actual amount, not monthly equivalent
@@ -467,6 +474,13 @@ class SubscriptionService:
                 by_payment_type[ptype] = by_payment_type.get(ptype, Decimal("0")) + amount_to_show
             else:
                 by_payment_type[ptype] = by_payment_type.get(ptype, Decimal("0")) + monthly
+
+            # Group by payment mode (new) - show one-time as total amount, not monthly
+            pmode = sub.payment_mode.value if sub.payment_mode else PaymentMode.RECURRING.value
+            if is_one_time:
+                by_payment_mode[pmode] = by_payment_mode.get(pmode, Decimal("0")) + amount_to_show
+            else:
+                by_payment_mode[pmode] = by_payment_mode.get(pmode, Decimal("0")) + monthly
 
             # Track debt totals - fall back to total_owed if remaining_balance not set
             if sub.payment_type == PaymentType.DEBT:
@@ -544,6 +558,7 @@ class SubscriptionService:
             active_count=len(subscriptions),
             by_category={k: round(v, 2) for k, v in by_category.items()},
             by_payment_type={k: round(v, 2) for k, v in by_payment_type.items()},
+            by_payment_mode={k: round(v, 2) for k, v in by_payment_mode.items()},
             upcoming_week=[SubscriptionResponse.model_validate(s) for s in upcoming],
             currency=target_currency,
             total_debt=round(total_debt, 2),
