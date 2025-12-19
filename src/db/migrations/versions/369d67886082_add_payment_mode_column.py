@@ -67,11 +67,12 @@ def upgrade() -> None:
     connection = op.get_bind()
 
     # Update each payment_type to corresponding payment_mode
+    # Cast to paymenttype enum for proper comparison in PostgreSQL
     for old_type, new_mode in PAYMENT_TYPE_TO_MODE.items():
         connection.execute(
             sa.text(
                 f"UPDATE subscriptions SET payment_mode = '{new_mode.upper()}' "
-                f"WHERE payment_type = '{old_type}'"
+                f"WHERE payment_type::text = '{old_type}'"
             )
         )
 
