@@ -145,6 +145,23 @@ class User(Base):
         lazy="selectin",
     )
 
+    # AI preferences (one-to-one)
+    ai_preferences: Mapped["AIPreferences | None"] = relationship(  # noqa: F821
+        "AIPreferences",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        uselist=False,
+        lazy="selectin",
+    )
+
+    # Cached icons (user-specific icons)
+    cached_icons: Mapped[list["IconCache"]] = relationship(  # noqa: F821
+        "IconCache",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+
     def __repr__(self) -> str:
         """Return string representation of user.
 

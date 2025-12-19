@@ -22,12 +22,14 @@ from fastapi import APIRouter
 
 from src.api import (
     agent,
+    ai_settings,
     analytics,
     auth,
     calendar,
     cards,
     categories,
     export_history,
+    icons,
     insights,
     search,
     subscriptions,
@@ -49,5 +51,7 @@ v1_router.include_router(cards.router, tags=["cards"])
 v1_router.include_router(categories.router, tags=["categories"])
 v1_router.include_router(users.router, prefix="/users", tags=["users"])
 v1_router.include_router(export_history.router, tags=["exports"])
+v1_router.include_router(icons.router, prefix="/icons", tags=["icons"])
+v1_router.include_router(ai_settings.router, prefix="/ai", tags=["ai-settings"])
 
 __all__ = ["v1_router"]

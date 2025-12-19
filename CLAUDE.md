@@ -32,24 +32,90 @@
 | **Phase 5** | Sprint 5.1 | ✅ Complete | Profile & Preferences |
 | **Phase 5** | Sprint 5.2 | ✅ Complete | Cards & Categories |
 | **Phase 5** | Sprint 5.3 | ✅ Complete | Notifications & Export |
-| **Phase 5** | Sprint 5.4 | 🔄 In Progress | Icons & AI Settings |
+| **Phase 5** | Sprint 5.4 | ✅ Complete | Icons & AI Settings |
 | **Phase 5** | Sprints 5.5-5.7 | 🔜 Upcoming | Smart Import, Integrations, Open Banking (~132h remaining) |
 | **Phase 6** | Sprint 6.1 | 🔜 Upcoming | Production Launch (~15h) |
 
-### Sprint 5.4 Tasks (Weeks 23-24) - Icons & AI Settings 🔄
+### Sprint 5.4 Tasks (Weeks 23-24) - Icons & AI Settings ✅
 
 | Task | Status | Description |
 |------|--------|-------------|
-| 5.4.1.1 | 🔜 TODO | Icon cache model and storage |
-| 5.4.1.2 | 🔜 TODO | External icon fetching (Clearbit, Logo.dev) |
-| 5.4.1.3 | 🔜 TODO | AI icon generation (DALL-E/Stable Diffusion) |
-| 5.4.1.4 | 🔜 TODO | Icon browser and search UI |
-| 5.4.2.1 | 🔜 TODO | Natural language parsing preferences |
-| 5.4.2.2 | 🔜 TODO | Smart categorization toggle |
-| 5.4.2.3 | 🔜 TODO | Conversation history management |
-| 5.4.2.4 | 🔜 TODO | AI model selection |
-| 5.4.2.5 | 🔜 TODO | Suggestion frequency settings |
-| 5.4.3 | 🔜 TODO | Unit tests for icons and AI settings |
+| 5.4.1.1 | ✅ DONE | Icon cache model and storage |
+| 5.4.1.2 | ✅ DONE | External icon fetching (SimpleIcons, Clearbit) |
+| 5.4.1.3 | ✅ DONE | AI icon generation (Claude SVG) |
+| 5.4.1.4 | ✅ DONE | Icon browser and search UI |
+| 5.4.2.1-5 | ✅ DONE | AI Assistant settings (NL parsing, model, suggestions) |
+| 5.4.3 | ✅ DONE | Unit tests for icons and AI settings (58 tests) |
+
+**Sprint 5.4 Features Completed:**
+- **Icon Cache Model** (`src/models/icon_cache.py`)
+  - IconCache SQLAlchemy model with TTL-based expiration
+  - IconSource enum (SIMPLE_ICONS, CLEARBIT, LOGO_DEV, BRANDFETCH, AI_GENERATED, USER_UPLOADED, FALLBACK)
+  - SOURCE_TTL_HOURS mapping for automatic expiry
+  - Methods: is_expired, is_global, set_expiry_from_source, record_fetch, refresh
+- **Icon Service** (`src/services/icon_service.py`)
+  - External icon fetching from SimpleIcons CDN and Clearbit Logo API
+  - SERVICE_SLUG_MAP for 50+ popular services
+  - BRAND_COLORS mapping for brand consistency
+  - Domain guessing for Clearbit API
+  - AI icon generation with Claude (SVG format)
+  - Style-based generation (minimal, branded, playful, corporate)
+  - SVG color extraction
+  - get_or_generate_icon() for automatic AI fallback
+- **Icon Schemas** (`src/schemas/icon.py`)
+  - IconResponse, IconSearchRequest, IconSearchResponse
+  - IconFetchRequest, IconGenerateRequest, IconUploadRequest
+  - IconBulkFetchRequest, IconBulkResponse, IconStatsResponse
+- **Icon API** (`src/api/icons.py`)
+  - GET /api/v1/icons/:service_name - Get icon
+  - POST /api/v1/icons/fetch - Fetch with sources
+  - POST /api/v1/icons/generate - Generate with AI
+  - POST /api/v1/icons/search - Search icons
+  - POST /api/v1/icons/bulk - Bulk fetch
+  - GET /api/v1/icons/stats - Cache statistics
+- **AI Preferences Model** (`src/models/ai_preferences.py`)
+  - AIPreferences SQLAlchemy model (one-to-one with User)
+  - Enums: SuggestionFrequency, AIModel, IconGenerationStyle
+  - Settings: ai_enabled, preferred_model, auto_categorization
+  - Settings: smart_suggestions, suggestion_frequency, confidence_threshold
+  - Settings: icon_generation_enabled, icon_style, icon_size
+  - Settings: conversation_history_enabled, conversation_history_days
+  - Settings: natural_language_parsing, learn_from_corrections
+  - Settings: privacy_mode, custom_instructions
+  - Properties: is_fully_enabled, should_auto_categorize, should_suggest
+  - Methods: meets_confidence_threshold, clear_conversation_history_cutoff
+- **AI Preferences Schemas** (`src/schemas/ai_preferences.py`)
+  - AIPreferencesCreate, AIPreferencesUpdate, AIPreferencesResponse
+  - ClearHistoryRequest
+  - All enums: AIModelEnum, SuggestionFrequencyEnum, IconGenerationStyleEnum
+- **AI Settings API** (`src/api/ai_settings.py`)
+  - GET /api/v1/ai/preferences - Get preferences
+  - PUT /api/v1/ai/preferences - Update preferences
+  - POST /api/v1/ai/reset - Reset to defaults
+  - GET /api/v1/ai/history/stats - Conversation stats
+  - DELETE /api/v1/ai/history - Clear history
+- **Icon Browser UI** (`frontend/src/components/IconBrowser.tsx`)
+  - Search and browse icons from cache
+  - AI generation with style and color options
+  - Quick service picker for popular services
+  - Icon selection with preview
+- **Frontend API** (`frontend/src/lib/api.ts`)
+  - Icon types and interfaces
+  - iconApi with all icon operations
+- **Migration** (`55688a8830bc_add_icon_cache_and_ai_preferences.py`)
+  - icon_cache table with indexes
+  - ai_preferences table with foreign key
+- **58 Unit Tests** (`tests/unit/test_icon_cache.py`, `tests/unit/test_ai_preferences.py`)
+  - IconSource enum tests
+  - IconCache model tests (expiry, global, methods)
+  - Icon schema tests
+  - IconService tests (normalization, slug mapping, domain guessing)
+  - AI style instructions tests
+  - SVG color extraction tests
+  - Async service tests (get_icon, stats, search, bulk)
+  - AI preferences model tests
+  - AI preferences schema validation tests
+- **Total unit tests: ~769** (711 previous + 58 new)
 
 ### Sprint 5.3 Tasks (Week 21) - Notifications & Export ✅
 

@@ -1,5 +1,11 @@
 """SQLAlchemy ORM models."""
 
+from src.models.ai_preferences import (
+    AIModel,
+    AIPreferences,
+    IconGenerationStyle,
+    SuggestionFrequency,
+)
 from src.models.category import Category
 from src.models.export_history import (
     ExportFormat,
@@ -7,6 +13,7 @@ from src.models.export_history import (
     ExportStatus,
     ExportType,
 )
+from src.models.icon_cache import IconCache, IconSource
 from src.models.notification import NotificationPreferences
 from src.models.notification_history import (
     NotificationChannel,
@@ -26,6 +33,8 @@ from src.models.subscription import (
 from src.models.user import User, UserRole
 
 __all__ = [
+    "AIModel",
+    "AIPreferences",
     "CardType",
     "Category",
     "Conversation",
@@ -34,6 +43,9 @@ __all__ = [
     "ExportStatus",
     "ExportType",
     "Frequency",
+    "IconCache",
+    "IconGenerationStyle",
+    "IconSource",
     "NotificationChannel",
     "NotificationHistory",
     "NotificationPreferences",
@@ -45,6 +57,7 @@ __all__ = [
     "PaymentType",
     "RAGAnalytics",
     "Subscription",
+    "SuggestionFrequency",
     "User",
     "UserRole",
 ]

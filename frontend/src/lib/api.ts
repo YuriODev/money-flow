@@ -917,3 +917,98 @@ export const categoriesApi = {
     return data;
   },
 };
+
+// Icon types
+export type IconSource = "simple_icons" | "clearbit" | "logo_dev" | "brandfetch" | "ai_generated" | "user_uploaded" | "fallback";
+export type IconStyle = "minimal" | "branded" | "playful" | "corporate";
+
+export interface Icon {
+  id: string;
+  service_name: string;
+  display_name: string | null;
+  source: IconSource;
+  icon_url: string | null;
+  brand_color: string | null;
+  secondary_color: string | null;
+  category: string | null;
+  width: number | null;
+  height: number | null;
+  format: string | null;
+  is_verified: boolean;
+  created_at: string;
+  expires_at: string | null;
+}
+
+export interface IconSearchRequest {
+  query: string;
+  include_ai?: boolean;
+  category?: string | null;
+}
+
+export interface IconSearchResponse {
+  icons: Icon[];
+  total: number;
+  from_cache: boolean;
+}
+
+export interface IconGenerateRequest {
+  service_name: string;
+  description?: string | null;
+  style?: IconStyle;
+  size?: number;
+  brand_color?: string | null;
+}
+
+export interface IconBulkRequest {
+  service_names: string[];
+  sources?: IconSource[];
+}
+
+export interface IconBulkResponse {
+  icons: Record<string, Icon | null>;
+  found: number;
+  missing: string[];
+}
+
+export interface IconStats {
+  total_icons: number;
+  by_source: Record<string, number>;
+  expired_count: number;
+  ai_generated_count: number;
+  user_uploaded_count: number;
+}
+
+// Icon API
+export const iconApi = {
+  // Get icon for a service
+  getIcon: async (serviceName: string, forceRefresh = false): Promise<Icon | null> => {
+    const { data } = await api.get(`/icons/${encodeURIComponent(serviceName)}`, {
+      params: { force_refresh: forceRefresh },
+    });
+    return data;
+  },
+
+  // Search for icons
+  search: async (request: IconSearchRequest): Promise<IconSearchResponse> => {
+    const { data } = await api.post("/icons/search", request);
+    return data;
+  },
+
+  // Generate icon with AI
+  generate: async (request: IconGenerateRequest): Promise<Icon | null> => {
+    const { data } = await api.post("/icons/generate", request);
+    return data;
+  },
+
+  // Bulk fetch icons
+  bulkFetch: async (request: IconBulkRequest): Promise<IconBulkResponse> => {
+    const { data } = await api.post("/icons/bulk", request);
+    return data;
+  },
+
+  // Get icon cache stats
+  getStats: async (): Promise<IconStats> => {
+    const { data } = await api.get("/icons/stats");
+    return data;
+  },
+};
