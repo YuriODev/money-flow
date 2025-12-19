@@ -32,11 +32,12 @@ test.describe("Dashboard", () => {
     await page.waitForLoadState("networkidle");
 
     // Should see view toggle tabs (uses role="tab" not button)
-    await expect(page.getByRole("tab", { name: /Payments/i })).toBeVisible();
-    await expect(page.getByRole("tab", { name: /Calendar/i })).toBeVisible();
-    await expect(page.getByRole("tab", { name: /Cards/i })).toBeVisible();
+    // Use exact match to avoid matching filter tabs inside subscription list
+    await expect(page.getByRole("tab", { name: "Payments", exact: true })).toBeVisible();
+    await expect(page.getByRole("tab", { name: "Calendar", exact: true })).toBeVisible();
+    await expect(page.getByRole("tab", { name: "Cards", exact: true })).toBeVisible();
     await expect(
-      page.getByRole("tab", { name: /AI Assistant/i })
+      page.getByRole("tab", { name: "AI Assistant", exact: true })
     ).toBeVisible();
   });
 
@@ -109,7 +110,7 @@ test.describe("Agent Chat View", () => {
 
     // Should see the AI Assistant tab (uses role="tab")
     await expect(
-      page.getByRole("tab", { name: /AI Assistant/i })
+      page.getByRole("tab", { name: "AI Assistant", exact: true })
     ).toBeVisible();
 
     // Should see chat input or message area
@@ -135,7 +136,7 @@ test.describe("Agent Chat View", () => {
       await page.waitForTimeout(2000);
 
       // The page should still be functional
-      await expect(page.getByRole("tab", { name: /AI Assistant/i })).toBeVisible();
+      await expect(page.getByRole("tab", { name: "AI Assistant", exact: true })).toBeVisible();
     }
   });
 });
@@ -147,7 +148,7 @@ test.describe("Calendar View", () => {
 
     // Should see calendar tab (uses role="tab")
     await expect(
-      page.getByRole("tab", { name: /Calendar/i })
+      page.getByRole("tab", { name: "Calendar", exact: true })
     ).toBeVisible();
   });
 });
@@ -158,7 +159,7 @@ test.describe("Cards View", () => {
     await page.waitForLoadState("networkidle");
 
     // Should see cards tab (uses role="tab")
-    await expect(page.getByRole("tab", { name: /Cards/i })).toBeVisible();
+    await expect(page.getByRole("tab", { name: "Cards", exact: true })).toBeVisible();
   });
 });
 
