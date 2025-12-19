@@ -145,6 +145,24 @@ class Settings(BaseSettings):
     telegram_bot_username: str = ""  # Bot username without @
     telegram_webhook_secret: str = ""  # Secret for webhook verification
 
+    # Email/SMTP settings (for email notifications)
+    smtp_host: str = ""  # SMTP server host (e.g., smtp.gmail.com)
+    smtp_port: int = 587  # SMTP port (587 for TLS, 465 for SSL)
+    smtp_user: str = ""  # SMTP username/email
+    smtp_password: str = ""  # SMTP password or app password
+    smtp_from_email: str = ""  # Sender email address
+    smtp_from_name: str = "Money Flow"  # Sender display name
+    smtp_use_tls: bool = True  # Use TLS encryption
+
+    # Cloud Backup settings
+    gcs_backup_bucket: str = ""  # GCS bucket name for backups
+    backup_retention_days: int = 30  # Days to retain backups
+
+    # Web Push (VAPID) settings for PWA notifications
+    vapid_private_key: str = ""  # VAPID private key (generate with py_vapid)
+    vapid_public_key: str = ""  # VAPID public key (shared with frontend)
+    vapid_email: str = ""  # Contact email for VAPID claims (mailto:)
+
 
 @lru_cache
 def get_settings() -> Settings:

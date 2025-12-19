@@ -616,6 +616,333 @@ async def send_weekly_digest(ctx: dict[str, Any]) -> dict[str, int]:
     return {"digests_sent": digests_sent}
 
 
+@task(name="scheduled_cloud_backup", max_tries=3, timeout=900)
+async def scheduled_cloud_backup(ctx: dict[str, Any]) -> dict[str, int]:
+    """Run scheduled backups for all users with backup enabled.
+
+    Creates compressed JSON backups of user subscription data
+    and uploads to cloud storage (GCS) or local fallback.
+
+    Args:
+        ctx: ARQ context dictionary.
+
+    Returns:
+        Dictionary with count of successful and failed backups.
+    """
+    from src.models.user import User
+    from src.services.backup_service import BackupService, run_scheduled_backup
+
+    logger.info("Running scheduled_cloud_backup task")
+
+    # Create database session
+    db_session = ctx.get("db_session")
+    if not db_session:
+        engine = create_async_engine(settings.database_url)
+        async_session = async_sessionmaker(engine, expire_on_commit=False)
+        db_session = async_session()
+
+    backup_service = BackupService()
+    successful = 0
+    failed = 0
+
+    try:
+        # Get all active users
+        # In the future, filter by users who have backup enabled in preferences
+        users_result = await db_session.execute(select(User).where(User.is_active.is_(True)))
+        users = users_result.scalars().all()
+
+        for user in users:
+            try:
+                result = await run_scheduled_backup(
+                    db=db_session,
+                    user=user,
+                    backup_service=backup_service,
+                )
+                if result.success:
+                    successful += 1
+                    logger.info(
+                        f"Backup completed for user {user.id}: "
+                        f"{result.subscription_count} subscriptions, "
+                        f"{result.file_size} bytes"
+                    )
+                else:
+                    failed += 1
+                    logger.error(f"Backup failed for user {user.id}: {result.error}")
+            except Exception as e:
+                failed += 1
+                logger.error(f"Backup error for user {user.id}: {e}")
+
+    finally:
+        await db_session.close()
+
+    logger.info(f"Cloud backup complete: {successful} successful, {failed} failed")
+    return {"successful": successful, "failed": failed}
+
+
+@task(name="send_email_reminders", max_tries=3, timeout=600)
+async def send_email_reminders(ctx: dict[str, Any], days_ahead: int = 7) -> dict[str, int]:
+    """Send payment reminders via email to users who have email notifications enabled.
+
+    Args:
+        ctx: ARQ context dictionary.
+        days_ahead: Number of days to look ahead for payments.
+
+    Returns:
+        Dictionary with count of emails sent.
+    """
+    from src.models.notification import NotificationPreferences
+    from src.models.subscription import Subscription
+    from src.models.user import User
+    from src.services.email_service import EmailService
+
+    logger.info(f"Running send_email_reminders task for {days_ahead} days ahead")
+
+    # Create database session
+    db_session = ctx.get("db_session")
+    if not db_session:
+        engine = create_async_engine(settings.database_url)
+        async_session = async_sessionmaker(engine, expire_on_commit=False)
+        db_session = async_session()
+
+    email_service = EmailService()
+
+    if not email_service.is_configured:
+        logger.warning("Email service not configured, skipping email reminders")
+        return {"emails_sent": 0, "users_notified": 0}
+
+    emails_sent = 0
+    users_notified = 0
+
+    try:
+        # Get all users with email reminders enabled
+        prefs_result = await db_session.execute(
+            select(NotificationPreferences)
+            .where(NotificationPreferences.email_enabled.is_(True))
+            .where(NotificationPreferences.reminder_enabled.is_(True))
+            .options(selectinload(NotificationPreferences.user))
+        )
+        notification_prefs = prefs_result.scalars().all()
+
+        today = date.today()
+
+        for prefs in notification_prefs:
+            # Get user email
+            user_result = await db_session.execute(select(User).where(User.id == prefs.user_id))
+            user = user_result.scalar_one_or_none()
+            if not user or not user.email:
+                continue
+
+            # Calculate the target date based on user's reminder_days_before
+            target_date = today + timedelta(days=prefs.reminder_days_before)
+
+            # Get subscriptions due on the target date
+            subs_result = await db_session.execute(
+                select(Subscription)
+                .where(Subscription.user_id == prefs.user_id)
+                .where(Subscription.is_active.is_(True))
+                .where(Subscription.next_payment_date == target_date)
+            )
+            subscriptions = subs_result.scalars().all()
+
+            for sub in subscriptions:
+                try:
+                    success = await email_service.send_reminder(
+                        to_email=user.email,
+                        subscription=sub,
+                        days_until=prefs.reminder_days_before,
+                    )
+                    if success:
+                        emails_sent += 1
+                except Exception as e:
+                    logger.error(f"Failed to send email reminder for subscription {sub.id}: {e}")
+
+            if subscriptions:
+                users_notified += 1
+
+    finally:
+        await db_session.close()
+
+    logger.info(f"Email reminders sent: {emails_sent} to {users_notified} users")
+    return {"emails_sent": emails_sent, "users_notified": users_notified}
+
+
+@task(name="send_email_daily_digest", max_tries=3, timeout=600)
+async def send_email_daily_digest(ctx: dict[str, Any]) -> dict[str, int]:
+    """Send daily payment digest via email.
+
+    Args:
+        ctx: ARQ context dictionary.
+
+    Returns:
+        Dictionary with count of digests sent.
+    """
+    from src.models.notification import NotificationPreferences
+    from src.models.subscription import Subscription
+    from src.models.user import User
+    from src.services.email_service import EmailService
+
+    logger.info("Running send_email_daily_digest task")
+
+    # Create database session
+    db_session = ctx.get("db_session")
+    if not db_session:
+        engine = create_async_engine(settings.database_url)
+        async_session = async_sessionmaker(engine, expire_on_commit=False)
+        db_session = async_session()
+
+    email_service = EmailService()
+
+    if not email_service.is_configured:
+        logger.warning("Email service not configured, skipping email digests")
+        return {"digests_sent": 0}
+
+    digests_sent = 0
+
+    try:
+        # Get all users with email daily digest enabled
+        prefs_result = await db_session.execute(
+            select(NotificationPreferences)
+            .where(NotificationPreferences.email_enabled.is_(True))
+            .where(NotificationPreferences.daily_digest.is_(True))
+            .options(selectinload(NotificationPreferences.user))
+        )
+        notification_prefs = prefs_result.scalars().all()
+
+        today = date.today()
+        week_end = today + timedelta(days=7)
+
+        for prefs in notification_prefs:
+            # Get user email and preferences
+            user_result = await db_session.execute(select(User).where(User.id == prefs.user_id))
+            user = user_result.scalar_one_or_none()
+            if not user or not user.email:
+                continue
+
+            currency = (
+                user.preferences.get("currency", "GBP") if user and user.preferences else "GBP"
+            )
+
+            # Get subscriptions due within the next week
+            subs_result = await db_session.execute(
+                select(Subscription)
+                .where(Subscription.user_id == prefs.user_id)
+                .where(Subscription.is_active.is_(True))
+                .where(Subscription.next_payment_date >= today)
+                .where(Subscription.next_payment_date <= week_end)
+                .order_by(Subscription.next_payment_date)
+            )
+            subscriptions = list(subs_result.scalars().all())
+
+            if not subscriptions:
+                continue
+
+            try:
+                success = await email_service.send_daily_digest(
+                    to_email=user.email,
+                    subscriptions=subscriptions,
+                    currency=currency,
+                )
+                if success:
+                    digests_sent += 1
+            except Exception as e:
+                logger.error(f"Failed to send email daily digest to user {prefs.user_id}: {e}")
+
+    finally:
+        await db_session.close()
+
+    logger.info(f"Email daily digests sent: {digests_sent}")
+    return {"digests_sent": digests_sent}
+
+
+@task(name="send_email_weekly_digest", max_tries=3, timeout=600)
+async def send_email_weekly_digest(ctx: dict[str, Any]) -> dict[str, int]:
+    """Send weekly payment summary via email.
+
+    Only runs on each user's preferred day of the week.
+
+    Args:
+        ctx: ARQ context dictionary.
+
+    Returns:
+        Dictionary with count of digests sent.
+    """
+    from src.models.notification import NotificationPreferences
+    from src.models.subscription import Subscription
+    from src.models.user import User
+    from src.services.email_service import EmailService
+
+    logger.info("Running send_email_weekly_digest task")
+
+    # Create database session
+    db_session = ctx.get("db_session")
+    if not db_session:
+        engine = create_async_engine(settings.database_url)
+        async_session = async_sessionmaker(engine, expire_on_commit=False)
+        db_session = async_session()
+
+    email_service = EmailService()
+
+    if not email_service.is_configured:
+        logger.warning("Email service not configured, skipping email weekly digests")
+        return {"digests_sent": 0}
+
+    digests_sent = 0
+
+    try:
+        today = date.today()
+        current_weekday = today.weekday()  # 0 = Monday
+        week_end = today + timedelta(days=7)
+
+        # Get all users with email weekly digest enabled on today's day
+        prefs_result = await db_session.execute(
+            select(NotificationPreferences)
+            .where(NotificationPreferences.email_enabled.is_(True))
+            .where(NotificationPreferences.weekly_digest.is_(True))
+            .where(NotificationPreferences.weekly_digest_day == current_weekday)
+            .options(selectinload(NotificationPreferences.user))
+        )
+        notification_prefs = prefs_result.scalars().all()
+
+        for prefs in notification_prefs:
+            # Get user email and preferences
+            user_result = await db_session.execute(select(User).where(User.id == prefs.user_id))
+            user = user_result.scalar_one_or_none()
+            if not user or not user.email:
+                continue
+
+            currency = (
+                user.preferences.get("currency", "GBP") if user and user.preferences else "GBP"
+            )
+
+            # Get all subscriptions due in the next 7 days
+            subs_result = await db_session.execute(
+                select(Subscription)
+                .where(Subscription.user_id == prefs.user_id)
+                .where(Subscription.is_active.is_(True))
+                .where(Subscription.next_payment_date >= today)
+                .where(Subscription.next_payment_date <= week_end)
+                .order_by(Subscription.next_payment_date)
+            )
+            subscriptions = list(subs_result.scalars().all())
+
+            try:
+                success = await email_service.send_weekly_digest(
+                    to_email=user.email,
+                    subscriptions=subscriptions,
+                    currency=currency,
+                )
+                if success:
+                    digests_sent += 1
+            except Exception as e:
+                logger.error(f"Failed to send email weekly digest to user {prefs.user_id}: {e}")
+
+    finally:
+        await db_session.close()
+
+    logger.info(f"Email weekly digests sent: {digests_sent}")
+    return {"digests_sent": digests_sent}
+
+
 @task(name="send_overdue_alerts", max_tries=3, timeout=600)
 async def send_overdue_alerts(ctx: dict[str, Any]) -> dict[str, int]:
     """Send alerts for overdue payments.
@@ -758,6 +1085,7 @@ class WorkerSettings:
     cron_jobs = [
         # Clean up expired sessions daily at 3 AM
         cron(cleanup_expired_sessions, hour=3, minute=0),
+        # Telegram notifications
         # Send payment reminders daily at 9 AM
         cron(send_payment_reminders, hour=9, minute=0),
         # Send daily digest at 8 AM
@@ -766,4 +1094,13 @@ class WorkerSettings:
         cron(send_weekly_digest, hour=8, minute=0),
         # Check for overdue payments at 10 AM
         cron(send_overdue_alerts, hour=10, minute=0),
+        # Email notifications
+        # Send email reminders daily at 9:30 AM (staggered from Telegram)
+        cron(send_email_reminders, hour=9, minute=30),
+        # Send email daily digest at 8:30 AM
+        cron(send_email_daily_digest, hour=8, minute=30),
+        # Send email weekly digest at 8:30 AM (task filters by user's preferred day)
+        cron(send_email_weekly_digest, hour=8, minute=30),
+        # Run cloud backups daily at 2 AM
+        cron(scheduled_cloud_backup, hour=2, minute=0),
     ]

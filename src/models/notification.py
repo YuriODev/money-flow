@@ -24,6 +24,14 @@ class NotificationPreferences(Base):
         id: UUID primary key (auto-generated).
         user_id: Foreign key to users table (one-to-one).
 
+        Email Notification Settings:
+            email_enabled: Whether email notifications are enabled.
+
+        Web Push (PWA) Integration:
+            push_enabled: Whether push notifications are enabled.
+            push_subscription: JSON-encoded push subscription object from browser.
+            push_verified: Whether push subscription is verified.
+
         Telegram Integration:
             telegram_enabled: Whether Telegram notifications are enabled.
             telegram_chat_id: Telegram chat ID for sending messages.
@@ -71,6 +79,16 @@ class NotificationPreferences(Base):
         String(36), ForeignKey("users.id", ondelete="CASCADE"), unique=True, nullable=False
     )
 
+    # Email notification settings
+    email_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+
+    # Web Push (PWA) integration
+    push_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    push_subscription: Mapped[str | None] = mapped_column(
+        String(2000), nullable=True
+    )  # JSON subscription object
+    push_verified: Mapped[bool] = mapped_column(Boolean, default=False)
+
     # Telegram integration
     telegram_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
     telegram_chat_id: Mapped[str | None] = mapped_column(String(50), nullable=True)
@@ -94,6 +112,17 @@ class NotificationPreferences(Base):
     quiet_hours_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
     quiet_hours_start: Mapped[time | None] = mapped_column(Time, nullable=True)
     quiet_hours_end: Mapped[time | None] = mapped_column(Time, nullable=True)
+
+    # Scheduled report settings
+    report_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    report_frequency: Mapped[str] = mapped_column(
+        String(20), default="weekly"
+    )  # daily, weekly, monthly
+    report_day: Mapped[int] = mapped_column(
+        Integer, default=0
+    )  # 0=Monday for weekly, 1=1st for monthly
+    report_time: Mapped[time] = mapped_column(Time, default=time(8, 0))  # 08:00
+    report_include_charts: Mapped[bool] = mapped_column(Boolean, default=True)
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
@@ -153,6 +182,41 @@ class NotificationPreferences(Base):
             True if Telegram is enabled and verified with a chat ID.
         """
         return bool(self.telegram_enabled and self.telegram_verified and self.telegram_chat_id)
+
+    @property
+    def is_push_linked(self) -> bool:
+        """Check if Web Push is successfully linked.
+
+        Returns:
+            True if push is enabled and verified with a subscription.
+        """
+        return bool(self.push_enabled and self.push_verified and self.push_subscription)
+
+    def get_push_subscription_dict(self) -> dict | None:
+        """Get push subscription as a dictionary.
+
+        Returns:
+            The push subscription object parsed from JSON, or None if not set.
+        """
+        import json
+
+        if not self.push_subscription:
+            return None
+        try:
+            return json.loads(self.push_subscription)
+        except json.JSONDecodeError:
+            return None
+
+    def set_push_subscription(self, subscription: dict) -> None:
+        """Set push subscription from a dictionary.
+
+        Args:
+            subscription: The push subscription object from the browser.
+        """
+        import json
+
+        self.push_subscription = json.dumps(subscription)
+        self.push_verified = True
 
     def is_in_quiet_hours(self, current_time: time | None = None) -> bool:
         """Check if current time is within quiet hours.
