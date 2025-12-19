@@ -276,7 +276,9 @@ class TestNotificationSchemas:
         assert update.daily_digest is None
 
     def test_notification_preferences_response_with_telegram(self):
-        """Test NotificationPreferencesResponse schema with telegram."""
+        """Test NotificationPreferencesResponse schema with telegram and push."""
+        from src.schemas.notification import PushStatus
+
         response = NotificationPreferencesResponse(
             id=str(uuid4()),
             user_id=str(uuid4()),
@@ -286,6 +288,12 @@ class TestNotificationSchemas:
                 username="testuser",
                 linked=True,
             ),
+            push=PushStatus(
+                enabled=False,
+                verified=False,
+                linked=False,
+            ),
+            email_enabled=True,
             reminder_enabled=True,
             reminder_days_before=3,
             overdue_alerts=True,
@@ -300,6 +308,8 @@ class TestNotificationSchemas:
         assert response.telegram.enabled is True
         assert response.telegram.verified is True
         assert response.telegram.username == "testuser"
+        assert response.push.enabled is False
+        assert response.email_enabled is True
 
     def test_preferences_to_response_helper(self):
         """Test preferences_to_response helper function."""
@@ -320,12 +330,18 @@ class TestNotificationSchemas:
         prefs.telegram_verified = True
         prefs.telegram_username = "testuser"
         prefs.is_telegram_linked = True
+        prefs.push_enabled = False
+        prefs.push_verified = False
+        prefs.is_push_linked = False
+        prefs.email_enabled = True
 
         result = preferences_to_response(prefs)
 
         assert result["id"] == prefs.id
         assert result["telegram"].enabled is True
         assert result["telegram"].verified is True
+        assert result["push"].enabled is False
+        assert result["email_enabled"] is True
 
 
 # =============================================================================

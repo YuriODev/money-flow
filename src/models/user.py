@@ -137,6 +137,14 @@ class User(Base):
         lazy="selectin",
     )
 
+    # Notification history
+    notification_history: Mapped[list["NotificationHistory"]] = relationship(  # noqa: F821
+        "NotificationHistory",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+
     def __repr__(self) -> str:
         """Return string representation of user.
 

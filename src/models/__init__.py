@@ -1,7 +1,19 @@
 """SQLAlchemy ORM models."""
 
 from src.models.category import Category
+from src.models.export_history import (
+    ExportFormat,
+    ExportHistory,
+    ExportStatus,
+    ExportType,
+)
 from src.models.notification import NotificationPreferences
+from src.models.notification_history import (
+    NotificationChannel,
+    NotificationHistory,
+    NotificationStatus,
+    NotificationType,
+)
 from src.models.payment_card import CardType, PaymentCard
 from src.models.rag import Conversation, RAGAnalytics
 from src.models.subscription import (
@@ -17,8 +29,16 @@ __all__ = [
     "CardType",
     "Category",
     "Conversation",
+    "ExportFormat",
+    "ExportHistory",
+    "ExportStatus",
+    "ExportType",
     "Frequency",
+    "NotificationChannel",
+    "NotificationHistory",
     "NotificationPreferences",
+    "NotificationStatus",
+    "NotificationType",
     "PaymentCard",
     "PaymentHistory",
     "PaymentStatus",
