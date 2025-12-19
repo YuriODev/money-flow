@@ -27,16 +27,16 @@ test.describe("Dashboard", () => {
     ).toBeVisible();
   });
 
-  test("should show view toggle buttons", async ({ page }) => {
+  test("should show view toggle tabs", async ({ page }) => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");
 
-    // Should see view toggle buttons
-    await expect(page.getByRole("button", { name: /Payments/i })).toBeVisible();
-    await expect(page.getByRole("button", { name: /Calendar/i })).toBeVisible();
-    await expect(page.getByRole("button", { name: /Cards/i })).toBeVisible();
+    // Should see view toggle tabs (uses role="tab" not button)
+    await expect(page.getByRole("tab", { name: /Payments/i })).toBeVisible();
+    await expect(page.getByRole("tab", { name: /Calendar/i })).toBeVisible();
+    await expect(page.getByRole("tab", { name: /Cards/i })).toBeVisible();
     await expect(
-      page.getByRole("button", { name: /AI Assistant/i })
+      page.getByRole("tab", { name: /AI Assistant/i })
     ).toBeVisible();
   });
 
@@ -44,21 +44,21 @@ test.describe("Dashboard", () => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");
 
-    // Click Calendar view - use exact match to avoid ambiguity
-    await page.getByRole("button", { name: "Calendar" }).click();
+    // Click Calendar view - tabs use role="tab"
+    await page.getByRole("tab", { name: "Calendar" }).click();
     // Wait for view to change (URL may or may not update depending on implementation)
     await page.waitForTimeout(500);
 
     // Click Cards view
-    await page.getByRole("button", { name: "Cards" }).click();
+    await page.getByRole("tab", { name: "Cards" }).click();
     await page.waitForTimeout(500);
 
     // Click AI Assistant view
-    await page.getByRole("button", { name: "AI Assistant" }).click();
+    await page.getByRole("tab", { name: "AI Assistant" }).click();
     await page.waitForTimeout(500);
 
-    // Click back to Payments - use first() to avoid ambiguity with "Next payments"
-    await page.getByRole("button", { name: "Payments", exact: true }).click();
+    // Click back to Payments - use exact match
+    await page.getByRole("tab", { name: "Payments", exact: true }).click();
     await page.waitForTimeout(500);
 
     // Page should still be functional
@@ -71,9 +71,9 @@ test.describe("Subscription List", () => {
     await page.goto("/?view=list");
     await page.waitForLoadState("networkidle");
 
-    // Should be on list view - use exact match
+    // Should be on list view - use tab role and exact match
     await expect(
-      page.getByRole("button", { name: "Payments", exact: true })
+      page.getByRole("tab", { name: "Payments", exact: true })
     ).toBeVisible();
   });
 
@@ -107,9 +107,9 @@ test.describe("Agent Chat View", () => {
     await page.goto("/?view=agent");
     await page.waitForLoadState("networkidle");
 
-    // Should see the AI Assistant view
+    // Should see the AI Assistant tab (uses role="tab")
     await expect(
-      page.getByRole("button", { name: /AI Assistant/i })
+      page.getByRole("tab", { name: /AI Assistant/i })
     ).toBeVisible();
 
     // Should see chat input or message area
@@ -135,7 +135,7 @@ test.describe("Agent Chat View", () => {
       await page.waitForTimeout(2000);
 
       // The page should still be functional
-      await expect(page.getByRole("button", { name: /AI Assistant/i })).toBeVisible();
+      await expect(page.getByRole("tab", { name: /AI Assistant/i })).toBeVisible();
     }
   });
 });
@@ -145,9 +145,9 @@ test.describe("Calendar View", () => {
     await page.goto("/?view=calendar");
     await page.waitForLoadState("networkidle");
 
-    // Should see calendar view
+    // Should see calendar tab (uses role="tab")
     await expect(
-      page.getByRole("button", { name: /Calendar/i })
+      page.getByRole("tab", { name: /Calendar/i })
     ).toBeVisible();
   });
 });
@@ -157,8 +157,8 @@ test.describe("Cards View", () => {
     await page.goto("/?view=cards");
     await page.waitForLoadState("networkidle");
 
-    // Should see cards view
-    await expect(page.getByRole("button", { name: /Cards/i })).toBeVisible();
+    // Should see cards tab (uses role="tab")
+    await expect(page.getByRole("tab", { name: /Cards/i })).toBeVisible();
   });
 });
 
@@ -184,9 +184,9 @@ test.describe("URL Navigation", () => {
     await page.goto("/?view=invalid");
     await page.waitForLoadState("networkidle");
 
-    // Should fallback to list view (Payments tab should be active)
+    // Should fallback to list view (Payments tab should be active, uses role="tab")
     await expect(
-      page.getByRole("button", { name: "Payments", exact: true })
+      page.getByRole("tab", { name: "Payments", exact: true })
     ).toBeVisible();
   });
 });

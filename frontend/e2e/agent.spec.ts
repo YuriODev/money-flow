@@ -13,9 +13,9 @@ test.describe("Agent Chat UI", () => {
     await page.goto("/?view=agent");
     await page.waitForLoadState("networkidle");
 
-    // Should see the AI Assistant button is active/visible
+    // Should see the AI Assistant tab is active/visible (uses role="tab" not button)
     await expect(
-      page.getByRole("button", { name: /AI Assistant/i })
+      page.getByRole("tab", { name: /AI Assistant/i })
     ).toBeVisible();
   });
 
@@ -35,8 +35,8 @@ test.describe("Agent Chat UI", () => {
     await page.goto("/?view=list");
     await page.waitForLoadState("networkidle");
 
-    // Click AI Assistant button
-    await page.getByRole("button", { name: /AI Assistant/i }).click();
+    // Click AI Assistant tab (uses role="tab" not button)
+    await page.getByRole("tab", { name: /AI Assistant/i }).click();
 
     // URL should update
     await expect(page).toHaveURL(/view=agent/);
