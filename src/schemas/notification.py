@@ -1,10 +1,10 @@
-"""Pydantic schemas for notification preferences.
+"""Pydantic schemas for notification preferences and history.
 
-This module defines request/response schemas for notification settings
-and Telegram integration endpoints.
+This module defines request/response schemas for notification settings,
+Telegram integration, push notifications, and notification history endpoints.
 """
 
-from datetime import time
+from datetime import datetime, time
 from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -68,6 +68,14 @@ class TelegramStatus(BaseModel):
     linked: bool = False  # True if enabled, verified, and has chat_id
 
 
+class PushStatus(BaseModel):
+    """Schema for Web Push connection status."""
+
+    enabled: bool = False
+    verified: bool = False
+    linked: bool = False  # True if enabled, verified, and has subscription
+
+
 class NotificationPreferencesResponse(NotificationPreferencesBase):
     """Schema for notification preferences response."""
 
@@ -76,6 +84,8 @@ class NotificationPreferencesResponse(NotificationPreferencesBase):
     id: str
     user_id: str
     telegram: TelegramStatus
+    push: PushStatus
+    email_enabled: bool = True
 
 
 class TelegramLinkRequest(BaseModel):
@@ -129,6 +139,47 @@ class TestNotificationResponse(BaseModel):
     channel: str = "telegram"
 
 
+class PushSubscriptionKeys(BaseModel):
+    """Schema for Web Push subscription keys."""
+
+    p256dh: str
+    auth: str
+
+
+class PushSubscriptionRequest(BaseModel):
+    """Schema for Web Push subscription.
+
+    This is the subscription object returned by the browser's
+    PushManager.subscribe() method.
+    """
+
+    endpoint: str
+    keys: PushSubscriptionKeys
+    expiration_time: int | None = None
+
+
+class PushSubscribeResponse(BaseModel):
+    """Schema for push subscription response."""
+
+    success: bool
+    message: str
+    push: PushStatus | None = None
+
+
+class PushUnsubscribeResponse(BaseModel):
+    """Schema for push unsubscribe response."""
+
+    success: bool
+    message: str
+
+
+class PushVapidKeyResponse(BaseModel):
+    """Schema for VAPID public key response."""
+
+    public_key: str
+    is_configured: bool
+
+
 class TriggerRemindersRequest(BaseModel):
     """Schema for manually triggering reminder tasks."""
 
@@ -173,4 +224,77 @@ def preferences_to_response(prefs) -> dict:
             username=prefs.telegram_username,
             linked=prefs.is_telegram_linked,
         ),
+        "push": PushStatus(
+            enabled=prefs.push_enabled,
+            verified=prefs.push_verified,
+            linked=prefs.is_push_linked,
+        ),
+        "email_enabled": prefs.email_enabled,
+    }
+
+
+# ============== Notification History Schemas ==============
+
+
+class NotificationHistoryResponse(BaseModel):
+    """Schema for notification history response."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    user_id: str
+    subscription_id: str | None = None
+    channel: str
+    notification_type: str
+    title: str
+    body: str
+    status: str
+    error_message: str | None = None
+    sent_at: datetime
+    delivered_at: datetime | None = None
+    extra_data: dict | None = None
+
+
+class NotificationHistoryListResponse(BaseModel):
+    """Schema for paginated notification history list."""
+
+    items: list[NotificationHistoryResponse]
+    total: int
+    page: int
+    page_size: int
+    has_more: bool
+
+
+class NotificationHistoryFilters(BaseModel):
+    """Schema for filtering notification history."""
+
+    channel: str | None = None  # telegram, email, push
+    notification_type: str | None = None  # payment_reminder, daily_digest, etc.
+    status: str | None = None  # sent, delivered, failed
+    start_date: datetime | None = None
+    end_date: datetime | None = None
+
+
+def history_to_response(history) -> dict:
+    """Convert NotificationHistory model to response dict.
+
+    Args:
+        history: NotificationHistory model instance.
+
+    Returns:
+        Dict suitable for NotificationHistoryResponse.
+    """
+    return {
+        "id": history.id,
+        "user_id": history.user_id,
+        "subscription_id": history.subscription_id,
+        "channel": history.channel,
+        "notification_type": history.notification_type,
+        "title": history.title,
+        "body": history.body,
+        "status": history.status,
+        "error_message": history.error_message,
+        "sent_at": history.sent_at,
+        "delivered_at": history.delivered_at,
+        "extra_data": history.get_extra_data_dict(),
     }
