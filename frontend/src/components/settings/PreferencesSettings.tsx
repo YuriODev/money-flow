@@ -57,7 +57,7 @@ const WEEK_STARTS = [
 
 export function PreferencesSettings() {
   const queryClient = useQueryClient();
-  const { theme: currentTheme, setTheme: setAppTheme } = useTheme();
+  const { theme: currentTheme, themePreference, setTheme: setAppTheme } = useTheme();
 
   // Fetch preferences
   const { data: preferences, isLoading } = useQuery({
@@ -68,6 +68,7 @@ export function PreferencesSettings() {
   // Form state
   const [formData, setFormData] = useState<UserPreferencesUpdate>({});
   const [saved, setSaved] = useState(false);
+  const [initialSynced, setInitialSynced] = useState(false);
 
   // Initialize form data when preferences are loaded
   useEffect(() => {
@@ -82,20 +83,14 @@ export function PreferencesSettings() {
         week_start: preferences.week_start,
         show_currency_symbol: preferences.show_currency_symbol,
       });
-    }
-  }, [preferences]);
 
-  // Helper to resolve theme preference to actual theme
-  const resolveTheme = (themePref: string): "light" | "dark" => {
-    if (themePref === "system") {
-      // Check system preference
-      if (typeof window !== "undefined" && window.matchMedia) {
-        return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      // Sync theme from server preferences on initial load
+      if (!initialSynced && preferences.theme) {
+        setAppTheme(preferences.theme as "light" | "dark" | "system");
+        setInitialSynced(true);
       }
-      return "light";
     }
-    return themePref as "light" | "dark";
-  };
+  }, [preferences, initialSynced, setAppTheme]);
 
   // Update mutation
   const updateMutation = useMutation({
@@ -103,9 +98,9 @@ export function PreferencesSettings() {
     onSuccess: (data) => {
       setSaved(true);
       queryClient.setQueryData(["userPreferences"], data);
-      // Apply theme change immediately
+      // Apply theme change immediately - pass the preference directly
       if (data.theme) {
-        setAppTheme(resolveTheme(data.theme));
+        setAppTheme(data.theme as "light" | "dark" | "system");
       }
       setTimeout(() => setSaved(false), 2000);
     },

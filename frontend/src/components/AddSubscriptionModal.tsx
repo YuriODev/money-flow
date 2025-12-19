@@ -7,9 +7,9 @@ import {
   subscriptionApi,
   userApi,
   type SubscriptionCreate,
-  type PaymentType,
-  PAYMENT_TYPE_LABELS,
-  PAYMENT_TYPE_ICONS,
+  type PaymentMode,
+  PAYMENT_MODE_LABELS,
+  PAYMENT_MODE_ICONS,
 } from "@/lib/api";
 import {
   X,
@@ -209,7 +209,7 @@ export function AddSubscriptionModal({
     currency: "GBP",
     frequency: "monthly",
     start_date: new Date().toISOString().split("T")[0],
-    payment_type: "subscription",
+    payment_mode: "recurring",
     category: "",
     category_id: null,
     card_id: undefined,
@@ -299,7 +299,7 @@ export function AddSubscriptionModal({
         currency: preferences?.currency || "GBP",
         frequency: "monthly",
         start_date: new Date().toISOString().split("T")[0],
-        payment_type: "subscription",
+        payment_mode: "recurring",
         category: "",
         category_id: null,
         card_id: undefined,
@@ -385,37 +385,37 @@ export function AddSubscriptionModal({
               </motion.button>
             </div>
 
-            {/* Payment Type Selector */}
+            {/* Payment Mode Selector */}
             <fieldset className="relative mb-6">
               <legend className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
-                Payment Type
+                Payment Mode
               </legend>
-              <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Select payment type">
-                {(Object.keys(PAYMENT_TYPE_LABELS) as PaymentType[]).map((type) => (
+              <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Select payment mode">
+                {(Object.keys(PAYMENT_MODE_LABELS) as PaymentMode[]).map((mode) => (
                   <motion.button
-                    key={type}
+                    key={mode}
                     type="button"
-                    onClick={() => setFormData({ ...formData, payment_type: type })}
+                    onClick={() => setFormData({ ...formData, payment_mode: mode })}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     className={cn(
                       "flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-200",
-                      formData.payment_type === type
+                      formData.payment_mode === mode
                         ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg"
                         : "glass-card-subtle hover:shadow-md"
                     )}
                     role="radio"
-                    aria-checked={formData.payment_type === type}
+                    aria-checked={formData.payment_mode === mode}
                   >
-                    <span aria-hidden="true">{PAYMENT_TYPE_ICONS[type]}</span>
-                    <span className="text-sm font-medium">{PAYMENT_TYPE_LABELS[type]}</span>
+                    <span aria-hidden="true">{PAYMENT_MODE_ICONS[mode]}</span>
+                    <span className="text-sm font-medium">{PAYMENT_MODE_LABELS[mode]}</span>
                   </motion.button>
                 ))}
               </div>
             </fieldset>
 
-            {/* Quick picks - only show for subscriptions */}
-            {formData.payment_type === "subscription" && (
+            {/* Quick picks - only show for recurring payments */}
+            {formData.payment_mode === "recurring" && (
               <div className="relative mb-6">
                 <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3 flex items-center gap-2">
                   <Sparkles className="w-4 h-4" />
@@ -620,7 +620,7 @@ export function AddSubscriptionModal({
               </div>
 
               {/* Debt-specific fields */}
-              {formData.payment_type === "debt" && (
+              {formData.payment_mode === "debt" && (
                 <motion.fieldset
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
@@ -699,7 +699,7 @@ export function AddSubscriptionModal({
               )}
 
               {/* Savings-specific fields */}
-              {(formData.payment_type === "savings" || formData.payment_type === "transfer") && (
+              {formData.payment_mode === "savings" && (
                 <motion.fieldset
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
@@ -708,7 +708,7 @@ export function AddSubscriptionModal({
                 >
                   <legend className="text-sm font-semibold text-green-700 dark:text-green-400 flex items-center gap-2">
                     <PiggyBank className="w-4 h-4" aria-hidden="true" />
-                    {formData.payment_type === "savings" ? "Savings Goal" : "Transfer Details"}
+                    Savings Goal
                   </legend>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -807,7 +807,7 @@ export function AddSubscriptionModal({
                       Adding...
                     </motion.span>
                   ) : (
-                    `Add ${PAYMENT_TYPE_LABELS[formData.payment_type || "subscription"]}`
+                    `Add ${PAYMENT_MODE_LABELS[formData.payment_mode || "recurring"]} Payment`
                   )}
                 </motion.button>
               </div>

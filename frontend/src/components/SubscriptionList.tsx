@@ -4,9 +4,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   subscriptionApi,
+  categoriesApi,
   type Subscription,
   type PaymentType,
+  type PaymentMode,
+  type Category,
   PAYMENT_TYPE_LABELS,
+  PAYMENT_MODE_LABELS,
 } from "@/lib/api";
 import { formatDate, getFrequencyLabel, cn } from "@/lib/utils";
 import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
@@ -31,26 +35,33 @@ import {
   Tv,
   LayoutGrid,
   CircleDot,
+  FolderOpen,
+  Layers,
   type LucideIcon,
 } from "lucide-react";
 import React, { useState, useMemo, useEffect, useCallback, useRef, KeyboardEvent } from "react";
 
-// All payment types for filter tabs (including special "no_card" filter)
-const ALL_PAYMENT_TYPES: (PaymentType | "all" | "no_card")[] = [
+// All payment modes for filter tabs (including special "no_card" filter)
+const ALL_PAYMENT_MODES: (PaymentMode | "all" | "no_card")[] = [
   "all",
-  "subscription",
-  "housing",
-  "utility",
-  "professional_service",
-  "insurance",
+  "recurring",
+  "one_time",
   "debt",
   "savings",
-  "transfer",
-  "one_time",
   "no_card",
 ];
 
-// Lucide icon components for each payment type
+// Lucide icon components for each payment mode
+const PAYMENT_MODE_ICON_COMPONENTS: Record<PaymentMode | "all" | "no_card", LucideIcon> = {
+  all: LayoutGrid,
+  recurring: Repeat,
+  one_time: CircleDot,
+  debt: CreditCard,
+  savings: PiggyBank,
+  no_card: AlertCircle,
+};
+
+// Keep old payment type icons for backwards compatibility
 const PAYMENT_TYPE_ICON_COMPONENTS: Record<PaymentType | "all" | "no_card", LucideIcon> = {
   all: LayoutGrid,
   subscription: Tv,
@@ -510,19 +521,25 @@ interface SubscriptionListProps {
   initialFilter?: string | null;
 }
 
+// Filter type: either by payment mode or by category
+type FilterType = "mode" | "category";
+
 export function SubscriptionList({ initialFilter }: SubscriptionListProps) {
   const queryClient = useQueryClient();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingSubscription, setEditingSubscription] = useState<Subscription | null>(null);
-  const [selectedPaymentType, setSelectedPaymentType] = useState<PaymentType | "all" | "no_card">(
+  const [filterType, setFilterType] = useState<FilterType>("mode");
+  const [selectedPaymentMode, setSelectedPaymentMode] = useState<PaymentMode | "all" | "no_card">(
     initialFilter === "no_card" ? "no_card" : "all"
   );
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | "all" | "uncategorized">("all");
   const filterTabsRef = useRef<HTMLDivElement>(null);
 
   // Update filter when initialFilter changes (from URL)
   useEffect(() => {
     if (initialFilter === "no_card") {
-      setSelectedPaymentType("no_card");
+      setSelectedPaymentMode("no_card");
+      setFilterType("mode");
     }
   }, [initialFilter]);
 
@@ -531,39 +548,83 @@ export function SubscriptionList({ initialFilter }: SubscriptionListProps) {
     queryFn: () => subscriptionApi.getAll(),
   });
 
-  // Filter subscriptions by payment type
+  // Fetch categories for category filtering
+  const { data: categories = [] } = useQuery({
+    queryKey: ["categories"],
+    queryFn: () => categoriesApi.getAll(),
+  });
+
+  // Filter subscriptions by payment mode or category
   const filteredSubscriptions = useMemo(() => {
     if (!subscriptions) return [];
     const active = subscriptions.filter((s: Subscription) => s.is_active);
-    if (selectedPaymentType === "all") return active;
-    if (selectedPaymentType === "no_card") return active.filter((s: Subscription) => !s.card_id);
-    return active.filter((s: Subscription) => s.payment_type === selectedPaymentType);
-  }, [subscriptions, selectedPaymentType]);
 
-  // Count subscriptions by payment type for badges
-  const paymentTypeCounts = useMemo(() => {
+    if (filterType === "mode") {
+      if (selectedPaymentMode === "all") return active;
+      if (selectedPaymentMode === "no_card") return active.filter((s: Subscription) => !s.card_id);
+      return active.filter((s: Subscription) => s.payment_mode === selectedPaymentMode);
+    } else {
+      // Filter by category
+      if (selectedCategoryId === "all") return active;
+      if (selectedCategoryId === "uncategorized") return active.filter((s: Subscription) => !s.category_id);
+      return active.filter((s: Subscription) => s.category_id === selectedCategoryId);
+    }
+  }, [subscriptions, filterType, selectedPaymentMode, selectedCategoryId]);
+
+  // Count subscriptions by payment mode for badges
+  const paymentModeCounts = useMemo(() => {
     if (!subscriptions) return {};
     const active = subscriptions.filter((s: Subscription) => s.is_active);
     const counts: Record<string, number> = { all: active.length };
-    for (const type of Object.keys(PAYMENT_TYPE_LABELS)) {
-      counts[type] = active.filter((s: Subscription) => s.payment_type === type).length;
+    for (const mode of Object.keys(PAYMENT_MODE_LABELS)) {
+      counts[mode] = active.filter((s: Subscription) => s.payment_mode === mode).length;
     }
     // Count subscriptions without a card assigned
     counts["no_card"] = active.filter((s: Subscription) => !s.card_id).length;
     return counts;
   }, [subscriptions]);
 
-  // Get visible tabs for keyboard navigation
+  // Count subscriptions by category for badges
+  const categoryCounts = useMemo(() => {
+    if (!subscriptions) return {};
+    const active = subscriptions.filter((s: Subscription) => s.is_active);
+    const counts: Record<string, number> = { all: active.length };
+    // Count uncategorized
+    counts["uncategorized"] = active.filter((s: Subscription) => !s.category_id).length;
+    // Count by each category
+    for (const cat of categories) {
+      counts[cat.id] = active.filter((s: Subscription) => s.category_id === cat.id).length;
+    }
+    return counts;
+  }, [subscriptions, categories]);
+
+  // Get visible tabs for keyboard navigation (depends on filter type)
   const visibleTabs = useMemo(() => {
-    return ALL_PAYMENT_TYPES.filter(
-      (type) => type === "all" || (paymentTypeCounts[type] || 0) > 0
+    return ALL_PAYMENT_MODES.filter(
+      (mode) => mode === "all" || (paymentModeCounts[mode] || 0) > 0
     );
-  }, [paymentTypeCounts]);
+  }, [paymentModeCounts]);
+
+  // Get visible category tabs
+  const visibleCategoryTabs = useMemo(() => {
+    const tabs: (string | "all" | "uncategorized")[] = ["all"];
+    // Add categories that have subscriptions
+    for (const cat of categories) {
+      if ((categoryCounts[cat.id] || 0) > 0) {
+        tabs.push(cat.id);
+      }
+    }
+    // Add uncategorized if there are any
+    if ((categoryCounts["uncategorized"] || 0) > 0) {
+      tabs.push("uncategorized");
+    }
+    return tabs;
+  }, [categories, categoryCounts]);
 
   // Keyboard navigation for filter tabs
   const handleFilterKeyDown = useCallback(
-    (e: KeyboardEvent<HTMLButtonElement>, currentType: PaymentType | "all" | "no_card") => {
-      const currentIndex = visibleTabs.indexOf(currentType);
+    (e: KeyboardEvent<HTMLButtonElement>, currentMode: PaymentMode | "all" | "no_card") => {
+      const currentIndex = visibleTabs.indexOf(currentMode);
       let nextIndex = currentIndex;
 
       if (e.key === "ArrowRight" || e.key === "ArrowDown") {
@@ -581,8 +642,8 @@ export function SubscriptionList({ initialFilter }: SubscriptionListProps) {
       }
 
       if (nextIndex !== currentIndex) {
-        const nextType = visibleTabs[nextIndex];
-        setSelectedPaymentType(nextType);
+        const nextMode = visibleTabs[nextIndex];
+        setSelectedPaymentMode(nextMode);
         // Focus the new tab
         const buttons = filterTabsRef.current?.querySelectorAll<HTMLButtonElement>('[role="tab"]');
         buttons?.[nextIndex]?.focus();
@@ -661,8 +722,11 @@ export function SubscriptionList({ initialFilter }: SubscriptionListProps) {
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">Your Payments</h2>
               <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                 {filteredSubscriptions.length} active payment{filteredSubscriptions.length !== 1 ? "s" : ""}
-                {selectedPaymentType !== "all" && (
-                  <span className="hidden sm:inline"> ({selectedPaymentType === "no_card" ? "No Card Assigned" : PAYMENT_TYPE_LABELS[selectedPaymentType]})</span>
+                {filterType === "mode" && selectedPaymentMode !== "all" && (
+                  <span className="hidden sm:inline"> ({selectedPaymentMode === "no_card" ? "No Card Assigned" : PAYMENT_MODE_LABELS[selectedPaymentMode]})</span>
+                )}
+                {filterType === "category" && selectedCategoryId !== "all" && (
+                  <span className="hidden sm:inline"> ({selectedCategoryId === "uncategorized" ? "Uncategorized" : categories.find(c => c.id === selectedCategoryId)?.name || ""})</span>
                 )}
               </p>
             </div>
@@ -680,67 +744,221 @@ export function SubscriptionList({ initialFilter }: SubscriptionListProps) {
           </motion.button>
         </motion.div>
 
-        {/* Payment Type Filter Tabs - horizontally scrollable on mobile */}
+        {/* Filter Type Toggle + Filter Tabs */}
         <motion.div
-          ref={filterTabsRef}
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="flex gap-2 pb-2 overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap"
-          role="tablist"
-          aria-label="Filter payments by type"
+          className="space-y-3"
         >
-          {ALL_PAYMENT_TYPES.map((type) => {
-            const count = paymentTypeCounts[type] || 0;
-            const isSelected = selectedPaymentType === type;
-            const label = type === "all" ? "All" : type === "no_card" ? "No Card" : PAYMENT_TYPE_LABELS[type];
-            const IconComponent = PAYMENT_TYPE_ICON_COMPONENTS[type];
-
-            // Only show tabs with items (or "All")
-            if (type !== "all" && count === 0) return null;
-
-            return (
-              <motion.button
-                key={type}
-                onClick={() => setSelectedPaymentType(type)}
-                onKeyDown={(e) => handleFilterKeyDown(e, type)}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+          {/* Filter Type Toggle */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Filter by:</span>
+            <div className="flex rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5">
+              <button
+                onClick={() => setFilterType("mode")}
                 className={cn(
-                  "flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap shrink-0",
-                  isSelected
-                    ? type === "no_card"
-                      ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg"
-                      : "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg"
-                    : type === "no_card"
-                      ? "glass-card-subtle text-amber-600 dark:text-amber-400 hover:shadow-md border border-amber-200 dark:border-amber-800"
-                      : "glass-card-subtle text-gray-600 dark:text-gray-400 hover:shadow-md"
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200",
+                  filterType === "mode"
+                    ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm"
+                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                 )}
-                role="tab"
-                aria-selected={isSelected}
-                aria-controls="payments-list"
-                tabIndex={isSelected ? 0 : -1}
               >
-                <IconComponent className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />
-                <span>{label}</span>
-                <span
+                <Layers className="w-3.5 h-3.5" />
+                Mode
+              </button>
+              <button
+                onClick={() => setFilterType("category")}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200",
+                  filterType === "category"
+                    ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm"
+                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                )}
+              >
+                <FolderOpen className="w-3.5 h-3.5" />
+                Category
+              </button>
+            </div>
+          </div>
+
+          {/* Filter Tabs - conditionally render based on filter type */}
+          <div
+            ref={filterTabsRef}
+            className="flex gap-2 pb-2 overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap"
+            role="tablist"
+            aria-label={filterType === "mode" ? "Filter payments by mode" : "Filter payments by category"}
+          >
+            {filterType === "mode" ? (
+              // Payment Mode Tabs
+              <>
+                {ALL_PAYMENT_MODES.map((mode) => {
+                  const count = paymentModeCounts[mode] || 0;
+                  const isSelected = selectedPaymentMode === mode;
+                  const label = mode === "all" ? "All" : mode === "no_card" ? "No Card" : PAYMENT_MODE_LABELS[mode];
+                  const IconComponent = PAYMENT_MODE_ICON_COMPONENTS[mode];
+
+                  // Only show tabs with items (or "All")
+                  if (mode !== "all" && count === 0) return null;
+
+                  return (
+                    <motion.button
+                      key={mode}
+                      onClick={() => setSelectedPaymentMode(mode)}
+                      onKeyDown={(e) => handleFilterKeyDown(e, mode)}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className={cn(
+                        "flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap shrink-0",
+                        isSelected
+                          ? mode === "no_card"
+                            ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg"
+                            : "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg"
+                          : mode === "no_card"
+                            ? "glass-card-subtle text-amber-600 dark:text-amber-400 hover:shadow-md border border-amber-200 dark:border-amber-800"
+                            : "glass-card-subtle text-gray-600 dark:text-gray-400 hover:shadow-md"
+                      )}
+                      role="tab"
+                      aria-selected={isSelected}
+                      aria-controls="payments-list"
+                      tabIndex={isSelected ? 0 : -1}
+                    >
+                      <IconComponent className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />
+                      <span>{label}</span>
+                      <span
+                        className={cn(
+                          "ml-0.5 sm:ml-1 px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold",
+                          isSelected
+                            ? "bg-white/20 text-white"
+                            : "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+                        )}
+                        aria-label={`${count} ${label === "All" ? "total" : label} payments`}
+                      >
+                        {count}
+                      </span>
+                    </motion.button>
+                  );
+                })}
+              </>
+            ) : (
+              // Category Tabs
+              <>
+                {/* All tab */}
+                <motion.button
+                  key="all"
+                  onClick={() => setSelectedCategoryId("all")}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   className={cn(
-                    "ml-0.5 sm:ml-1 px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold",
-                    isSelected
-                      ? "bg-white/20 text-white"
-                      : "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+                    "flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap shrink-0",
+                    selectedCategoryId === "all"
+                      ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg"
+                      : "glass-card-subtle text-gray-600 dark:text-gray-400 hover:shadow-md"
                   )}
-                  aria-label={`${count} ${label === "All" ? "total" : label} payments`}
+                  role="tab"
+                  aria-selected={selectedCategoryId === "all"}
+                  aria-controls="payments-list"
+                  tabIndex={selectedCategoryId === "all" ? 0 : -1}
                 >
-                  {count}
-                </span>
-              </motion.button>
-            );
-          })}
+                  <LayoutGrid className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />
+                  <span>All</span>
+                  <span
+                    className={cn(
+                      "ml-0.5 sm:ml-1 px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold",
+                      selectedCategoryId === "all"
+                        ? "bg-white/20 text-white"
+                        : "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+                    )}
+                  >
+                    {categoryCounts["all"] || 0}
+                  </span>
+                </motion.button>
+
+                {/* Category tabs */}
+                {categories.map((cat) => {
+                  const count = categoryCounts[cat.id] || 0;
+                  if (count === 0) return null;
+                  const isSelected = selectedCategoryId === cat.id;
+
+                  return (
+                    <motion.button
+                      key={cat.id}
+                      onClick={() => setSelectedCategoryId(cat.id)}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className={cn(
+                        "flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap shrink-0",
+                        isSelected
+                          ? "text-white shadow-lg"
+                          : "glass-card-subtle hover:shadow-md"
+                      )}
+                      style={{
+                        backgroundColor: isSelected ? cat.color : undefined,
+                        color: isSelected ? "white" : cat.color,
+                        borderColor: isSelected ? undefined : cat.color,
+                        borderWidth: isSelected ? undefined : "1px",
+                      }}
+                      role="tab"
+                      aria-selected={isSelected}
+                      aria-controls="payments-list"
+                      tabIndex={isSelected ? 0 : -1}
+                    >
+                      {cat.icon && <span aria-hidden="true">{cat.icon}</span>}
+                      <span>{cat.name}</span>
+                      <span
+                        className={cn(
+                          "ml-0.5 sm:ml-1 px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold",
+                          isSelected
+                            ? "bg-white/20 text-white"
+                            : "bg-gray-200 dark:bg-gray-700"
+                        )}
+                        style={{ color: isSelected ? "white" : cat.color }}
+                      >
+                        {count}
+                      </span>
+                    </motion.button>
+                  );
+                })}
+
+                {/* Uncategorized tab */}
+                {(categoryCounts["uncategorized"] || 0) > 0 && (
+                  <motion.button
+                    key="uncategorized"
+                    onClick={() => setSelectedCategoryId("uncategorized")}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className={cn(
+                      "flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap shrink-0",
+                      selectedCategoryId === "uncategorized"
+                        ? "bg-gradient-to-r from-gray-500 to-gray-600 text-white shadow-lg"
+                        : "glass-card-subtle text-gray-500 dark:text-gray-400 hover:shadow-md border border-gray-300 dark:border-gray-600"
+                    )}
+                    role="tab"
+                    aria-selected={selectedCategoryId === "uncategorized"}
+                    aria-controls="payments-list"
+                    tabIndex={selectedCategoryId === "uncategorized" ? 0 : -1}
+                  >
+                    <AlertCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />
+                    <span>Uncategorized</span>
+                    <span
+                      className={cn(
+                        "ml-0.5 sm:ml-1 px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold",
+                        selectedCategoryId === "uncategorized"
+                          ? "bg-white/20 text-white"
+                          : "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+                      )}
+                    >
+                      {categoryCounts["uncategorized"]}
+                    </span>
+                  </motion.button>
+                )}
+              </>
+            )}
+          </div>
         </motion.div>
 
         {/* Content */}
-        <div id="payments-list" role="tabpanel" aria-label={`${selectedPaymentType === "all" ? "All" : selectedPaymentType === "no_card" ? "No Card Assigned" : PAYMENT_TYPE_LABELS[selectedPaymentType]} payments`}>
+        <div id="payments-list" role="tabpanel" aria-label={`${selectedPaymentMode === "all" ? "All" : selectedPaymentMode === "no_card" ? "No Card Assigned" : PAYMENT_MODE_LABELS[selectedPaymentMode]} payments`}>
         {filteredSubscriptions.length === 0 ? (
           <EmptyState onAdd={() => setIsAddModalOpen(true)} />
         ) : (

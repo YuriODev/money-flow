@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
 import { SubscriptionList } from "@/components/SubscriptionList";
 import { AgentChat } from "@/components/AgentChat";
 import { StatsPanel } from "@/components/StatsPanel";
@@ -15,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { useKeyboardShortcuts, SHORTCUTS } from "@/hooks/useKeyboardShortcuts";
 import { useTheme } from "@/lib/theme-context";
 import { useAuth } from "@/lib/auth-context";
+import { userApi } from "@/lib/api";
 
 type ViewType = "list" | "calendar" | "cards" | "agent";
 const VALID_VIEWS: ViewType[] = ["list", "calendar", "cards", "agent"];
@@ -48,6 +50,15 @@ export default function Home() {
   const { toggleTheme } = useTheme();
   const { isAuthenticated } = useAuth();
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
+  const [preferencesApplied, setPreferencesApplied] = useState(false);
+
+  // Fetch user preferences to get default view
+  const { data: preferences } = useQuery({
+    queryKey: ["userPreferences"],
+    queryFn: () => userApi.getPreferences(),
+    enabled: isAuthenticated,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
 
   // Get initial view from URL params (computed once, no effect needed)
   const initialView = useMemo(() => {
@@ -56,6 +67,22 @@ export default function Home() {
   }, []);
 
   const [view, setView] = useState<ViewType>(initialView);
+
+  // Apply user's default view preference on first load (only if no URL param)
+  useEffect(() => {
+    if (preferences && !preferencesApplied && isAuthenticated) {
+      const viewParam = searchParams.get("view");
+      // Only apply default view if user hasn't explicitly set a view via URL
+      if (!viewParam && preferences.default_view) {
+        const defaultView = preferences.default_view as ViewType;
+        if (VALID_VIEWS.includes(defaultView) && defaultView !== view) {
+          setView(defaultView);
+          router.replace(`/?view=${defaultView}`, { scroll: false });
+        }
+      }
+      setPreferencesApplied(true);
+    }
+  }, [preferences, preferencesApplied, isAuthenticated, searchParams, view, router]);
 
   // Sync view state when URL changes (e.g., browser back/forward)
   useEffect(() => {

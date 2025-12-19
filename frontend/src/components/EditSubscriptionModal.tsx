@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { subscriptionApi, cardsApi, type Subscription, type PaymentType, PAYMENT_TYPE_LABELS } from "@/lib/api";
+import { subscriptionApi, cardsApi, type Subscription, type PaymentMode, PAYMENT_MODE_LABELS, PAYMENT_MODE_ICONS } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { X, Save, Loader2, Calendar, CreditCard, Wallet, ChevronDown, Tag, FolderOpen } from "lucide-react";
 import { toast } from "@/components/Toast";
@@ -49,9 +49,9 @@ export function EditSubscriptionModal({
   const [startDate, setStartDate] = useState(subscription.start_date);
   const [cardId, setCardId] = useState<string | null>(subscription.card_id || null);
   const [categoryId, setCategoryId] = useState<string | null>(subscription.category_id || null);
-  const [paymentType, setPaymentType] = useState<PaymentType>(subscription.payment_type);
+  const [paymentMode, setPaymentMode] = useState<PaymentMode>(subscription.payment_mode);
   const [isCardDropdownOpen, setIsCardDropdownOpen] = useState(false);
-  const [isPaymentTypeDropdownOpen, setIsPaymentTypeDropdownOpen] = useState(false);
+  const [isPaymentModeDropdownOpen, setIsPaymentModeDropdownOpen] = useState(false);
 
   // Fetch available cards
   const { data: cards = [] } = useQuery({
@@ -68,11 +68,11 @@ export function EditSubscriptionModal({
     setStartDate(subscription.start_date);
     setCardId(subscription.card_id || null);
     setCategoryId(subscription.category_id || null);
-    setPaymentType(subscription.payment_type);
+    setPaymentMode(subscription.payment_mode);
   }, [subscription]);
 
   const updateMutation = useMutation({
-    mutationFn: (data: { amount: number; currency: string; start_date: string; card_id?: string | null; category_id?: string | null; payment_type?: PaymentType }) =>
+    mutationFn: (data: { amount: number; currency: string; start_date: string; card_id?: string | null; category_id?: string | null; payment_mode?: PaymentMode }) =>
       subscriptionApi.update(subscription.id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
@@ -97,7 +97,7 @@ export function EditSubscriptionModal({
       start_date: startDate,
       card_id: cardId,
       category_id: categoryId,
-      payment_type: paymentType,
+      payment_mode: paymentMode,
     });
   };
 
@@ -221,36 +221,37 @@ export function EditSubscriptionModal({
                 </div>
               </div>
 
-              {/* Payment Type Selector */}
+              {/* Payment Mode Selector */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <div className="flex items-center gap-2">
                     <Tag className="w-4 h-4" />
-                    Payment Type
+                    Payment Mode
                   </div>
                 </label>
                 <div className="relative">
                   <button
                     type="button"
-                    onClick={() => setIsPaymentTypeDropdownOpen(!isPaymentTypeDropdownOpen)}
+                    onClick={() => setIsPaymentModeDropdownOpen(!isPaymentModeDropdownOpen)}
                     className={cn(
                       "w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 text-left",
                       "focus:ring-0 focus:border-blue-400 dark:focus:border-blue-500 focus:shadow-lg focus:shadow-blue-100 dark:focus:shadow-blue-900/50",
-                      isPaymentTypeDropdownOpen ? "border-blue-400 dark:border-blue-500 shadow-lg shadow-blue-100 dark:shadow-blue-900/50" : "border-gray-200 dark:border-gray-700",
+                      isPaymentModeDropdownOpen ? "border-blue-400 dark:border-blue-500 shadow-lg shadow-blue-100 dark:shadow-blue-900/50" : "border-gray-200 dark:border-gray-700",
                       "bg-white/50 dark:bg-gray-800/50 flex items-center justify-between"
                     )}
                   >
-                    <span className="font-medium text-gray-900 dark:text-gray-100">
-                      {PAYMENT_TYPE_LABELS[paymentType]}
+                    <span className="flex items-center gap-2 font-medium text-gray-900 dark:text-gray-100">
+                      <span>{PAYMENT_MODE_ICONS[paymentMode]}</span>
+                      {PAYMENT_MODE_LABELS[paymentMode]}
                     </span>
                     <ChevronDown className={cn(
                       "w-5 h-5 text-gray-400 dark:text-gray-500 transition-transform",
-                      isPaymentTypeDropdownOpen && "rotate-180"
+                      isPaymentModeDropdownOpen && "rotate-180"
                     )} />
                   </button>
 
                   <AnimatePresence>
-                    {isPaymentTypeDropdownOpen && (
+                    {isPaymentModeDropdownOpen && (
                       <motion.div
                         initial={{ opacity: 0, y: -10, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -258,24 +259,25 @@ export function EditSubscriptionModal({
                         transition={{ duration: 0.15 }}
                         className="absolute z-[100] w-full mt-2 py-2 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 max-h-64 overflow-y-auto"
                       >
-                        {(Object.keys(PAYMENT_TYPE_LABELS) as PaymentType[]).map((type) => (
+                        {(Object.keys(PAYMENT_MODE_LABELS) as PaymentMode[]).map((mode) => (
                           <button
-                            key={type}
+                            key={mode}
                             type="button"
                             onClick={() => {
-                              setPaymentType(type);
-                              setIsPaymentTypeDropdownOpen(false);
+                              setPaymentMode(mode);
+                              setIsPaymentModeDropdownOpen(false);
                             }}
                             className={cn(
-                              "w-full px-4 py-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors",
-                              paymentType === type && "bg-blue-50 dark:bg-blue-900/30"
+                              "w-full px-4 py-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-2",
+                              paymentMode === mode && "bg-blue-50 dark:bg-blue-900/30"
                             )}
                           >
+                            <span>{PAYMENT_MODE_ICONS[mode]}</span>
                             <span className={cn(
                               "font-medium",
-                              paymentType === type ? "text-blue-600 dark:text-blue-400" : "text-gray-700 dark:text-gray-300"
+                              paymentMode === mode ? "text-blue-600 dark:text-blue-400" : "text-gray-700 dark:text-gray-300"
                             )}>
-                              {PAYMENT_TYPE_LABELS[type]}
+                              {PAYMENT_MODE_LABELS[mode]}
                             </span>
                           </button>
                         ))}
@@ -283,10 +285,10 @@ export function EditSubscriptionModal({
                     )}
                   </AnimatePresence>
 
-                  {isPaymentTypeDropdownOpen && (
+                  {isPaymentModeDropdownOpen && (
                     <div
                       className="fixed inset-0 z-[99]"
-                      onClick={() => setIsPaymentTypeDropdownOpen(false)}
+                      onClick={() => setIsPaymentModeDropdownOpen(false)}
                     />
                   )}
                 </div>
