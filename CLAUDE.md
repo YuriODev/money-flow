@@ -50,9 +50,10 @@
 | 5.5.1.1 | ✅ DONE | PDF parser with pdfplumber |
 | 5.5.1.2 | ✅ DONE | CSV parser with dynamic bank lookup |
 | 5.5.1.3 | ✅ DONE | OFX/QIF parser |
-| 5.5.2.1 | 🔜 TODO | AI extraction of recurring patterns |
-| 5.5.2.2 | 🔜 TODO | Preview and confirm import UI |
-| 5.5.2.3 | 🔜 TODO | Duplicate detection and merge |
+| 5.5.2.1 | ✅ DONE | AI extraction of recurring patterns |
+| 5.5.2.2 | ✅ DONE | Statement import API endpoints |
+| 5.5.2.3 | ✅ DONE | Duplicate detection service |
+| 5.5.2.4 | 🔜 TODO | Preview and confirm import UI (Frontend) |
 | 5.5.3 | 🔜 TODO | Unit tests for statement parsers |
 
 **Scope Decision:** Email scanning (Gmail/Outlook) deferred to Sprint 5.6 to focus on bank statement parsing quality.
@@ -127,6 +128,50 @@
   - QFX (Quicken OFX variant) support
   - Transaction type mapping (credit, debit, int, div, fee, etc.)
   - QIF field parsing (D=date, T=amount, P=payee, M=memo, etc.)
+
+**Sprint 5.5 Features Completed (Phase 3 - AI Pattern Detection & Import):**
+- **Statement AI Service** (`src/services/statement_ai_service.py`)
+  - Transaction grouping by normalized merchant name
+  - Recurring pattern detection (frequency, amount consistency)
+  - Payment type classification using 100+ keyword patterns
+  - Claude Haiku integration for enhanced AI classification
+  - Confidence scoring (count score, amount score, timing score)
+  - DetectedPattern dataclass with all pattern attributes
+  - FrequencyType enum (weekly, biweekly, monthly, quarterly, yearly, irregular)
+  - PaymentTypeClassification enum (subscription, housing, utility, insurance, etc.)
+- **Duplicate Detection Service** (`src/services/duplicate_detector.py`)
+  - Fuzzy name matching using SequenceMatcher
+  - Amount similarity checking (10% tolerance)
+  - Frequency alignment verification
+  - DuplicateMatch dataclass with similarity scores
+  - Configurable thresholds for matching
+- **Statement Import Models** (`src/models/statement_import.py`)
+  - StatementImportJob model for tracking import progress
+  - DetectedSubscription model for storing AI-detected patterns
+  - ImportJobStatus enum (pending, processing, ready, completed, failed, cancelled)
+  - DetectionStatus enum (pending, selected, skipped, imported, duplicate, merged)
+  - FileType enum (pdf, csv, ofx, qfx, qif)
+- **Statement Import Schemas** (`src/schemas/statement.py`)
+  - ImportJobCreate, ImportJobResponse, ImportJobListResponse
+  - DetectedSubscriptionResponse, DetectedSubscriptionUpdate
+  - ConfirmImportRequest, ConfirmImportResponse
+  - ImportPreviewResponse, ImportPreviewSummary
+  - DuplicateMatch, DuplicateCheckResponse
+- **Statement Import API** (`src/api/statement_import.py`)
+  - POST /api/v1/import/upload - Upload and process statement
+  - GET /api/v1/import/jobs - List import jobs
+  - GET /api/v1/import/jobs/{id} - Get import job details
+  - GET /api/v1/import/jobs/{id}/status - Get job processing status
+  - GET /api/v1/import/jobs/{id}/preview - Preview detected subscriptions
+  - GET /api/v1/import/jobs/{id}/detected - List detected subscriptions
+  - PATCH /api/v1/import/detected/{id} - Update detection
+  - POST /api/v1/import/detected/bulk-update - Bulk update detections
+  - POST /api/v1/import/jobs/{id}/confirm - Confirm and import
+  - GET /api/v1/import/jobs/{id}/duplicates - Check for duplicates
+  - DELETE /api/v1/import/jobs/{id} - Cancel import job
+- **Database Migration** (`69107cd3b0ea_add_statement_import_tables.py`)
+  - statement_import_jobs table with all fields and indexes
+  - detected_subscriptions table with foreign keys
 
 ### Sprint 5.4 Tasks (Weeks 23-24) - Icons & AI Settings ✅
 
