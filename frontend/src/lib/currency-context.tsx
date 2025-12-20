@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from "react";
 import { userApi } from "./api";
+import { setExchangeRates } from "./utils";
 
 /**
  * Currency region identifiers matching backend regions.
@@ -231,6 +232,30 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     fetchCurrencies();
   }, [fetchCurrencies]);
+
+  // Fetch exchange rates on mount (and cache them globally for utils.ts)
+  const fetchExchangeRates = useCallback(async () => {
+    try {
+      const response = await fetch("/api/v1/subscriptions/exchange-rates");
+      if (!response.ok) {
+        throw new Error(`Failed to fetch exchange rates: ${response.status}`);
+      }
+      const data = await response.json();
+      if (data.rates) {
+        // Cache rates globally in utils.ts
+        setExchangeRates(data.rates);
+        console.debug(`Loaded ${Object.keys(data.rates).length} exchange rates`);
+      }
+    } catch (err) {
+      console.error("Failed to fetch exchange rates:", err);
+      // Continue with whatever rates were already cached
+    }
+  }, []);
+
+  // Fetch exchange rates on mount
+  useEffect(() => {
+    fetchExchangeRates();
+  }, [fetchExchangeRates]);
 
   // Sync currency from user preferences (called after login or on mount if authenticated)
   const syncFromPreferences = useCallback(async () => {

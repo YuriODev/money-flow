@@ -126,6 +126,37 @@ async def get_summary(
     return await service.get_summary(currency_service=currency_service, payment_type=payment_type)
 
 
+@router.get("/exchange-rates", response_model=dict)
+@limiter.limit(rate_limit_get)
+async def get_exchange_rates(
+    request: Request,
+) -> dict:
+    """Get current exchange rates (USD-based).
+
+    Fetches live exchange rates from the currency API.
+    Rates are relative to USD (1 USD = X currency).
+
+    Returns:
+        Dictionary with "rates" containing currency code to rate mapping.
+
+    Example:
+        GET /api/subscriptions/exchange-rates
+        Returns: {"rates": {"USD": 1.0, "GBP": 0.79, "EUR": 0.92, ...}}
+    """
+    currency_service = CurrencyService(api_key=settings.exchange_rate_api_key or None)
+    try:
+        rates = await currency_service._get_rates()
+        # Convert Decimal to float for JSON serialization
+        float_rates = {code: float(rate) for code, rate in rates.items()}
+        return {"rates": float_rates, "base": "USD"}
+    except Exception as e:
+        logger.error(f"Failed to fetch exchange rates: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Unable to fetch exchange rates",
+        )
+
+
 @router.get("/{subscription_id}", response_model=SubscriptionResponse)
 @limiter.limit(rate_limit_get)
 async def get_subscription(
