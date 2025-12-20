@@ -2,9 +2,9 @@
 
 > **Comprehensive Roadmap for Production-Ready Enhancement**
 >
-> **Version**: 2.1.0
+> **Version**: 2.2.0
 > **Created**: December 13, 2025
-> **Updated**: December 18, 2025
+> **Updated**: December 20, 2025
 > **Project**: Money Flow (Subscription Tracker)
 > **Total Duration**: 36 Weeks (6 Phases)
 > **Estimated Effort**: ~655 hours (400 base + 240 Settings + 15 Launch)
@@ -74,8 +74,8 @@ This master plan transforms Money Flow from a well-architected personal project 
 | **5** | 5.2 | Cards & Categories | 19-20 | 26h | ✅ Complete |
 | **5** | 5.3 | Notifications & Export | 21-22 | 28h | ✅ Complete |
 | **5** | 5.4 | Icons & AI Settings | 23-24 | 27h | ✅ Complete |
-| **5** | 5.5 | Smart Import (AI) | 25-27 | 46h | 🔜 Not Started |
-| **5** | 5.6 | Integrations | 28-30 | 40h | 🔜 Not Started |
+| **5** | 5.5 | Smart Import (AI) | 25-27 | 30h | 🔄 In Progress |
+| **5** | 5.6 | Integrations & Email | 28-30 | 56h | 🔜 Not Started |
 | **5** | 5.7 | Open Banking | 31-34 | 46h | 🔜 Not Started |
 | **6** | 6.1 | Production Launch | 35-36 | 15h | 🔜 Not Started |
 
@@ -1597,42 +1597,68 @@ Intelligent icon management and AI assistant customization.
 
 ---
 
-## Sprint 5.5: Smart Import - AI Features (Weeks 25-27) 🔜
+## Sprint 5.5: Smart Import - Bank Statements (Weeks 25-27) 🔄
 
 ### Overview
-AI-powered data import from bank statements and email receipts.
+AI-powered data import from bank statements. Email scanning deferred to Sprint 5.6.
 
-| Task ID | Task Name | Priority | Hours | Dependencies | Deliverable |
-|---------|-----------|----------|-------|--------------|-------------|
-| **5.5.1** | **Bank Statement Import** | 🟠 | 24h | None | Statement parser |
-| 5.5.1.1 | PDF text extraction (PyPDF2, pdfplumber) | 🟠 | 4h | - | PDF parsing |
-| 5.5.1.2 | CSV/OFX/QIF format support | 🟠 | 4h | - | Format support |
-| 5.5.1.3 | AI extraction of recurring patterns | 🟠 | 8h | 5.5.1.1 | Pattern detection |
-| 5.5.1.4 | Preview and confirm import UI | 🟠 | 4h | 5.5.1.3 | Import wizard |
-| 5.5.1.5 | Duplicate detection and merge | 🟠 | 4h | 5.5.1.4 | Deduplication |
-| **5.5.2** | **Email Receipt Scanning** | 🟡 | 16h | None | Email scanner |
-| 5.5.2.1 | Gmail OAuth integration | 🟡 | 4h | - | Gmail auth |
-| 5.5.2.2 | Email parsing for subscriptions | 🟡 | 6h | 5.5.2.1 | Email parsing |
-| 5.5.2.3 | Receipt template matching | 🟡 | 4h | 5.5.2.2 | Template matching |
-| 5.5.2.4 | Outlook support | 🟢 | 2h | 5.5.2.2 | Outlook auth |
-| **5.5.3** | **Tests** | 🔴 | 6h | 5.5.2 | Test coverage |
+| Task ID | Task Name | Priority | Hours | Dependencies | Status | Deliverable |
+|---------|-----------|----------|-------|--------------|--------|-------------|
+| **5.5.0** | **Bank Profile Database** | 🔴 | 9h | None | ✅ | Bank DB |
+| 5.5.0.1 | BankProfile model with JSONB mappings | 🔴 | 2h | - | ✅ DONE | Bank model |
+| 5.5.0.2 | Bank CRUD API endpoints | 🔴 | 2h | 5.5.0.1 | ✅ DONE | Bank API |
+| 5.5.0.3 | Bank seed data (33 banks, 7 countries) | 🔴 | 3h | 5.5.0.2 | ✅ DONE | Seed JSON |
+| 5.5.0.4 | Bank auto-detection from headers | 🟠 | 2h | 5.5.0.3 | ✅ DONE | Detection logic |
+| **5.5.1** | **Statement Parsers** | 🟠 | 12h | 5.5.0 | ✅ | Parsers |
+| 5.5.1.1 | PDF text extraction (pdfplumber) | 🟠 | 4h | - | ✅ DONE | PDF parsing |
+| 5.5.1.2 | CSV parser with dynamic bank lookup | 🟠 | 4h | 5.5.0 | ✅ DONE | CSV parsing |
+| 5.5.1.3 | OFX/QIF parser (ofxparse) | 🟠 | 4h | - | ✅ DONE | OFX/QIF parsing |
+| **5.5.2** | **AI Pattern Detection** | 🟠 | 16h | 5.5.1 | 🔜 | AI extraction |
+| 5.5.2.1 | AI extraction of recurring patterns | 🟠 | 8h | 5.5.1 | 🔜 TODO | Pattern detection |
+| 5.5.2.2 | Preview and confirm import UI | 🟠 | 4h | 5.5.2.1 | 🔜 TODO | Import wizard |
+| 5.5.2.3 | Duplicate detection and merge | 🟠 | 4h | 5.5.2.2 | 🔜 TODO | Deduplication |
+| **5.5.3** | **Tests** | 🔴 | 6h | 5.5.2 | 🔜 | Test coverage |
+| 5.5.3.1 | Unit tests for parsers and bank service | 🔴 | 4h | 5.5.2 | 🔜 TODO | Parser tests |
+| 5.5.3.2 | Integration tests for import API | 🔴 | 2h | 5.5.3.1 | 🔜 TODO | API tests |
+
+**Sprint 5.5 Completed Features:**
+- ✅ **Bank Profile Database** (`src/models/bank_profile.py`)
+  - BankProfile model with JSONB column mappings
+  - Support for 33 banks (UK, US, BR, DE, AR, UA, NL)
+  - Auto-detection from CSV headers and filename patterns
+  - Bank search and filtering API
+- ✅ **Statement Parsers** (`src/services/parsers/`)
+  - PDF parser with pdfplumber for text/table extraction
+  - CSV parser with dynamic bank profile lookup
+  - OFX/QIF parser with ofxparse library
+
+**Sprint 5.5 Remaining:**
+- 🔜 AI pattern detection for recurring payments
+- 🔜 Preview and confirm import UI
+- 🔜 Duplicate detection and merge
+- 🔜 Unit and integration tests
 
 **Sprint 5.5 Deliverables:**
-- 📦 Bank statement PDF/CSV import with AI extraction
-- 📦 Automatic recurring payment detection
-- 📦 Gmail/Outlook email scanning
+- 📦 Bank profile database with 33+ banks
+- 📦 Bank statement PDF/CSV/OFX import
+- 📦 AI-powered recurring payment detection
 - 📦 Smart duplicate detection
-- ⏱️ **Total: ~46 hours**
+- ⏱️ **Total: ~30 hours** (reduced from 46h, email deferred to 5.6)
 
 ---
 
-## Sprint 5.6: Integrations (Weeks 28-30) 🔜
+## Sprint 5.6: Integrations & Email Scanning (Weeks 28-30) 🔜
 
 ### Overview
-Third-party calendar integration and webhook support.
+Third-party calendar integration, webhook support, and email receipt scanning (deferred from 5.5).
 
 | Task ID | Task Name | Priority | Hours | Dependencies | Deliverable |
 |---------|-----------|----------|-------|--------------|-------------|
+| **5.6.0** | **Email Receipt Scanning** | 🟡 | 16h | None | Email scanner |
+| 5.6.0.1 | Gmail OAuth integration | 🟡 | 4h | - | Gmail auth |
+| 5.6.0.2 | Email parsing for subscriptions | 🟡 | 6h | 5.6.0.1 | Email parsing |
+| 5.6.0.3 | Receipt template matching | 🟡 | 4h | 5.6.0.2 | Template matching |
+| 5.6.0.4 | Outlook support | 🟢 | 2h | 5.6.0.2 | Outlook auth |
 | **5.6.1** | **Calendar Integration** | 🟠 | 16h | None | Calendar sync |
 | 5.6.1.1 | iCal feed generation | 🟠 | 4h | - | iCal endpoint |
 | 5.6.1.2 | Google Calendar OAuth | 🟠 | 6h | - | Google sync |
@@ -1649,11 +1675,12 @@ Third-party calendar integration and webhook support.
 | **5.6.4** | **Tests** | 🔴 | 4h | 5.6.3 | Test coverage |
 
 **Sprint 5.6 Deliverables:**
+- 📦 Gmail/Outlook email receipt scanning (moved from 5.5)
 - 📦 iCal feed for calendar subscriptions
 - 📦 Google Calendar bidirectional sync
 - 📦 Webhook system for third-party integrations
 - 📦 IFTTT/Zapier compatibility
-- ⏱️ **Total: ~40 hours**
+- ⏱️ **Total: ~56 hours** (includes 16h from 5.5)
 
 ---
 
