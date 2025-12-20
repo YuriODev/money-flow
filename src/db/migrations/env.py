@@ -16,8 +16,7 @@ from src.core.config import settings
 from src.db.database import Base
 
 # Import all models to register them with Base.metadata
-from src.models.rag import Conversation, RAGAnalytics  # noqa: F401
-from src.models.subscription import PaymentHistory, Subscription  # noqa: F401
+from src.models import *  # noqa: F401, F403
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

@@ -6,6 +6,7 @@ from src.models.ai_preferences import (
     IconGenerationStyle,
     SuggestionFrequency,
 )
+from src.models.bank_profile import BankProfile
 from src.models.category import Category
 from src.models.export_history import (
     ExportFormat,
@@ -35,6 +36,7 @@ from src.models.user import User, UserRole
 __all__ = [
     "AIModel",
     "AIPreferences",
+    "BankProfile",
     "CardType",
     "Category",
     "Conversation",

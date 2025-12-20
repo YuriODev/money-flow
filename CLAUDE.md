@@ -33,8 +33,100 @@
 | **Phase 5** | Sprint 5.2 | ✅ Complete | Cards & Categories |
 | **Phase 5** | Sprint 5.3 | ✅ Complete | Notifications & Export |
 | **Phase 5** | Sprint 5.4 | ✅ Complete | Icons & AI Settings |
-| **Phase 5** | Sprints 5.5-5.7 | 🔜 Upcoming | Smart Import, Integrations, Open Banking (~132h remaining) |
+| **Phase 5** | Sprint 5.5 | 🔄 In Progress | Smart Import (Bank Statements) |
+| **Phase 5** | Sprints 5.6-5.7 | 🔜 Upcoming | Integrations, Open Banking (~100h remaining) |
 | **Phase 6** | Sprint 6.1 | 🔜 Upcoming | Production Launch (~15h) |
+
+### Sprint 5.5 Tasks (Weeks 25-27) - Smart Import (AI) 🔄
+
+| Task | Status | Description |
+|------|--------|-------------|
+| 5.5.0.1 | ✅ DONE | Install dependencies (pdfplumber, PyPDF2, ofxparse) |
+| 5.5.0.2 | ✅ DONE | Create base StatementParser class and dataclasses |
+| 5.5.0.3 | ✅ DONE | BankProfile model with JSONB mappings |
+| 5.5.0.4 | ✅ DONE | Bank profiles database migration |
+| 5.5.0.5 | ✅ DONE | Bank seed data JSON (33 banks) |
+| 5.5.0.6 | ✅ DONE | Bank CRUD API endpoints |
+| 5.5.1.1 | ✅ DONE | PDF parser with pdfplumber |
+| 5.5.1.2 | ✅ DONE | CSV parser with dynamic bank lookup |
+| 5.5.1.3 | ✅ DONE | OFX/QIF parser |
+| 5.5.2.1 | 🔜 TODO | AI extraction of recurring patterns |
+| 5.5.2.2 | 🔜 TODO | Preview and confirm import UI |
+| 5.5.2.3 | 🔜 TODO | Duplicate detection and merge |
+| 5.5.3 | 🔜 TODO | Unit tests for statement parsers |
+
+**Scope Decision:** Email scanning (Gmail/Outlook) deferred to Sprint 5.6 to focus on bank statement parsing quality.
+
+**Sprint 5.5 Features Completed (Phase 1 - Bank Infrastructure):**
+- **Bank Profile Model** (`src/models/bank_profile.py`)
+  - BankProfile SQLAlchemy model with JSONB columns
+  - csv_mapping, pdf_patterns, detection_patterns JSONB fields
+  - Country code, currency, logo_url, website fields
+  - is_verified, usage_count tracking
+  - Helper methods for column access
+- **Bank Profile Migration** (`0a1c54d55e2f_add_bank_profiles_table.py`)
+  - bank_profiles table with all fields
+  - Indexes on slug (unique), country_code
+- **Bank Seed Data** (`data/bank_profiles.json`)
+  - 33 banks from 7 countries (GB, US, BR, DE, AR, UA, NL)
+  - UK: Monzo, Revolut, Starling, Barclays, HSBC, Lloyds, NatWest, Santander, Halifax, Nationwide, Metro Bank
+  - US: Chase, Bank of America, Wells Fargo, Citi, Capital One, Discover, American Express, PNC
+  - Brazil: Nubank, Itaú, Bradesco, Banco do Brasil, Inter
+  - Germany: N26, DKB, Commerzbank
+  - Argentina: Banco Galicia, Mercado Pago
+  - Ukraine: PrivatBank, Monobank
+  - Netherlands: ING, ABN AMRO
+- **Bank Service** (`src/services/bank_service.py`)
+  - CRUD operations (get_all, get_by_slug, create, update, delete)
+  - Bank detection from filename, headers, content patterns
+  - Search by name/slug
+  - Countries list with bank counts
+  - Seed from JSON file
+- **Bank Schemas** (`src/schemas/bank.py`)
+  - BankProfileCreate, BankProfileUpdate, BankProfileResponse
+  - BankDetectRequest, BankDetectResponse
+  - BankProfileListResponse, CountryBanksResponse
+  - CSVMappingSchema, DetectionPatternsSchema
+- **Bank API** (`src/api/banks.py`)
+  - GET /api/v1/banks - List banks with filtering
+  - GET /api/v1/banks/search - Search banks
+  - GET /api/v1/banks/countries - List countries with bank counts
+  - GET /api/v1/banks/{slug} - Get bank by slug
+  - POST /api/v1/banks - Create bank (admin)
+  - PATCH /api/v1/banks/{slug} - Update bank
+  - DELETE /api/v1/banks/{slug} - Delete bank
+  - POST /api/v1/banks/detect - Auto-detect bank from file
+  - POST /api/v1/banks/seed - Seed from JSON
+
+**Sprint 5.5 Features Completed (Phase 2 - Statement Parsers):**
+- **Base Parser Infrastructure** (`src/services/parsers/base.py`)
+  - StatementParser abstract base class
+  - StatementData dataclass (transactions, bank_name, currency, format, period)
+  - Transaction dataclass (date, amount, description, type, balance, reference)
+  - StatementFormat enum (PDF, CSV, OFX, QIF)
+  - TransactionType enum (CREDIT, DEBIT, UNKNOWN)
+  - Common utilities: _read_file, _get_filename, _parse_date, _parse_amount, _detect_currency
+- **PDF Parser** (`src/services/parsers/pdf_parser.py`)
+  - Uses pdfplumber for text/table extraction
+  - Multi-page document handling
+  - Bank detection patterns for 18+ banks
+  - Date patterns: DD/MM/YYYY, MM/DD/YYYY, YYYY-MM-DD, DD Mon YYYY, etc.
+  - Amount patterns: currency symbols, accounting format, thousands separators
+  - Table parsing with column detection (date, description, amount, debit/credit, balance)
+  - Text fallback parsing with regex patterns
+- **CSV Parser** (`src/services/parsers/csv_parser.py`)
+  - Dynamic bank profile lookup from database
+  - Auto-detection of bank from filename/headers
+  - Flexible column mapping from bank profiles
+  - Multi-encoding support (utf-8, latin-1, cp1252, iso-8859-1)
+  - Debit/credit column handling (single amount or separate)
+  - Async parse_async() method for bank service integration
+- **OFX/QIF Parser** (`src/services/parsers/ofx_parser.py`)
+  - OFX 1.x/2.x support via ofxparse library
+  - QIF custom parser for legacy Quicken format
+  - QFX (Quicken OFX variant) support
+  - Transaction type mapping (credit, debit, int, div, fee, etc.)
+  - QIF field parsing (D=date, T=amount, P=payee, M=memo, etc.)
 
 ### Sprint 5.4 Tasks (Weeks 23-24) - Icons & AI Settings ✅
 
@@ -1484,12 +1576,13 @@ This ensures context is preserved for future development.
 ---
 
 **Last Updated**: 2025-12-20
-**Version**: 5.4.0 (Sprint 5.4 Complete)
+**Version**: 5.5.0 (Sprint 5.5 Phase 1-2 Complete)
 **Current Phase**: Phase 5 - Settings & AI Features
-**Current Sprint**: 5.5 - Smart Import (AI)
+**Current Sprint**: 5.5 - Smart Import (AI) - Phase 1 & 2 Complete
 **Completed Phases**: Phase 1 ✅, Phase 2 ✅, Phase 3 ✅, Phase 4 ✅
 **Completed Sprints (Phase 5)**: Sprint 5.1 ✅, Sprint 5.2 ✅, Sprint 5.3 ✅, Sprint 5.4 ✅
-**Remaining (Phase 5)**: ~132 hours (4 sprints)
+**Sprint 5.5 Progress**: Bank Infrastructure ✅, Statement Parsers ✅, AI Pattern Detection 🔜
+**Remaining (Phase 5)**: ~100 hours (3 sprints + AI features)
 **For Questions**: Check [.claude/docs/MASTER_PLAN.md](.claude/docs/MASTER_PLAN.md) or [.claude/CHANGELOG.md](.claude/CHANGELOG.md)
 
 ### Recent CI Fixes (2025-12-19)

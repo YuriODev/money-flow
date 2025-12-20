@@ -33,6 +33,5 @@ build
 
 # Project specific
 *.db
-data/
 .env
 .env.local

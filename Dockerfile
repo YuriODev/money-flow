@@ -65,8 +65,11 @@ ENV PATH="/opt/venv/bin:$PATH"
 # Copy application code
 COPY --chown=${APP_USER}:${APP_GROUP} src/ ./src/
 
+# Copy data files (bank profiles, etc.)
+COPY --chown=${APP_USER}:${APP_GROUP} data/ ./data/
+
 # Security: Set proper permissions
-RUN chmod -R 550 /app/src
+RUN chmod -R 550 /app/src && chmod -R 550 /app/data
 
 # Switch to non-root user
 USER ${APP_USER}

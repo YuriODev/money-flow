@@ -47,6 +47,10 @@ dependencies = [
     "aiosmtplib>=3.0.0",
     # Push notifications (Web Push API)
     "pywebpush>=1.14.0",
+    # Bank statement parsing (Sprint 5.5)
+    "pdfplumber>=0.11.0",  # PDF text/table extraction
+    "PyPDF2>=3.0.0",       # PDF parsing fallback
+    "ofxparse>=0.21",      # OFX/QIF format parsing
 ]
 
 [project.optional-dependencies]
