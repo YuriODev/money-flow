@@ -24,6 +24,13 @@ from src.models.notification_history import (
 )
 from src.models.payment_card import CardType, PaymentCard
 from src.models.rag import Conversation, RAGAnalytics
+from src.models.statement_import import (
+    DetectedSubscription,
+    DetectionStatus,
+    FileType,
+    ImportJobStatus,
+    StatementImportJob,
+)
 from src.models.subscription import (
     Frequency,
     PaymentHistory,
@@ -40,14 +47,18 @@ __all__ = [
     "CardType",
     "Category",
     "Conversation",
+    "DetectedSubscription",
+    "DetectionStatus",
     "ExportFormat",
     "ExportHistory",
     "ExportStatus",
     "ExportType",
+    "FileType",
     "Frequency",
     "IconCache",
     "IconGenerationStyle",
     "IconSource",
+    "ImportJobStatus",
     "NotificationChannel",
     "NotificationHistory",
     "NotificationPreferences",
@@ -58,6 +69,7 @@ __all__ = [
     "PaymentStatus",
     "PaymentType",
     "RAGAnalytics",
+    "StatementImportJob",
     "Subscription",
     "SuggestionFrequency",
     "User",

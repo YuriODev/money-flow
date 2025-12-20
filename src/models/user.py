@@ -162,6 +162,14 @@ class User(Base):
         lazy="selectin",
     )
 
+    # Statement import jobs
+    import_jobs: Mapped[list["StatementImportJob"]] = relationship(  # noqa: F821
+        "StatementImportJob",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+
     def __repr__(self) -> str:
         """Return string representation of user.
 

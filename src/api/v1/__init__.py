@@ -34,6 +34,7 @@ from src.api import (
     icons,
     insights,
     search,
+    statement_import,
     subscriptions,
     users,
 )
@@ -57,5 +58,6 @@ v1_router.include_router(icons.router, prefix="/icons", tags=["icons"])
 v1_router.include_router(ai_settings.router, prefix="/ai", tags=["ai-settings"])
 v1_router.include_router(currencies.router, prefix="/currencies", tags=["currencies"])
 v1_router.include_router(banks.router, tags=["banks"])
+v1_router.include_router(statement_import.router, tags=["statement-import"])
 
 __all__ = ["v1_router"]
