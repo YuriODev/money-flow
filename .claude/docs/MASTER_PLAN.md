@@ -73,7 +73,7 @@ This master plan transforms Money Flow from a well-architected personal project 
 | **5** | 5.1 | Profile & Preferences | 17-18 | 28h | ✅ Complete |
 | **5** | 5.2 | Cards & Categories | 19-20 | 26h | ✅ Complete |
 | **5** | 5.3 | Notifications & Export | 21-22 | 28h | ✅ Complete |
-| **5** | 5.4 | Icons & AI Settings | 23-24 | 27h | 🔄 In Progress |
+| **5** | 5.4 | Icons & AI Settings | 23-24 | 27h | ✅ Complete |
 | **5** | 5.5 | Smart Import (AI) | 25-27 | 46h | 🔜 Not Started |
 | **5** | 5.6 | Integrations | 28-30 | 40h | 🔜 Not Started |
 | **5** | 5.7 | Open Banking | 31-34 | 46h | 🔜 Not Started |

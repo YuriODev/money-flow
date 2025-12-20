@@ -18,19 +18,7 @@ import {
 } from "lucide-react";
 import { userApi, UserPreferences, UserPreferencesUpdate } from "@/lib/api";
 import { useTheme } from "@/lib/theme-context";
-
-const CURRENCIES = [
-  { code: "GBP", name: "British Pound", symbol: "£" },
-  { code: "USD", name: "US Dollar", symbol: "$" },
-  { code: "EUR", name: "Euro", symbol: "€" },
-  { code: "UAH", name: "Ukrainian Hryvnia", symbol: "₴" },
-  { code: "CAD", name: "Canadian Dollar", symbol: "C$" },
-  { code: "AUD", name: "Australian Dollar", symbol: "A$" },
-  { code: "JPY", name: "Japanese Yen", symbol: "¥" },
-  { code: "CHF", name: "Swiss Franc", symbol: "CHF" },
-  { code: "CNY", name: "Chinese Yuan", symbol: "¥" },
-  { code: "INR", name: "Indian Rupee", symbol: "₹" },
-] as const;
+import { useCurrency, POPULAR_CURRENCIES } from "@/lib/currency-context";
 
 const DATE_FORMATS = [
   { value: "DD/MM/YYYY", label: "DD/MM/YYYY", example: "25/12/2025" },
@@ -58,6 +46,7 @@ const WEEK_STARTS = [
 export function PreferencesSettings() {
   const queryClient = useQueryClient();
   const { theme: currentTheme, themePreference: _themePreference, setTheme: setAppTheme } = useTheme();
+  const { currency: contextCurrency, updateCurrencyLocally } = useCurrency();
 
   // Fetch preferences
   const { data: preferences, isLoading } = useQuery({
@@ -92,6 +81,15 @@ export function PreferencesSettings() {
     }
   }, [preferences, initialSynced, setAppTheme]);
 
+  // Sync form data when context currency changes (from header dropdown)
+  useEffect(() => {
+    if (contextCurrency && formData.currency !== contextCurrency) {
+      setFormData((prev) => ({ ...prev, currency: contextCurrency as any }));
+      // Also invalidate the preferences query to refetch from server
+      queryClient.invalidateQueries({ queryKey: ["userPreferences"] });
+    }
+  }, [contextCurrency, queryClient]);
+
   // Update mutation
   const updateMutation = useMutation({
     mutationFn: (data: UserPreferencesUpdate) => userApi.updatePreferences(data),
@@ -101,6 +99,11 @@ export function PreferencesSettings() {
       // Apply theme change immediately - pass the preference directly
       if (data.theme) {
         setAppTheme(data.theme as "light" | "dark" | "system");
+      }
+      // Sync currency with context so header updates immediately
+      if (data.currency && data.currency !== contextCurrency) {
+        // Use local update to avoid duplicate API call (settings already saved it)
+        updateCurrencyLocally(data.currency);
       }
       setTimeout(() => setSaved(false), 2000);
     },
@@ -175,12 +178,15 @@ export function PreferencesSettings() {
                     onChange={(e) => handleChange("currency", e.target.value)}
                     className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   >
-                    {CURRENCIES.map((currency) => (
+                    {POPULAR_CURRENCIES.map((currency) => (
                       <option key={currency.code} value={currency.code}>
-                        {currency.symbol} - {currency.name} ({currency.code})
+                        {currency.flag} {currency.symbol} - {currency.name} ({currency.code})
                       </option>
                     ))}
                   </select>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+                    More currencies available in the header dropdown
+                  </p>
                 </div>
               </div>
             </div>

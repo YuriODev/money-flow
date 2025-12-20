@@ -116,6 +116,25 @@
   - AI preferences model tests
   - AI preferences schema validation tests
 - **Total unit tests: ~769** (711 previous + 58 new)
+- **Dynamic Currency Conversion** (`src/services/currency_service.py`)
+  - Live exchange rates from fawazahmed0/currency-api (free, no API key)
+  - 200+ currencies supported with real-time rates
+  - API fallback chain: Primary CDN → Mirror → Open Exchange Rates → Static rates
+  - Primary API: `https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json`
+  - Mirror API: `https://latest.currency-api.pages.dev/v1/currencies/usd.json`
+  - Cache TTL: 1 hour for exchange rates
+  - Minimal static fallback (10 currencies) only when ALL APIs fail
+- **Currency API Endpoints** (`src/api/currencies.py`)
+  - GET /api/v1/currencies - All currencies grouped by region
+  - GET /api/v1/currencies/search - Search currencies
+  - GET /api/v1/currencies/popular - Popular currencies list
+  - GET /api/v1/currencies/regions - Get all regions
+  - GET /api/v1/currencies/regions/{region_id} - Currencies by region
+  - GET /api/v1/currencies/{code} - Single currency info
+- **Currency Tests** (`tests/unit/test_currency_service.py`)
+  - Range-based assertions for dynamic rates
+  - TestCurrencyServiceLiveAPI class for real API tests
+  - Tests for BRL, NGN, JPY and other world currencies
 
 ### Sprint 5.3 Tasks (Week 21) - Notifications & Export ✅
 
@@ -1464,12 +1483,12 @@ This ensures context is preserved for future development.
 
 ---
 
-**Last Updated**: 2025-12-19
-**Version**: 5.3.0 (Sprint 5.3 Complete)
+**Last Updated**: 2025-12-20
+**Version**: 5.4.0 (Sprint 5.4 Complete)
 **Current Phase**: Phase 5 - Settings & AI Features
-**Current Sprint**: 5.4 - Icons & AI Settings
+**Current Sprint**: 5.5 - Smart Import (AI)
 **Completed Phases**: Phase 1 ✅, Phase 2 ✅, Phase 3 ✅, Phase 4 ✅
-**Completed Sprints (Phase 5)**: Sprint 5.1 ✅, Sprint 5.2 ✅, Sprint 5.3 ✅
+**Completed Sprints (Phase 5)**: Sprint 5.1 ✅, Sprint 5.2 ✅, Sprint 5.3 ✅, Sprint 5.4 ✅
 **Remaining (Phase 5)**: ~132 hours (4 sprints)
 **For Questions**: Check [.claude/docs/MASTER_PLAN.md](.claude/docs/MASTER_PLAN.md) or [.claude/CHANGELOG.md](.claude/CHANGELOG.md)
 

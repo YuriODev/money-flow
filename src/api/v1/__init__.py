@@ -28,6 +28,7 @@ from src.api import (
     calendar,
     cards,
     categories,
+    currencies,
     export_history,
     icons,
     insights,
@@ -53,5 +54,6 @@ v1_router.include_router(users.router, prefix="/users", tags=["users"])
 v1_router.include_router(export_history.router, tags=["exports"])
 v1_router.include_router(icons.router, prefix="/icons", tags=["icons"])
 v1_router.include_router(ai_settings.router, prefix="/ai", tags=["ai-settings"])
+v1_router.include_router(currencies.router, prefix="/currencies", tags=["currencies"])
 
 __all__ = ["v1_router"]

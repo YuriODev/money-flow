@@ -3,7 +3,8 @@
 This module provides currency conversion functionality using the Open Exchange Rates API
 for live rates with automatic fallback to static rates. Includes caching for performance.
 
-The service supports GBP (default), EUR, USD, and UAH currencies.
+The service supports all 161+ ISO 4217 currencies with real-time exchange rates.
+Popular currencies include GBP, EUR, USD, JPY, CHF, and many more.
 """
 
 import asyncio
@@ -16,6 +17,17 @@ from typing import Any
 import httpx
 
 from src.core.config import settings
+from src.data.currencies import (
+    ALL_CURRENCY_CODES,
+    CURRENCIES,
+    POPULAR_CURRENCIES,
+    CurrencyData,
+    CurrencyRegion,
+    get_currencies_by_region,
+    get_currency,
+    is_valid_currency,
+    search_currencies,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -63,12 +75,38 @@ class CurrencyInfo:
         symbol: Currency symbol (e.g., '£').
         name: Full currency name (e.g., 'British Pound').
         flag_emoji: Country flag emoji for the currency.
+        region: Geographic region for grouping.
+        decimal_places: Number of decimal places.
+        is_popular: Whether this is a commonly used currency.
     """
 
     code: str
     symbol: str
     name: str
     flag_emoji: str
+    region: str = "popular"
+    decimal_places: int = 2
+    is_popular: bool = False
+
+    @classmethod
+    def from_currency_data(cls, data: CurrencyData) -> "CurrencyInfo":
+        """Create CurrencyInfo from CurrencyData.
+
+        Args:
+            data: CurrencyData instance.
+
+        Returns:
+            CurrencyInfo instance.
+        """
+        return cls(
+            code=data.code,
+            symbol=data.symbol,
+            name=data.name,
+            flag_emoji=data.flag,
+            region=data.region.value,
+            decimal_places=data.decimal_places,
+            is_popular=data.is_popular,
+        )
 
 
 @dataclass
@@ -104,12 +142,12 @@ class CurrencyService:
     it falls back to static rates.
 
     The service uses an in-memory cache to reduce API calls and improve performance.
-    Cache TTL is configurable via settings.
+    Cache TTL is configurable via settings. Supports all 161+ ISO 4217 currencies.
 
     Attributes:
         api_key: Open Exchange Rates API key.
         base_url: API base URL.
-        supported_currencies: List of supported currency codes.
+        supported_currencies: List of all supported currency codes (161+).
         default_currency: Default currency for conversions.
         _cache: In-memory rate cache.
         _lock: Async lock for thread-safe cache updates.
@@ -125,25 +163,29 @@ class CurrencyService:
         Decimal('79.00')
     """
 
-    # Currency metadata for UI display
-    CURRENCY_INFO: dict[str, CurrencyInfo] = {
-        "GBP": CurrencyInfo("GBP", "£", "British Pound", "🇬🇧"),
-        "EUR": CurrencyInfo("EUR", "€", "Euro", "🇪🇺"),
-        "USD": CurrencyInfo("USD", "$", "US Dollar", "🇺🇸"),
-        "UAH": CurrencyInfo("UAH", "₴", "Ukrainian Hryvnia", "🇺🇦"),
-    }
-
-    # Fallback static rates (base: USD) - updated periodically
-    # These are used when the API is unavailable
+    # Minimal fallback static rates (base: USD) - only used when ALL APIs fail
+    # These are approximate and should rarely be used
     STATIC_RATES_USD_BASE: dict[str, Decimal] = {
         "USD": Decimal("1.00"),
-        "GBP": Decimal("0.79"),
-        "EUR": Decimal("0.92"),
-        "UAH": Decimal("41.50"),
+        "EUR": Decimal("0.85"),
+        "GBP": Decimal("0.75"),
+        "JPY": Decimal("155.00"),
+        "CNY": Decimal("7.00"),
+        "CHF": Decimal("0.80"),
+        "CAD": Decimal("1.38"),
+        "AUD": Decimal("1.51"),
+        "INR": Decimal("90.00"),
+        "UAH": Decimal("42.00"),
     }
 
-    # Open Exchange Rates API base URL
-    API_BASE_URL = "https://openexchangerates.org/api"
+    # Primary API: fawazahmed0/currency-api (free, no API key, 200+ currencies)
+    # https://github.com/fawazahmed0/exchange-api
+    PRIMARY_API_URL = "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json"
+    # Fallback mirror
+    FALLBACK_API_URL = "https://latest.currency-api.pages.dev/v1/currencies/usd.json"
+
+    # Secondary API: Open Exchange Rates (requires API key)
+    OPENEXCHANGERATES_API_URL = "https://openexchangerates.org/api"
 
     def __init__(
         self,
@@ -168,14 +210,17 @@ class CurrencyService:
         """
         self.api_key = api_key or settings.exchange_rate_api_key or None
         self.default_currency = default_currency or settings.default_currency
-        self.supported_currencies = list(self.CURRENCY_INFO.keys())
+        self.supported_currencies = ALL_CURRENCY_CODES  # All 161+ currencies
         self.cache_ttl = cache_ttl or settings.cache_ttl_exchange_rates
 
         self._cache: ExchangeRateCache | None = None
         self._lock = asyncio.Lock()
 
         if not self.api_key:
-            logger.warning("No exchange rate API key configured. Using static rates only.")
+            logger.info(
+                "No Open Exchange Rates API key configured. "
+                "Using free fawazahmed0/currency-api for live rates."
+            )
 
     async def get_rate(
         self,
@@ -369,8 +414,8 @@ class CurrencyService:
             >>> service.get_symbol('UAH')
             '₴'
         """
-        info = self.CURRENCY_INFO.get(currency_code.upper())
-        return info.symbol if info else currency_code
+        data = get_currency(currency_code)
+        return data.symbol if data else currency_code
 
     def get_currency_info(self, currency_code: str) -> CurrencyInfo | None:
         """Get full currency information.
@@ -388,13 +433,14 @@ class CurrencyService:
             >>> print(f"{info.flag_emoji} {info.name}: {info.symbol}")
             🇬🇧 British Pound: £
         """
-        return self.CURRENCY_INFO.get(currency_code.upper())
+        data = get_currency(currency_code)
+        return CurrencyInfo.from_currency_data(data) if data else None
 
     def get_all_currency_info(self) -> list[CurrencyInfo]:
         """Get information about all supported currencies.
 
         Returns:
-            List of CurrencyInfo objects for all supported currencies.
+            List of CurrencyInfo objects for all 161+ supported currencies.
 
         Example:
             >>> service = CurrencyService()
@@ -402,7 +448,61 @@ class CurrencyService:
             >>> for c in currencies:
             ...     print(f"{c.flag_emoji} {c.code}")
         """
-        return list(self.CURRENCY_INFO.values())
+        return [CurrencyInfo.from_currency_data(c) for c in CURRENCIES]
+
+    def get_popular_currencies(self) -> list[CurrencyInfo]:
+        """Get information about popular currencies only.
+
+        Returns:
+            List of CurrencyInfo for the most commonly used currencies (24).
+
+        Example:
+            >>> service = CurrencyService()
+            >>> popular = service.get_popular_currencies()
+            >>> print(len(popular))  # 24 popular currencies
+        """
+        return [CurrencyInfo.from_currency_data(c) for c in POPULAR_CURRENCIES]
+
+    def get_currencies_by_region(self, region: str) -> list[CurrencyInfo]:
+        """Get currencies for a specific region.
+
+        Args:
+            region: Region name ('europe', 'americas', 'asia_pacific',
+                   'middle_east', 'africa', 'caribbean', 'popular').
+
+        Returns:
+            List of CurrencyInfo for currencies in that region.
+
+        Example:
+            >>> service = CurrencyService()
+            >>> european = service.get_currencies_by_region('europe')
+            >>> print(len(european))  # 15 European currencies
+        """
+        try:
+            region_enum = CurrencyRegion(region.lower())
+            currencies = get_currencies_by_region(region_enum)
+            return [CurrencyInfo.from_currency_data(c) for c in currencies]
+        except ValueError:
+            return []
+
+    def search_currencies(self, query: str, limit: int = 20) -> list[CurrencyInfo]:
+        """Search currencies by code, name, or symbol.
+
+        Args:
+            query: Search string (case-insensitive).
+            limit: Maximum number of results to return.
+
+        Returns:
+            List of matching CurrencyInfo objects, sorted by relevance.
+
+        Example:
+            >>> service = CurrencyService()
+            >>> results = service.search_currencies('dollar')
+            >>> print([c.code for c in results])
+            ['USD', 'CAD', 'AUD', 'NZD', 'HKD', 'SGD', ...]
+        """
+        currencies = search_currencies(query, limit)
+        return [CurrencyInfo.from_currency_data(c) for c in currencies]
 
     def format_amount(
         self,
@@ -442,14 +542,16 @@ class CurrencyService:
         Raises:
             UnsupportedCurrencyError: If currency is not supported.
         """
-        if currency_code.upper() not in self.supported_currencies:
+        if not is_valid_currency(currency_code):
             raise UnsupportedCurrencyError(
-                f"Currency '{currency_code}' is not supported. "
-                f"Supported currencies: {', '.join(self.supported_currencies)}",
+                f"Currency '{currency_code}' is not a valid ISO 4217 currency code.",
             )
 
     async def _get_rates(self) -> dict[str, Decimal]:
         """Get exchange rates from cache or API.
+
+        Always attempts to fetch live rates from the free API first.
+        Falls back to Open Exchange Rates API if configured, then static rates.
 
         Returns:
             Dictionary of currency codes to USD-based rates.
@@ -467,11 +569,8 @@ class CurrencyService:
             if self._cache and not self._cache.is_expired():
                 return self._cache.rates
 
-            # Fetch fresh rates
-            if self.api_key:
-                rates = await self._fetch_live_rates()
-            else:
-                rates = self.STATIC_RATES_USD_BASE.copy()
+            # Always try to fetch live rates (free API doesn't need key)
+            rates = await self._fetch_live_rates()
 
             # Update cache
             now = datetime.utcnow()
@@ -485,44 +584,107 @@ class CurrencyService:
             return rates
 
     async def _fetch_live_rates(self) -> dict[str, Decimal]:
-        """Fetch live exchange rates from Open Exchange Rates API.
+        """Fetch live exchange rates from free currency API.
+
+        Tries multiple sources in order:
+        1. fawazahmed0/currency-api (free, no API key, 200+ currencies)
+        2. Fallback mirror of the same API
+        3. Open Exchange Rates API (if API key configured)
+        4. Static fallback rates (last resort)
 
         Returns:
             Dictionary of currency codes to USD-based rates.
 
         Raises:
-            CurrencyConversionError: If API request fails.
+            CurrencyConversionError: If all API requests fail.
         """
-        url = f"{self.API_BASE_URL}/latest.json"
-        params = {
-            "app_id": self.api_key,
-            "symbols": ",".join(self.supported_currencies),
-        }
-
+        # Try primary free API first (fawazahmed0/currency-api)
         try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.get(url, params=params)
-                response.raise_for_status()
-                data: dict[str, Any] = response.json()
+            rates = await self._fetch_from_free_api(self.PRIMARY_API_URL)
+            if rates:
+                logger.info(f"Fetched {len(rates)} rates from primary free API")
+                return rates
+        except Exception as e:
+            logger.warning(f"Primary free API failed: {e}")
 
-            rates: dict[str, Decimal] = {}
-            for code, rate in data.get("rates", {}).items():
+        # Try fallback mirror
+        try:
+            rates = await self._fetch_from_free_api(self.FALLBACK_API_URL)
+            if rates:
+                logger.info(f"Fetched {len(rates)} rates from fallback free API")
+                return rates
+        except Exception as e:
+            logger.warning(f"Fallback free API failed: {e}")
+
+        # Try Open Exchange Rates if API key is configured
+        if self.api_key:
+            try:
+                rates = await self._fetch_from_openexchangerates()
+                if rates:
+                    logger.info(f"Fetched {len(rates)} rates from Open Exchange Rates")
+                    return rates
+            except Exception as e:
+                logger.warning(f"Open Exchange Rates API failed: {e}")
+
+        # Last resort: use static rates
+        logger.warning("All exchange rate APIs failed, using static fallback rates")
+        return self.STATIC_RATES_USD_BASE.copy()
+
+    async def _fetch_from_free_api(self, url: str) -> dict[str, Decimal]:
+        """Fetch rates from fawazahmed0/currency-api.
+
+        Args:
+            url: API URL to fetch from.
+
+        Returns:
+            Dictionary of currency codes to USD-based rates.
+
+        Raises:
+            Exception: If request fails.
+        """
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            response = await client.get(url)
+            response.raise_for_status()
+            data: dict[str, Any] = response.json()
+
+        rates: dict[str, Decimal] = {}
+        # The API returns {"date": "...", "usd": {"eur": 0.85, "gbp": 0.75, ...}}
+        usd_rates = data.get("usd", {})
+
+        for code, rate in usd_rates.items():
+            # Convert to uppercase and filter valid ISO 4217 currencies
+            code_upper = code.upper()
+            if is_valid_currency(code_upper) and isinstance(rate, (int, float)):
+                rates[code_upper] = Decimal(str(rate))
+
+        # Ensure USD is always 1.00
+        rates["USD"] = Decimal("1.00")
+
+        return rates
+
+    async def _fetch_from_openexchangerates(self) -> dict[str, Decimal]:
+        """Fetch rates from Open Exchange Rates API.
+
+        Returns:
+            Dictionary of currency codes to USD-based rates.
+
+        Raises:
+            Exception: If request fails.
+        """
+        url = f"{self.OPENEXCHANGERATES_API_URL}/latest.json"
+        params: dict[str, str] = {"app_id": self.api_key or ""}
+
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(url, params=params)
+            response.raise_for_status()
+            data: dict[str, Any] = response.json()
+
+        rates: dict[str, Decimal] = {}
+        for code, rate in data.get("rates", {}).items():
+            if is_valid_currency(code):
                 rates[code] = Decimal(str(rate))
 
-            logger.info(f"Fetched live exchange rates: {list(rates.keys())}")
-            return rates
-
-        except httpx.HTTPStatusError as e:
-            logger.error(f"Exchange rate API error: {e.response.status_code}")
-            raise CurrencyConversionError(
-                f"Exchange rate API returned {e.response.status_code}"
-            ) from e
-        except httpx.RequestError as e:
-            logger.error(f"Exchange rate API request failed: {e}")
-            raise CurrencyConversionError(f"Failed to connect to exchange rate API: {e}") from e
-        except Exception as e:
-            logger.error(f"Unexpected error fetching rates: {e}")
-            raise CurrencyConversionError(f"Unexpected error: {e}") from e
+        return rates
 
     def _get_static_rate(
         self,
