@@ -22,6 +22,7 @@ from src.core.config import settings
 from src.core.dependencies import get_db
 from src.models.subscription import Frequency, PaymentMode, PaymentType
 from src.models.user import User
+from src.schemas.report import ReportConfig
 from src.schemas.subscription import (
     ExportData,
     ImportResult,
@@ -520,23 +521,33 @@ async def export_subscriptions_csv(
 async def export_subscriptions_pdf(
     request: Request,
     include_inactive: bool = Query(default=False, description="Include inactive payments"),
+    include_charts: bool = Query(default=True, description="Include visual charts in report"),
     payment_type: PaymentType | None = Query(default=None, description="Filter by payment type"),
     page_size: str = Query(default="a4", description="Page size (a4 or letter)"),
+    target_currency: str = Query(
+        default=None, description="Target currency for report (default: user preference)"
+    ),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ) -> Response:
     """Export all subscriptions/payments as a PDF report.
 
     Generates a professional PDF report with:
-    - Summary statistics (monthly/yearly totals)
-    - Spending breakdown by category
+    - Summary statistics (monthly/yearly totals) with currency conversion
+    - Spending breakdown by category (with optional pie chart)
+    - Spending analysis bar charts (current month and YTD)
     - Upcoming payments (next 30 days)
-    - Complete payments table
+    - Complete payments table with currency column
+
+    All amounts are converted to the target currency using live exchange rates.
+    The original amounts are shown in parentheses when currencies differ.
 
     Args:
         include_inactive: Whether to include inactive payments.
+        include_charts: Whether to include visual charts (pie chart, bar charts).
         payment_type: Optional filter for specific payment type.
         page_size: Page size for the PDF ('a4' or 'letter').
+        target_currency: Currency for report totals (defaults to user preference or GBP).
         db: Database session (injected by dependency).
         current_user: Authenticated user (injected by dependency).
 
@@ -546,21 +557,122 @@ async def export_subscriptions_pdf(
     Example:
         GET /api/subscriptions/export/pdf
         GET /api/subscriptions/export/pdf?include_inactive=true
+        GET /api/subscriptions/export/pdf?include_charts=true
         GET /api/subscriptions/export/pdf?page_size=letter
+        GET /api/subscriptions/export/pdf?target_currency=USD
     """
+    from src.schemas.report import ReportConfig, ReportOptions
     from src.services.pdf_report_service import PDFReportService
 
     service = SubscriptionService(db, user_id=str(current_user.id))
     is_active = None if include_inactive else True
-    subscriptions = await service.get_all(is_active=is_active, payment_type=payment_type)
+    # Use include_relationships=True to eagerly load all relationships
+    # (payment_card, category_rel, payment_history) for PDF generation
+    subscriptions = await service.get_all(
+        is_active=is_active, payment_type=payment_type, include_relationships=True
+    )
 
-    # Generate PDF report
+    # Create currency service for conversions
+    currency_service = CurrencyService(api_key=settings.exchange_rate_api_key or None)
+
+    # Determine report currency (target_currency > user preference > default)
+    report_currency = target_currency or settings.default_currency
+
+    # Create config with chart options
+    config = ReportConfig(
+        page_size=page_size,
+        target_currency=report_currency,
+        options=ReportOptions(include_charts=include_charts),
+    )
+
+    # Generate PDF report with currency conversion
     pdf_service = PDFReportService(
         page_size=page_size,
         include_inactive=include_inactive,
-        currency=settings.default_currency,
+        currency=report_currency,
+        currency_service=currency_service,
+        config=config,
     )
-    pdf_content = pdf_service.generate_report(
+    pdf_content = await pdf_service.generate_report_async(
+        subscriptions=subscriptions,
+        user_email=current_user.email,
+        report_title="Money Flow Report",
+    )
+
+    filename = f"money_flow_report_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.pdf"
+
+    return Response(
+        content=pdf_content,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.post("/export/pdf")
+@limiter.limit(rate_limit_get)
+async def export_subscriptions_pdf_configured(
+    request: Request,
+    config: ReportConfig,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+) -> Response:
+    """Export subscriptions/payments as a customized PDF report.
+
+    This endpoint allows full customization of the PDF report via the
+    ReportConfig body, including:
+    - Page size and target currency
+    - Date ranges for upcoming payments and history
+    - Which sections to include/exclude
+    - Filters for payment modes, categories, cards
+    - Visual options
+
+    Args:
+        config: Report configuration specifying all customization options.
+        db: Database session (injected by dependency).
+        current_user: Authenticated user (injected by dependency).
+
+    Returns:
+        PDF file download response.
+
+    Example:
+        POST /api/subscriptions/export/pdf
+        {
+            "page_size": "a4",
+            "target_currency": "USD",
+            "date_range_days": 60,
+            "history_days": 30,
+            "sections": {
+                "summary": true,
+                "category_breakdown": true,
+                "upcoming_payments": true,
+                "payment_history": true,
+                "all_payments": true
+            },
+            "filters": {
+                "include_inactive": false
+            }
+        }
+    """
+    from src.services.pdf_report_service import PDFReportService
+
+    service = SubscriptionService(db, user_id=str(current_user.id))
+
+    # Apply filters from config
+    is_active = None if config.filters.include_inactive else True
+    # Use include_relationships=True to eagerly load all relationships
+    # (payment_card, category_rel, payment_history) for PDF generation
+    subscriptions = await service.get_all(is_active=is_active, include_relationships=True)
+
+    # Create currency service for conversions
+    currency_service = CurrencyService(api_key=settings.exchange_rate_api_key or None)
+
+    # Generate PDF report with full config
+    pdf_service = PDFReportService(
+        currency=config.target_currency or settings.default_currency,
+        currency_service=currency_service,
+        config=config,
+    )
+    pdf_content = await pdf_service.generate_report_async(
         subscriptions=subscriptions,
         user_email=current_user.email,
         report_title="Money Flow Report",

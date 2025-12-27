@@ -2,7 +2,7 @@
 
 This module provides:
 - BankProfile: SQLAlchemy model for storing bank CSV/PDF mapping configurations
-- Dynamic column mappings stored as JSONB for flexibility
+- Dynamic column mappings stored as JSON for flexibility
 - Auto-detection patterns for identifying banks from file content
 """
 
@@ -12,8 +12,8 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import Boolean, DateTime, Integer, String, Text
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy import JSON, Boolean, DateTime, Integer, String, Text
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.db.database import Base
@@ -33,9 +33,9 @@ class BankProfile(Base):
         currency: Default currency for this bank (ISO 4217)
         logo_url: URL to bank logo image
         website: Bank website URL
-        csv_mapping: JSONB with column name mappings for CSV parsing
-        pdf_patterns: JSONB with patterns for PDF text extraction
-        detection_patterns: JSONB with patterns to auto-detect this bank
+        csv_mapping: JSON with column name mappings for CSV parsing
+        pdf_patterns: JSON with patterns for PDF text extraction
+        detection_patterns: JSON with patterns to auto-detect this bank
         is_verified: Admin-verified bank profile
         usage_count: Number of times this profile was used
         last_verified: Last admin verification date
@@ -61,7 +61,7 @@ class BankProfile(Base):
     logo_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     website: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
-    # CSV column mappings (JSONB)
+    # CSV column mappings (JSON)
     # Structure:
     # {
     #   "date_columns": ["Date", "Transaction Date"],
@@ -79,13 +79,13 @@ class BankProfile(Base):
     #   "header_row": 0
     # }
     csv_mapping: Mapped[dict] = mapped_column(
-        JSONB,
+        JSON,
         nullable=False,
         default=dict,
         server_default="{}",
     )
 
-    # PDF extraction patterns (JSONB)
+    # PDF extraction patterns (JSON)
     # Structure:
     # {
     #   "table_keywords": ["Date", "Description", "Amount"],
@@ -94,13 +94,13 @@ class BankProfile(Base):
     #   "exclude_patterns": ["Page \\d+", "Statement Date"]
     # }
     pdf_patterns: Mapped[dict] = mapped_column(
-        JSONB,
+        JSON,
         nullable=False,
         default=dict,
         server_default="{}",
     )
 
-    # Detection patterns for auto-identifying bank from file (JSONB)
+    # Detection patterns for auto-identifying bank from file (JSON)
     # Structure:
     # {
     #   "header_keywords": ["Monzo", "Account Statement"],
@@ -108,7 +108,7 @@ class BankProfile(Base):
     #   "content_patterns": ["Account: \\d{8}", "Sort Code: \\d{2}-\\d{2}-\\d{2}"]
     # }
     detection_patterns: Mapped[dict] = mapped_column(
-        JSONB,
+        JSON,
         nullable=False,
         default=dict,
         server_default="{}",

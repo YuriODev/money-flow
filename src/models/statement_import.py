@@ -14,6 +14,7 @@ from enum import Enum
 from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import (
+    JSON,
     Boolean,
     DateTime,
     ForeignKey,
@@ -26,7 +27,7 @@ from sqlalchemy import (
 from sqlalchemy import (
     Enum as SQLEnum,
 )
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.db.database import Base
@@ -128,7 +129,7 @@ class StatementImportJob(Base):
     period_end: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Raw data for debugging (optional)
-    raw_data: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    raw_data: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
@@ -248,10 +249,10 @@ class DetectedSubscription(Base):
     )
 
     # Sample transaction descriptions
-    sample_descriptions: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
+    sample_descriptions: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
 
     # Raw detection data for debugging
-    raw_data: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    raw_data: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(

@@ -117,7 +117,7 @@ class CSVStatementParser(StatementParser):
             return StatementData(
                 transactions=transactions,
                 bank_name=bank_profile.name if bank_profile else self.bank_name,
-                currency=bank_profile.currency if bank_profile else self.currency,
+                currency=bank_profile.currency if bank_profile else self.default_currency,
                 format=StatementFormat.CSV,
                 filename=filename,
                 raw_text=text[:10000],
@@ -183,7 +183,7 @@ class CSVStatementParser(StatementParser):
             return StatementData(
                 transactions=transactions,
                 bank_name=self.bank_profile.name if self.bank_profile else self.bank_name,
-                currency=self.bank_profile.currency if self.bank_profile else self.currency,
+                currency=self.bank_profile.currency if self.bank_profile else self.default_currency,
                 format=StatementFormat.CSV,
                 filename=filename,
                 raw_text=text[:10000],
@@ -290,9 +290,7 @@ class CSVStatementParser(StatementParser):
 
         raise ParseError("Failed to decode CSV content")
 
-    def _map_columns(
-        self, headers: list[str], mapping: dict
-    ) -> dict[str, int | None]:
+    def _map_columns(self, headers: list[str], mapping: dict) -> dict[str, int | None]:
         """Map column names to indexes.
 
         Args:
@@ -324,9 +322,7 @@ class CSVStatementParser(StatementParser):
             ),
             "amount": mapping.get("amount_columns", ["amount", "value", "sum"]),
             "debit": mapping.get("debit_columns", ["debit", "money out", "paid out", "withdrawal"]),
-            "credit": mapping.get(
-                "credit_columns", ["credit", "money in", "paid in", "deposit"]
-            ),
+            "credit": mapping.get("credit_columns", ["credit", "money in", "paid in", "deposit"]),
             "balance": mapping.get("balance_columns", ["balance", "running balance"]),
             "reference": mapping.get("reference_columns", ["reference", "ref", "transaction id"]),
             "category": mapping.get("category_columns", ["category", "type"]),

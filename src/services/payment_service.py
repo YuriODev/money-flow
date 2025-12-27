@@ -496,8 +496,27 @@ class PaymentService:
         result = await self.db.execute(
             select(Subscription).where(Subscription.is_active == True)  # noqa: E712
         )
-        subscriptions = result.scalars().all()
+        subscriptions = list(result.scalars().all())
         print(f"[Calendar] Found {len(subscriptions)} active subscriptions", flush=True)
+
+        # Also get completed one-time payments in the date range
+        # These are inactive but should still appear on the calendar
+        one_time_result = await self.db.execute(
+            select(Subscription).where(
+                and_(
+                    Subscription.is_active == False,  # noqa: E712
+                    Subscription.payment_type == PaymentType.ONE_TIME,
+                    Subscription.next_payment_date >= start_date,
+                    Subscription.next_payment_date <= end_date,
+                )
+            )
+        )
+        completed_one_time = list(one_time_result.scalars().all())
+        print(
+            f"[Calendar] Found {len(completed_one_time)} completed one-time payments in range",
+            flush=True,
+        )
+        subscriptions.extend(completed_one_time)
 
         # Get all completed payments in the date range to check which are already paid
         payments_result = await self.db.execute(

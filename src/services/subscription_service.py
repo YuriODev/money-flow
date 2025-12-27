@@ -214,6 +214,7 @@ class SubscriptionService:
         payment_type: PaymentType | None = None,
         payment_mode: PaymentMode | None = None,
         include_card: bool = False,
+        include_relationships: bool = False,
     ) -> Sequence[Subscription]:
         """Get all subscriptions/payments with optional filters.
 
@@ -234,6 +235,9 @@ class SubscriptionService:
                 If None, returns all payment modes.
             include_card: If True, eagerly load the payment_card relationship
                 to avoid N+1 queries when accessing subscription.payment_card.
+            include_relationships: If True, eagerly load all relationships
+                (payment_card, category_rel, payment_history) for PDF reports
+                and other use cases that need full data without lazy loading.
 
         Returns:
             Sequence of Subscription objects matching the filters,
@@ -262,8 +266,15 @@ class SubscriptionService:
         """
         query = select(Subscription)
 
+        # Eager load all relationships if requested (for PDF reports, etc.)
+        if include_relationships:
+            query = query.options(
+                selectinload(Subscription.payment_card),
+                selectinload(Subscription.category_rel),
+                selectinload(Subscription.payment_history),
+            )
         # Eager load payment_card if requested
-        if include_card:
+        elif include_card:
             query = query.options(selectinload(Subscription.payment_card))
 
         conditions = []
