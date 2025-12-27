@@ -1674,11 +1674,11 @@ Third-party calendar integration, webhook support, and email receipt scanning (d
 | 5.6.0.2 | Email parsing for subscriptions | 🟡 | 6h | 5.6.0.1 | Email parsing |
 | 5.6.0.3 | Receipt template matching | 🟡 | 4h | 5.6.0.2 | Template matching |
 | 5.6.0.4 | Outlook support | 🟢 | 2h | 5.6.0.2 | Outlook auth |
-| **5.6.1** | **Calendar Integration** | 🟠 | 16h | None | Calendar sync |
+| **5.6.1** | **Calendar Integration** | ✅ | 16h | None | Calendar sync |
 | 5.6.1.1 | iCal feed generation | ✅ | 4h | - | iCal endpoint |
-| 5.6.1.2 | Google Calendar OAuth | 🟠 | 6h | - | Google sync |
-| 5.6.1.3 | Apple Calendar support | 🟡 | 4h | - | Apple sync |
-| 5.6.1.4 | Two-way sync logic | 🟡 | 2h | 5.6.1.2 | Bidirectional |
+| 5.6.1.2 | Google Calendar OAuth | ✅ | 6h | - | Google sync |
+| 5.6.1.3 | Apple Calendar support | ✅ | 4h | - | Apple sync (via iCal) |
+| 5.6.1.4 | Two-way sync logic | 🟡 | 2h | 5.6.1.2 | Bidirectional (future) |
 | **5.6.2** | **Webhooks** | 🟠 | 12h | None | Webhook system |
 | 5.6.2.1 | Webhook subscription model | 🟠 | 2h | - | `webhooks` table |
 | 5.6.2.2 | Webhook delivery service | 🟠 | 4h | 5.6.2.1 | Delivery queue |
@@ -1720,13 +1720,49 @@ Third-party calendar integration, webhook support, and email receipt scanning (d
   - Event creation tests (UID, summary, categories, priority, alarms)
   - Feed generation tests (empty, with subscriptions, RRULE, VALARM)
 
+**Google Calendar OAuth** (Task 5.6.1.2) ✅
+- **GoogleCalendarService** (`src/services/google_calendar_service.py`)
+  - Full OAuth flow with token management
+  - Token refresh with google-auth library
+  - Event creation with recurrence rules (RRULE)
+  - Currency symbol mapping for event summaries
+  - sync_subscriptions_to_calendar() for bulk sync
+- **GoogleCalendarConnection Model** (`src/models/google_calendar.py`)
+  - OAuth tokens storage (access_token, refresh_token, token_expiry)
+  - GoogleCalendarSyncStatus enum (CONNECTED, DISCONNECTED, TOKEN_EXPIRED, ERROR)
+  - is_token_expired and needs_reauthorization properties
+  - One-to-one relationship with User model
+- **Google Calendar API Endpoints** (`src/api/calendar.py`)
+  - GET /api/v1/calendar/google/status - Connection status
+  - GET /api/v1/calendar/google/connect - Initiate OAuth flow
+  - GET /api/v1/calendar/google/callback - OAuth callback handler
+  - DELETE /api/v1/calendar/google/disconnect - Remove integration
+  - POST /api/v1/calendar/google/sync - Sync subscriptions to calendar
+  - GET /api/v1/calendar/google/calendars - List user's calendars
+- **Frontend Google Calendar UI** (`frontend/src/components/ImportExportModal.tsx`)
+  - Google Calendar section with Google logo
+  - Connect/Disconnect buttons with OAuth flow
+  - Sync Now button with progress indicator
+  - Last sync timestamp display
+- **Unit Tests** (`tests/unit/test_google_calendar.py`)
+  - 41 tests covering model, service, OAuth flow
+  - Recurrence rule generation tests
+  - Event body building tests
+  - Currency symbol tests
+
+**Apple Calendar** (Task 5.6.1.3) ✅
+- Fully supported via iCal feed subscription
+- One-click webcal:// subscription
+- Manual subscription instructions in UI
+
 **Sprint 5.6 Deliverables:**
 - 📦 Gmail/Outlook email receipt scanning (moved from 5.5)
 - ✅ iCal feed for calendar subscriptions (DONE)
-- 📦 Google Calendar bidirectional sync
+- ✅ Google Calendar OAuth sync (DONE)
+- ✅ Apple Calendar support via iCal (DONE)
 - 📦 Webhook system for third-party integrations
 - 📦 IFTTT/Zapier compatibility
-- ⏱️ **Total: ~56 hours** (iCal: ~8h complete, ~48h remaining)
+- ⏱️ **Total: ~56 hours** (Calendar: ~16h complete, ~40h remaining)
 
 ---
 
