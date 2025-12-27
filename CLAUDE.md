@@ -33,11 +33,12 @@
 | **Phase 5** | Sprint 5.2 | ✅ Complete | Cards & Categories |
 | **Phase 5** | Sprint 5.3 | ✅ Complete | Notifications & Export |
 | **Phase 5** | Sprint 5.4 | ✅ Complete | Icons & AI Settings |
-| **Phase 5** | Sprint 5.5 | 🔄 In Progress | Smart Import (Bank Statements) |
-| **Phase 5** | Sprints 5.6-5.7 | 🔜 Upcoming | Integrations, Open Banking (~100h remaining) |
+| **Phase 5** | Sprint 5.5 | ✅ Complete | Smart Import (Bank Statements) |
+| **Phase 5** | Sprint 5.6 | 🔄 In Progress | Integrations & Email Scanning |
+| **Phase 5** | Sprint 5.7 | 🔜 Upcoming | Open Banking (~46h) |
 | **Phase 6** | Sprint 6.1 | 🔜 Upcoming | Production Launch (~15h) |
 
-### Sprint 5.5 Tasks (Weeks 25-27) - Smart Import (AI) 🔄
+### Sprint 5.5 Tasks (Weeks 25-27) - Smart Import (AI) ✅
 
 | Task | Status | Description |
 |------|--------|-------------|
@@ -53,8 +54,8 @@
 | 5.5.2.1 | ✅ DONE | AI extraction of recurring patterns |
 | 5.5.2.2 | ✅ DONE | Statement import API endpoints |
 | 5.5.2.3 | ✅ DONE | Duplicate detection service |
-| 5.5.2.4 | 🔜 TODO | Preview and confirm import UI (Frontend) |
-| 5.5.3 | 🔜 TODO | Unit tests for statement parsers |
+| 5.5.2.4 | ✅ DONE | Preview and confirm import UI (Frontend) |
+| 5.5.3 | ✅ DONE | Unit tests for Sprint 5.5 (112 tests) |
 
 **Scope Decision:** Email scanning (Gmail/Outlook) deferred to Sprint 5.6 to focus on bank statement parsing quality.
 
@@ -172,6 +173,131 @@
 - **Database Migration** (`69107cd3b0ea_add_statement_import_tables.py`)
   - statement_import_jobs table with all fields and indexes
   - detected_subscriptions table with foreign keys
+- **Unit Tests** (`tests/unit/test_statement_import.py`)
+  - 112 comprehensive tests covering:
+    - Transaction dataclass tests (creation, type inference, amount conversion)
+    - StatementData tests (filtering, searching, aggregations)
+    - Format detection tests (PDF, CSV, OFX, QIF by extension and content)
+    - Parser error tests (ParserError, ParseError, EmptyStatementError)
+    - StatementAIService tests (normalization, grouping, frequency detection)
+    - Payment type classification tests (subscription, housing, utility, etc.)
+    - Confidence calculation tests
+    - Pattern analysis tests
+    - DuplicateDetector tests (name, amount, frequency similarity)
+    - Schema validation tests for all import schemas
+    - CSV parser tests with amount parsing
+- **Total unit tests: ~972** (860 previous + 112 new)
+
+**Sprint 5.5 Features Completed (Phase 4 - Frontend UI):**
+- **Statement Import Modal** (`frontend/src/components/StatementImportModal.tsx`)
+  - Multi-step wizard UI (upload → processing → preview → complete)
+  - Drag-and-drop file upload with visual feedback
+  - Bank search/selection with auto-detection support
+  - Currency selection (GBP, USD, EUR, UAH, CAD, AUD)
+  - AI analysis toggle option
+  - Processing status with animated spinner
+  - Detected subscriptions preview with:
+    - Summary stats (detected, selected, duplicates, monthly total)
+    - Select all/deselect all functionality
+    - Individual subscription cards with confidence badges
+    - Duplicate highlighting and skip
+    - Frequency and payment type labels
+    - Sample transaction descriptions
+  - Import options (assign card, assign category)
+  - Confirmation with import results
+  - Dark mode support
+- **Import/Export Modal Integration** (`frontend/src/components/ImportExportModal.tsx`)
+  - Added "Bank Statement" tab with feature overview
+  - Supported formats display (PDF, CSV, OFX, QFX, QIF)
+  - "How it works" guide
+  - Opens StatementImportModal for full wizard
+- **API Types & Functions** (`frontend/src/lib/api.ts`)
+  - BankProfile, ImportJob, DetectedSubscription interfaces
+  - ImportPreview, ImportPreviewSummary types
+  - StatementUploadResponse, ImportJobStatusResponse types
+  - ConfirmImportRequest, ConfirmImportResponse types
+  - statementImportApi with all operations:
+    - uploadStatement() - Upload with options
+    - getJobStatus() - Poll for completion
+    - getPreview() - Get detected subscriptions
+    - updateDetected() - Toggle selection
+    - bulkUpdateDetected() - Select/deselect all
+    - confirmImport() - Import selected
+    - cancelJob() - Cancel import
+    - getDuplicates() - Check for duplicates
+  - banksApi with bank profile operations
+
+### Sprint 5.6 Tasks (Weeks 28-30) - Integrations & Email Scanning 🔄
+
+| Task | Status | Description |
+|------|--------|-------------|
+| 5.6.0.1 | 🔜 TODO | Gmail OAuth integration |
+| 5.6.0.2 | 🔜 TODO | Email parsing for subscriptions |
+| 5.6.0.3 | 🔜 TODO | Receipt template matching |
+| 5.6.0.4 | 🔜 TODO | Outlook support |
+| 5.6.1.1 | ✅ DONE | iCal feed generation |
+| 5.6.1.2 | 🔜 TODO | Google Calendar OAuth |
+| 5.6.1.3 | 🔜 TODO | Apple Calendar support |
+| 5.6.1.4 | 🔜 TODO | Two-way sync logic |
+| 5.6.2.1 | 🔜 TODO | Webhook subscription model |
+| 5.6.2.2 | 🔜 TODO | Webhook delivery service |
+| 5.6.2.3 | 🔜 TODO | Event types (payment due, completed, etc.) |
+| 5.6.2.4 | 🔜 TODO | Webhook management UI |
+| 5.6.3.1 | 🔜 TODO | IFTTT trigger integration |
+| 5.6.3.2 | 🔜 TODO | Zapier app publication |
+| 5.6.4 | 🔄 Partial | Unit tests for Sprint 5.6 (50 iCal tests) |
+
+**Sprint 5.6 Features Completed:**
+- **iCal Feed Generation** (`src/services/ical_service.py`)
+  - ICalService class with full feed generation
+  - FREQUENCY_MAP for all payment frequencies (daily, weekly, biweekly, monthly, quarterly, yearly, one_time)
+  - Event creation with SUMMARY, DTSTART/DTEND, RRULE, CATEGORIES, PRIORITY
+  - VALARM reminders (1 day before payment)
+  - Currency symbol mapping for 11 currencies
+  - Token-based authentication for public feed URLs
+- **Calendar API Endpoints** (`src/api/calendar.py`)
+  - GET /api/v1/calendar/ical/feed-url - Get feed URL with instructions
+  - GET /api/v1/calendar/ical/feed/{user_id}/{token}/payments.ics - Public feed endpoint
+  - GET /api/v1/calendar/ical/preview - Preview upcoming events
+  - webcal:// URL for one-click calendar subscription
+  - Instructions for Google Calendar, Apple Calendar, Outlook
+- **Frontend Calendar Tab** (`frontend/src/components/ImportExportModal.tsx`)
+  - New "Calendar" tab in Import/Export modal
+  - Feed URL display with copy button
+  - One-click "Subscribe with One Click" button (webcal://)
+  - Manual setup instructions for Google, Apple, Outlook
+  - Features overview (reminders, auto-updates, amounts)
+- **Frontend API Types** (`frontend/src/lib/api.ts`)
+  - ICalFeedResponse, ICalPreviewEvent, ICalPreviewResponse interfaces
+  - calendarApi.getICalFeedUrl() and calendarApi.previewICalEvents() methods
+- **Unit Tests** (`tests/unit/test_ical_service.py`)
+  - 50 tests covering ICalService, FREQUENCY_MAP, currency symbols, RRULE generation
+  - Token generation and validation tests
+  - Event creation tests (UID, summary, categories, priority, alarms)
+  - Feed generation tests (empty, with subscriptions, RRULE, VALARM)
+
+**Sprint 5.6 Focus Areas:**
+- **Email Receipt Scanning** (Task 5.6.0) - 16h
+  - Gmail OAuth integration
+  - Email parsing for subscription receipts
+  - Receipt template matching
+  - Outlook support
+- **Calendar Integration** (Task 5.6.1) - 16h ⏳ (iCal complete, OAuth pending)
+  - ✅ iCal feed generation for calendar subscriptions
+  - Google Calendar OAuth and two-way sync
+  - Apple Calendar support
+- **Webhooks** (Task 5.6.2) - 12h
+  - Webhook subscription model and delivery service
+  - Event types (payment due, completed, etc.)
+  - Webhook management UI
+- **IFTTT/Zapier** (Task 5.6.3) - 8h
+  - IFTTT trigger integration
+  - Zapier app publication
+- **Tests** (Task 5.6.4) - 4h
+  - ✅ 50 iCal tests complete
+  - Remaining: webhook, email scanning tests
+
+**Total Sprint 5.6 Hours: ~56h (iCal: ~8h complete)**
 
 ### Sprint 5.4 Tasks (Weeks 23-24) - Icons & AI Settings ✅
 
@@ -1620,18 +1746,26 @@ This ensures context is preserved for future development.
 
 ---
 
-**Last Updated**: 2025-12-20
-**Version**: 5.5.0 (Sprint 5.5 Phase 1-2 Complete)
+**Last Updated**: 2025-12-26
+**Version**: 5.6.1 (Sprint 5.6 iCal Complete)
 **Current Phase**: Phase 5 - Settings & AI Features
-**Current Sprint**: 5.5 - Smart Import (AI) - Phase 1 & 2 Complete
+**Current Sprint**: 5.6 - Integrations & Email Scanning
 **Completed Phases**: Phase 1 ✅, Phase 2 ✅, Phase 3 ✅, Phase 4 ✅
-**Completed Sprints (Phase 5)**: Sprint 5.1 ✅, Sprint 5.2 ✅, Sprint 5.3 ✅, Sprint 5.4 ✅
-**Sprint 5.5 Progress**: Bank Infrastructure ✅, Statement Parsers ✅, AI Pattern Detection 🔜
-**Remaining (Phase 5)**: ~100 hours (3 sprints + AI features)
+**Completed Sprints (Phase 5)**: Sprint 5.1 ✅, Sprint 5.2 ✅, Sprint 5.3 ✅, Sprint 5.4 ✅, Sprint 5.5 ✅
+**Sprint 5.6 Progress**: iCal feed generation ✅, Calendar tab UI ✅, 50 unit tests ✅
+**Remaining (Phase 5)**: ~94 hours (Sprint 5.6: 48h + Sprint 5.7: 46h)
 **For Questions**: Check [.claude/docs/MASTER_PLAN.md](.claude/docs/MASTER_PLAN.md) or [.claude/CHANGELOG.md](.claude/CHANGELOG.md)
 
-### Recent CI Fixes (2025-12-19)
-- **E2E Test Fixes** - Fixed Playwright tests that were failing in GitHub Actions:
-  - Changed `getByRole('button')` to `getByRole('tab')` for view toggle buttons
-  - Added `exact: true` to tab selectors to avoid matching filter tabs
-  - Removed flaky post-send assertion in agent chat test
+### Recent Updates (2025-12-26)
+- **Sprint 5.6 iCal Integration Complete**:
+  - iCal feed generation service with RRULE recurrence
+  - Calendar API endpoints (feed URL, public feed, preview)
+  - Frontend Calendar tab with copy/subscribe buttons
+  - Instructions for Google, Apple, Outlook calendars
+  - 50 unit tests for calendar features
+- **Sprint 5.5 Complete** - All Smart Import features implemented:
+  - Bank profile database with 33+ banks
+  - PDF/CSV/OFX statement parsers
+  - AI pattern detection for recurring payments
+  - Statement import wizard UI
+  - PDF report enhancements with optional sections

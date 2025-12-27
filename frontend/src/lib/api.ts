@@ -437,6 +437,24 @@ export interface ImportResult {
   errors: string[];
 }
 
+// PDF Report Section Options
+export interface PdfSections {
+  categoryBreakdown: boolean;
+  oneTimePayments: boolean;
+  charts: boolean;
+  upcomingPayments: boolean;
+  paymentHistory: boolean;
+  allPayments: boolean;
+}
+
+// PDF Report Config for advanced export
+export interface PdfReportConfig {
+  includeInactive: boolean;
+  sections: PdfSections;
+  pageSize?: "a4" | "letter";
+  targetCurrency?: string;
+}
+
 export const importExportApi = {
   exportJson: async (includeInactive = true): Promise<ExportData> => {
     const { data } = await api.get("/subscriptions/export/json", {
@@ -453,11 +471,36 @@ export const importExportApi = {
     return response.data;
   },
 
-  exportPdf: async (includeInactive = false, pageSize = "a4"): Promise<Blob> => {
+  exportPdf: async (includeInactive = false, pageSize = "a4", includeCharts = true): Promise<Blob> => {
     const response = await api.get("/subscriptions/export/pdf", {
-      params: { include_inactive: includeInactive, page_size: pageSize },
+      params: { include_inactive: includeInactive, page_size: pageSize, include_charts: includeCharts },
       responseType: "blob",
     });
+    return response.data;
+  },
+
+  // Advanced PDF export with section configuration
+  exportPdfAdvanced: async (config: PdfReportConfig): Promise<Blob> => {
+    const response = await api.post(
+      "/subscriptions/export/pdf",
+      {
+        page_size: config.pageSize || "a4",
+        target_currency: config.targetCurrency,
+        sections: {
+          summary: true, // Always include summary
+          category_breakdown: config.sections.categoryBreakdown,
+          one_time_payments: config.sections.oneTimePayments,
+          charts: config.sections.charts,
+          upcoming_payments: config.sections.upcomingPayments,
+          payment_history: config.sections.paymentHistory,
+          all_payments: config.sections.allPayments,
+        },
+        filters: {
+          include_inactive: config.includeInactive,
+        },
+      },
+      { responseType: "blob" }
+    );
     return response.data;
   },
 
@@ -700,7 +743,51 @@ export const calendarApi = {
   deletePayment: async (subscriptionId: string, paymentDate: string): Promise<void> => {
     await api.delete(`/calendar/payments/${subscriptionId}/${paymentDate}`);
   },
+
+  // iCal Feed endpoints (Sprint 5.6)
+  getICalFeedUrl: async (): Promise<ICalFeedResponse> => {
+    const { data } = await api.get("/calendar/ical/feed-url");
+    return data;
+  },
+
+  previewICalEvents: async (daysAhead: number = 30): Promise<ICalPreviewResponse> => {
+    const { data } = await api.get("/calendar/ical/preview", {
+      params: { days_ahead: daysAhead },
+    });
+    return data;
+  },
 };
+
+// iCal Feed types (Sprint 5.6)
+export interface ICalFeedResponse {
+  feed_url: string;
+  webcal_url: string;
+  token: string;
+  feed_path: string;
+  instructions: {
+    google_calendar: string;
+    apple_calendar: string;
+    outlook: string;
+    one_click: string;
+  };
+}
+
+export interface ICalPreviewEvent {
+  id: string;
+  title: string;
+  date: string | null;
+  amount: number;
+  currency: string;
+  frequency: string;
+  payment_type: string | null;
+}
+
+export interface ICalPreviewResponse {
+  events: ICalPreviewEvent[];
+  total: number;
+  days_ahead: number;
+  generated_at: string;
+}
 
 // User Profile types
 export interface UserProfile {
@@ -1009,6 +1096,254 @@ export const iconApi = {
   // Get icon cache stats
   getStats: async (): Promise<IconStats> => {
     const { data } = await api.get("/icons/stats");
+    return data;
+  },
+};
+
+// ============================================================================
+// Statement Import Types (Bank Statement Import - Sprint 5.5)
+// ============================================================================
+
+export type ImportJobStatus = "pending" | "processing" | "ready" | "completed" | "failed" | "cancelled";
+export type DetectionStatus = "pending" | "imported" | "skipped" | "duplicate";
+export type StatementFileType = "pdf" | "csv" | "ofx" | "qfx" | "qif";
+
+export interface BankProfile {
+  id: string;
+  name: string;
+  slug: string;
+  country_code: string;
+  currency: string;
+  logo_url: string | null;
+  website: string | null;
+  is_verified: boolean;
+}
+
+export interface ImportJob {
+  id: string;
+  filename: string;
+  file_type: StatementFileType;
+  file_size: number | null;
+  bank_id: string | null;
+  bank_name: string | null;
+  currency: string;
+  status: ImportJobStatus;
+  error_message: string | null;
+  total_transactions: number;
+  detected_count: number;
+  imported_count: number;
+  skipped_count: number;
+  duplicate_count: number;
+  period_start: string | null;
+  period_end: string | null;
+  created_at: string;
+  processing_started_at: string | null;
+  completed_at: string | null;
+}
+
+export interface DetectedSubscription {
+  id: string;
+  job_id: string;
+  name: string;
+  normalized_name: string;
+  amount: string;
+  currency: string;
+  frequency: string;
+  payment_type: string;
+  confidence: number;
+  amount_variance: number;
+  transaction_count: number;
+  first_seen: string | null;
+  last_seen: string | null;
+  status: DetectionStatus;
+  is_selected: boolean;
+  duplicate_of_id: string | null;
+  duplicate_similarity: number | null;
+  sample_descriptions: string[] | null;
+  created_at: string;
+}
+
+export interface ImportPreviewSummary {
+  total_detected: number;
+  selected_count: number;
+  duplicate_count: number;
+  high_confidence_count: number;
+  low_confidence_count: number;
+  total_monthly_amount: string;
+  currencies: string[];
+  payment_types: Record<string, number>;
+  frequencies: Record<string, number>;
+}
+
+export interface ImportPreview {
+  job: ImportJob;
+  detected_subscriptions: DetectedSubscription[];
+  summary: ImportPreviewSummary;
+}
+
+export interface StatementUploadResponse {
+  job_id: string;
+  filename: string;
+  file_type: string;
+  status: string;
+  message: string;
+}
+
+export interface ImportJobStatusResponse {
+  id: string;
+  status: ImportJobStatus;
+  detected_count: number;
+  error_message: string | null;
+  is_ready: boolean;
+}
+
+export interface ConfirmImportRequest {
+  subscription_ids?: string[];
+  card_id?: string | null;
+  category_id?: string | null;
+}
+
+export interface ConfirmImportResponse {
+  job_id: string;
+  imported_count: number;
+  skipped_count: number;
+  duplicate_count: number;
+  created_subscription_ids: string[];
+}
+
+export interface DuplicateMatch {
+  detected_id: string;
+  detected_name: string;
+  existing_id: string;
+  existing_name: string;
+  similarity: number;
+  match_reasons: string[];
+}
+
+export interface DetectedSubscriptionUpdate {
+  is_selected?: boolean;
+  status?: string;
+  name?: string;
+  amount?: number;
+  frequency?: string;
+  payment_type?: string;
+}
+
+// Statement Import API
+export const statementImportApi = {
+  // Upload a bank statement file
+  uploadStatement: async (
+    file: File,
+    options?: {
+      bank_id?: string;
+      currency?: string;
+      use_ai?: boolean;
+      min_confidence?: number;
+    }
+  ): Promise<StatementUploadResponse> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    if (options?.bank_id) formData.append("bank_id", options.bank_id);
+    if (options?.currency) formData.append("currency", options.currency);
+    if (options?.use_ai !== undefined) formData.append("use_ai", String(options.use_ai));
+    if (options?.min_confidence !== undefined) formData.append("min_confidence", String(options.min_confidence));
+
+    const { data } = await api.post("/import/upload", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return data;
+  },
+
+  // Get job status (for polling)
+  getJobStatus: async (jobId: string): Promise<ImportJobStatusResponse> => {
+    const { data } = await api.get(`/import/jobs/${jobId}/status`);
+    return data;
+  },
+
+  // Get import preview with detected subscriptions
+  getPreview: async (jobId: string): Promise<ImportPreview> => {
+    const { data } = await api.get(`/import/jobs/${jobId}/preview`);
+    return data;
+  },
+
+  // Get import job details
+  getJob: async (jobId: string): Promise<ImportJob> => {
+    const { data } = await api.get(`/import/jobs/${jobId}`);
+    return data;
+  },
+
+  // List all import jobs
+  listJobs: async (limit = 20, offset = 0): Promise<{ jobs: ImportJob[]; total: number }> => {
+    const { data } = await api.get("/import/jobs", { params: { limit, offset } });
+    return data;
+  },
+
+  // Update a detected subscription
+  updateDetected: async (
+    detectedId: string,
+    update: DetectedSubscriptionUpdate
+  ): Promise<DetectedSubscription> => {
+    const { data } = await api.patch(`/import/detected/${detectedId}`, update);
+    return data;
+  },
+
+  // Bulk update detected subscriptions
+  bulkUpdateDetected: async (
+    subscriptionIds: string[],
+    update: { is_selected?: boolean; status?: string }
+  ): Promise<{ updated_count: number; subscription_ids: string[] }> => {
+    const { data } = await api.post("/import/detected/bulk-update", {
+      subscription_ids: subscriptionIds,
+      ...update,
+    });
+    return data;
+  },
+
+  // Confirm import of selected subscriptions
+  confirmImport: async (
+    jobId: string,
+    request?: ConfirmImportRequest
+  ): Promise<ConfirmImportResponse> => {
+    const { data } = await api.post(`/import/jobs/${jobId}/confirm`, request || {});
+    return data;
+  },
+
+  // Cancel an import job
+  cancelJob: async (jobId: string): Promise<{ message: string; job_id: string }> => {
+    const { data } = await api.delete(`/import/jobs/${jobId}`);
+    return data;
+  },
+
+  // Get duplicates for a job
+  getDuplicates: async (jobId: string): Promise<{ duplicates: DuplicateMatch[]; total_matches: number }> => {
+    const { data } = await api.get(`/import/jobs/${jobId}/duplicates`);
+    return data;
+  },
+};
+
+// Bank Profiles API
+export const banksApi = {
+  // Get all bank profiles
+  getAll: async (country?: string): Promise<BankProfile[]> => {
+    const { data } = await api.get("/banks", { params: country ? { country_code: country } : {} });
+    return data;
+  },
+
+  // Search banks
+  search: async (query: string): Promise<BankProfile[]> => {
+    const { data } = await api.get("/banks/search", { params: { q: query } });
+    return data;
+  },
+
+  // Get popular banks
+  getPopular: async (): Promise<BankProfile[]> => {
+    const { data } = await api.get("/banks/popular");
+    return data;
+  },
+
+  // Get bank by slug
+  getBySlug: async (slug: string): Promise<BankProfile> => {
+    const { data } = await api.get(`/banks/${slug}`);
     return data;
   },
 };

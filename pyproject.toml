@@ -51,6 +51,8 @@ dependencies = [
     "pdfplumber>=0.11.0",  # PDF text/table extraction
     "PyPDF2>=3.0.0",       # PDF parsing fallback
     "ofxparse>=0.21",      # OFX/QIF format parsing
+    # Calendar integration (Sprint 5.6)
+    "icalendar>=5.0.0",    # iCal feed generation
 ]
 
 [project.optional-dependencies]

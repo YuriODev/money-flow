@@ -2,9 +2,9 @@
 
 > **Comprehensive Roadmap for Production-Ready Enhancement**
 >
-> **Version**: 2.2.0
+> **Version**: 2.3.0
 > **Created**: December 13, 2025
-> **Updated**: December 20, 2025
+> **Updated**: December 26, 2025
 > **Project**: Money Flow (Subscription Tracker)
 > **Total Duration**: 36 Weeks (6 Phases)
 > **Estimated Effort**: ~655 hours (400 base + 240 Settings + 15 Launch)
@@ -74,8 +74,8 @@ This master plan transforms Money Flow from a well-architected personal project 
 | **5** | 5.2 | Cards & Categories | 19-20 | 26h | ✅ Complete |
 | **5** | 5.3 | Notifications & Export | 21-22 | 28h | ✅ Complete |
 | **5** | 5.4 | Icons & AI Settings | 23-24 | 27h | ✅ Complete |
-| **5** | 5.5 | Smart Import (AI) | 25-27 | 30h | 🔄 In Progress |
-| **5** | 5.6 | Integrations & Email | 28-30 | 56h | 🔜 Not Started |
+| **5** | 5.5 | Smart Import (AI) | 25-27 | 30h | ✅ Complete |
+| **5** | 5.6 | Integrations & Email | 28-30 | 56h | 🔄 In Progress |
 | **5** | 5.7 | Open Banking | 31-34 | 46h | 🔜 Not Started |
 | **6** | 6.1 | Production Launch | 35-36 | 15h | 🔜 Not Started |
 
@@ -1597,7 +1597,7 @@ Intelligent icon management and AI assistant customization.
 
 ---
 
-## Sprint 5.5: Smart Import - Bank Statements (Weeks 25-27) 🔄
+## Sprint 5.5: Smart Import - Bank Statements (Weeks 25-27) ✅
 
 ### Overview
 AI-powered data import from bank statements. Email scanning deferred to Sprint 5.6.
@@ -1613,13 +1613,13 @@ AI-powered data import from bank statements. Email scanning deferred to Sprint 5
 | 5.5.1.1 | PDF text extraction (pdfplumber) | 🟠 | 4h | - | ✅ DONE | PDF parsing |
 | 5.5.1.2 | CSV parser with dynamic bank lookup | 🟠 | 4h | 5.5.0 | ✅ DONE | CSV parsing |
 | 5.5.1.3 | OFX/QIF parser (ofxparse) | 🟠 | 4h | - | ✅ DONE | OFX/QIF parsing |
-| **5.5.2** | **AI Pattern Detection** | 🟠 | 16h | 5.5.1 | 🔜 | AI extraction |
-| 5.5.2.1 | AI extraction of recurring patterns | 🟠 | 8h | 5.5.1 | 🔜 TODO | Pattern detection |
-| 5.5.2.2 | Preview and confirm import UI | 🟠 | 4h | 5.5.2.1 | 🔜 TODO | Import wizard |
-| 5.5.2.3 | Duplicate detection and merge | 🟠 | 4h | 5.5.2.2 | 🔜 TODO | Deduplication |
-| **5.5.3** | **Tests** | 🔴 | 6h | 5.5.2 | 🔜 | Test coverage |
-| 5.5.3.1 | Unit tests for parsers and bank service | 🔴 | 4h | 5.5.2 | 🔜 TODO | Parser tests |
-| 5.5.3.2 | Integration tests for import API | 🔴 | 2h | 5.5.3.1 | 🔜 TODO | API tests |
+| **5.5.2** | **AI Pattern Detection** | 🟠 | 16h | 5.5.1 | ✅ | AI extraction |
+| 5.5.2.1 | AI extraction of recurring patterns | 🟠 | 8h | 5.5.1 | ✅ DONE | Pattern detection |
+| 5.5.2.2 | Preview and confirm import UI | 🟠 | 4h | 5.5.2.1 | ✅ DONE | Import wizard |
+| 5.5.2.3 | Duplicate detection and merge | 🟠 | 4h | 5.5.2.2 | ✅ DONE | Deduplication |
+| **5.5.3** | **Tests** | 🔴 | 6h | 5.5.2 | ✅ | Test coverage |
+| 5.5.3.1 | Unit tests for parsers and bank service | 🔴 | 4h | 5.5.2 | ✅ DONE | Parser tests |
+| 5.5.3.2 | Integration tests for import API | 🔴 | 2h | 5.5.3.1 | ✅ DONE | API tests |
 
 **Sprint 5.5 Completed Features:**
 - ✅ **Bank Profile Database** (`src/models/bank_profile.py`)
@@ -1631,23 +1631,38 @@ AI-powered data import from bank statements. Email scanning deferred to Sprint 5
   - PDF parser with pdfplumber for text/table extraction
   - CSV parser with dynamic bank profile lookup
   - OFX/QIF parser with ofxparse library
+- ✅ **AI Pattern Detection** (`src/services/statement_ai_service.py`)
+  - Transaction grouping by normalized merchant name
+  - Recurring pattern detection (frequency, amount consistency)
+  - Payment type classification using 100+ keyword patterns
+  - Claude Haiku integration for enhanced AI classification
+  - Confidence scoring (count score, amount score, timing score)
+- ✅ **Duplicate Detection** (`src/services/duplicate_detector.py`)
+  - Fuzzy name matching using SequenceMatcher
+  - Amount similarity checking (10% tolerance)
+  - Frequency alignment verification
+- ✅ **Statement Import UI** (`frontend/src/components/StatementImportModal.tsx`)
+  - Multi-step wizard UI (upload → processing → preview → complete)
+  - Drag-and-drop file upload with bank detection
+  - AI analysis with confidence badges
+  - Select/deselect detected subscriptions
+- ✅ **PDF Report Enhancements**
+  - One-time payments section with bar charts
+  - Optional sections (except Summary)
+  - Fixed table alignment (amounts right-aligned, status centered)
+- ✅ **Unit Tests** - 112 tests for Sprint 5.5 features
 
-**Sprint 5.5 Remaining:**
-- 🔜 AI pattern detection for recurring payments
-- 🔜 Preview and confirm import UI
-- 🔜 Duplicate detection and merge
-- 🔜 Unit and integration tests
-
-**Sprint 5.5 Deliverables:**
+**Sprint 5.5 Deliverables:** ✅ ALL COMPLETE
 - 📦 Bank profile database with 33+ banks
 - 📦 Bank statement PDF/CSV/OFX import
 - 📦 AI-powered recurring payment detection
 - 📦 Smart duplicate detection
-- ⏱️ **Total: ~30 hours** (reduced from 46h, email deferred to 5.6)
+- 📦 PDF Report enhancements with optional sections
+- ⏱️ **Total: ~30 hours** (completed)
 
 ---
 
-## Sprint 5.6: Integrations & Email Scanning (Weeks 28-30) 🔜
+## Sprint 5.6: Integrations & Email Scanning (Weeks 28-30) 🔄
 
 ### Overview
 Third-party calendar integration, webhook support, and email receipt scanning (deferred from 5.5).
@@ -1660,7 +1675,7 @@ Third-party calendar integration, webhook support, and email receipt scanning (d
 | 5.6.0.3 | Receipt template matching | 🟡 | 4h | 5.6.0.2 | Template matching |
 | 5.6.0.4 | Outlook support | 🟢 | 2h | 5.6.0.2 | Outlook auth |
 | **5.6.1** | **Calendar Integration** | 🟠 | 16h | None | Calendar sync |
-| 5.6.1.1 | iCal feed generation | 🟠 | 4h | - | iCal endpoint |
+| 5.6.1.1 | iCal feed generation | ✅ | 4h | - | iCal endpoint |
 | 5.6.1.2 | Google Calendar OAuth | 🟠 | 6h | - | Google sync |
 | 5.6.1.3 | Apple Calendar support | 🟡 | 4h | - | Apple sync |
 | 5.6.1.4 | Two-way sync logic | 🟡 | 2h | 5.6.1.2 | Bidirectional |
@@ -1672,15 +1687,46 @@ Third-party calendar integration, webhook support, and email receipt scanning (d
 | **5.6.3** | **IFTTT/Zapier** | 🟡 | 8h | 5.6.2 | Automation |
 | 5.6.3.1 | IFTTT trigger integration | 🟡 | 4h | - | IFTTT connect |
 | 5.6.3.2 | Zapier app publication | 🟡 | 4h | - | Zapier app |
-| **5.6.4** | **Tests** | 🔴 | 4h | 5.6.3 | Test coverage |
+| **5.6.4** | **Tests** | 🔄 | 4h | 5.6.3 | Test coverage |
+
+### Sprint 5.6 Completed Features (Calendar Integration)
+
+**iCal Feed Generation** (Task 5.6.1.1) ✅
+- **ICalService** (`src/services/ical_service.py`)
+  - Full iCal feed generation with VEVENT components
+  - FREQUENCY_MAP for all payment frequencies (daily, weekly, biweekly, monthly, quarterly, yearly, one_time)
+  - Event creation with SUMMARY, DTSTART/DTEND, RRULE, CATEGORIES, PRIORITY
+  - VALARM reminders (1 day before payment)
+  - Currency symbol mapping for 11 currencies (GBP, USD, EUR, UAH, CAD, AUD, JPY, CHF, CNY, INR, BRL)
+  - Token-based authentication for public feed URLs
+- **Calendar API Endpoints** (`src/api/calendar.py`)
+  - GET /api/v1/calendar/ical/feed-url - Get feed URL with instructions
+  - GET /api/v1/calendar/ical/feed/{user_id}/{token}/payments.ics - Public feed endpoint
+  - GET /api/v1/calendar/ical/preview - Preview upcoming events as JSON
+  - webcal:// URL for one-click calendar subscription
+  - Instructions for Google Calendar, Apple Calendar, Outlook
+- **Frontend Calendar Tab** (`frontend/src/components/ImportExportModal.tsx`)
+  - New "Calendar" tab in Import/Export modal
+  - Feed URL display with copy button
+  - One-click "Subscribe with One Click" button (webcal://)
+  - Manual setup instructions for Google, Apple, Outlook
+  - Features overview (reminders, auto-updates, amounts in titles)
+- **Frontend API Types** (`frontend/src/lib/api.ts`)
+  - ICalFeedResponse, ICalPreviewEvent, ICalPreviewResponse interfaces
+  - calendarApi.getICalFeedUrl() and calendarApi.previewICalEvents() methods
+- **Unit Tests** (`tests/unit/test_ical_service.py`)
+  - 50 tests covering ICalService, FREQUENCY_MAP, currency symbols, RRULE generation
+  - Token generation and validation tests
+  - Event creation tests (UID, summary, categories, priority, alarms)
+  - Feed generation tests (empty, with subscriptions, RRULE, VALARM)
 
 **Sprint 5.6 Deliverables:**
 - 📦 Gmail/Outlook email receipt scanning (moved from 5.5)
-- 📦 iCal feed for calendar subscriptions
+- ✅ iCal feed for calendar subscriptions (DONE)
 - 📦 Google Calendar bidirectional sync
 - 📦 Webhook system for third-party integrations
 - 📦 IFTTT/Zapier compatibility
-- ⏱️ **Total: ~56 hours** (includes 16h from 5.5)
+- ⏱️ **Total: ~56 hours** (iCal: ~8h complete, ~48h remaining)
 
 ---
 
@@ -1721,12 +1767,12 @@ Open Banking API integration for automatic transaction import (UK/EU focus).
 
 | Sprint | Focus | Weeks | Hours | Status |
 |--------|-------|-------|-------|--------|
-| **5.1** | Profile & Preferences | 17-18 | 28h | 🔜 Not Started |
-| **5.2** | Cards & Categories | 19-20 | 26h | 🔜 Not Started |
-| **5.3** | Notifications & Export | 21-22 | 28h | 🔜 Not Started |
-| **5.4** | Icons & AI Settings | 23-24 | 27h | 🔜 Not Started |
-| **5.5** | Smart Import (AI) | 25-27 | 46h | 🔜 Not Started |
-| **5.6** | Integrations | 28-30 | 40h | 🔜 Not Started |
+| **5.1** | Profile & Preferences | 17-18 | 28h | ✅ Complete |
+| **5.2** | Cards & Categories | 19-20 | 26h | ✅ Complete |
+| **5.3** | Notifications & Export | 21-22 | 28h | ✅ Complete |
+| **5.4** | Icons & AI Settings | 23-24 | 27h | ✅ Complete |
+| **5.5** | Smart Import (AI) | 25-27 | 30h | ✅ Complete |
+| **5.6** | Integrations & Email | 28-30 | 56h | 🔄 In Progress |
 | **5.7** | Open Banking | 31-34 | 46h | 🔜 Not Started |
 
 **Phase 5 Total: ~241 hours across 18 weeks**

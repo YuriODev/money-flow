@@ -1,25 +1,34 @@
 """Calendar and payment history API endpoints.
 
 This module provides API endpoints for calendar view, payment history,
-and payment recording functionality.
+payment recording functionality, and iCal feed generation.
 
 All endpoints use async/await for non-blocking I/O operations.
+
+Sprint 5.6 - Added iCal feed generation endpoints.
 """
 
+import hashlib
 import logging
-from datetime import date
+from datetime import date, datetime, timedelta
 from decimal import Decimal
+from typing import Annotated
+from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from pydantic import BaseModel, Field
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.auth.dependencies import get_current_user
 from src.core.config import settings
 from src.core.dependencies import get_db
-from src.models.subscription import PaymentStatus
+from src.models.subscription import PaymentStatus, Subscription
+from src.models.user import User
 from src.schemas.subscription import CalendarEvent, MonthlyPaymentsSummary, PaymentHistoryResponse
 from src.security.rate_limit import limiter, rate_limit_get, rate_limit_write
 from src.services.currency_service import CurrencyService
+from src.services.ical_service import ICalService
 from src.services.payment_service import PaymentService
 
 logger = logging.getLogger(__name__)
@@ -308,3 +317,238 @@ async def get_monthly_payments_summary(
     )
 
     return MonthlyPaymentsSummary(**summary)
+
+
+# =============================================================================
+# iCal Feed Endpoints (Sprint 5.6)
+# =============================================================================
+
+
+class CalendarFeedResponse(BaseModel):
+    """Response containing calendar feed information."""
+
+    feed_url: str = Field(description="The iCal feed URL (use your server's base URL)")
+    webcal_url: str = Field(description="The webcal:// URL for one-click subscribe")
+    token: str = Field(description="The feed authentication token")
+    feed_path: str = Field(description="The path portion of the feed URL")
+    instructions: dict[str, str] = Field(description="Setup instructions for various apps")
+
+
+class CalendarPreviewEvent(BaseModel):
+    """A single event in the calendar preview."""
+
+    id: str
+    title: str
+    date: str | None
+    amount: float
+    currency: str
+    frequency: str
+    payment_type: str | None
+
+
+class CalendarPreviewResponse(BaseModel):
+    """Response for calendar preview."""
+
+    events: list[CalendarPreviewEvent]
+    total: int
+    days_ahead: int
+    generated_at: str
+
+
+def _generate_user_token(user_id: UUID) -> str:
+    """Generate a deterministic token for a user.
+
+    This creates a stable token based on user_id that can be used
+    to authenticate calendar feed requests.
+
+    Args:
+        user_id: The user's UUID.
+
+    Returns:
+        str: A 32-character token.
+    """
+    return hashlib.sha256(f"{user_id}-ical-feed-v1".encode()).hexdigest()[:32]
+
+
+@router.get("/ical/feed-url", response_model=CalendarFeedResponse)
+@limiter.limit(rate_limit_get)
+async def get_ical_feed_url(
+    request: Request,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> CalendarFeedResponse:
+    """Get the iCal feed URL for the current user.
+
+    Returns the feed URL along with setup instructions for various
+    calendar applications.
+
+    Returns:
+        CalendarFeedResponse: Feed URL and setup instructions.
+    """
+    token = _generate_user_token(current_user.id)
+
+    # Build the feed path
+    feed_path = f"/api/v1/calendar/ical/feed/{current_user.id}/{token}/payments.ics"
+
+    # Try to determine base URL from request
+    scheme = request.headers.get("x-forwarded-proto", request.url.scheme)
+    host = request.headers.get("x-forwarded-host", request.url.netloc)
+    base_url = f"{scheme}://{host}"
+
+    feed_url = f"{base_url}{feed_path}"
+    webcal_host = host.replace("https://", "").replace("http://", "")
+    webcal_url = f"webcal://{webcal_host}{feed_path}"
+
+    instructions = {
+        "google_calendar": (
+            "1. Open Google Calendar\n"
+            "2. Click '+' next to 'Other calendars'\n"
+            "3. Select 'From URL'\n"
+            "4. Paste the feed URL"
+        ),
+        "apple_calendar": (
+            "1. Open Calendar app\n"
+            "2. File > New Calendar Subscription\n"
+            "3. Paste the feed URL\n"
+            "4. Click Subscribe"
+        ),
+        "outlook": (
+            "1. Open Outlook Calendar\n"
+            "2. Add Calendar > From Internet\n"
+            "3. Paste the feed URL\n"
+            "4. Click Import"
+        ),
+        "one_click": (
+            "Click the webcal:// URL to automatically open your default calendar app and subscribe."
+        ),
+    }
+
+    return CalendarFeedResponse(
+        feed_url=feed_url,
+        webcal_url=webcal_url,
+        token=token,
+        feed_path=feed_path,
+        instructions=instructions,
+    )
+
+
+@router.get("/ical/feed/{user_id}/{token}/payments.ics")
+async def get_ical_feed(
+    user_id: UUID,
+    token: str,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    include_inactive: Annotated[bool, Query()] = False,
+    days_ahead: Annotated[int, Query(ge=30, le=730)] = 365,
+    payment_types: Annotated[str | None, Query()] = None,
+) -> Response:
+    """Get the iCal feed for a user's subscriptions.
+
+    This endpoint is publicly accessible but requires a valid token.
+    The token is generated per-user and provides read-only access
+    to the calendar feed.
+
+    Args:
+        user_id: The user's UUID.
+        token: The authentication token.
+        include_inactive: Include inactive subscriptions.
+        days_ahead: Number of days of future events to include.
+        payment_types: Comma-separated list of payment types to include.
+
+    Returns:
+        Response: The iCal file content with appropriate headers.
+
+    Raises:
+        HTTPException: 403 if token is invalid.
+    """
+    # Validate token
+    expected_token = _generate_user_token(user_id)
+    if token != expected_token:
+        raise HTTPException(status_code=403, detail="Invalid feed token")
+
+    # Parse payment types
+    types_list = None
+    if payment_types:
+        types_list = [t.strip() for t in payment_types.split(",")]
+
+    # Generate feed
+    service = ICalService(db, user_id)
+    ical_content = await service.generate_feed(
+        include_inactive=include_inactive,
+        days_ahead=days_ahead,
+        payment_types=types_list,
+    )
+
+    return Response(
+        content=ical_content,
+        media_type="text/calendar",
+        headers={
+            "Content-Disposition": "attachment; filename=moneyflow-payments.ics",
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        },
+    )
+
+
+@router.get("/ical/preview", response_model=CalendarPreviewResponse)
+@limiter.limit(rate_limit_get)
+async def preview_ical_events(
+    request: Request,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+    days_ahead: Annotated[int, Query(ge=7, le=90)] = 30,
+    payment_types: Annotated[str | None, Query()] = None,
+) -> CalendarPreviewResponse:
+    """Preview upcoming calendar events without generating a full feed.
+
+    Returns a JSON preview of what events would appear in the calendar.
+
+    Args:
+        days_ahead: Number of days to preview (max 90).
+        payment_types: Comma-separated list of payment types.
+
+    Returns:
+        CalendarPreviewResponse: Preview of upcoming events.
+    """
+    # Parse payment types
+    types_list = None
+    if payment_types:
+        types_list = [t.strip() for t in payment_types.split(",")]
+
+    # Build query - convert UUID to string for comparison with String(36) column
+    user_id_str = str(current_user.id)
+    query = (
+        select(Subscription)
+        .where(Subscription.user_id == user_id_str)
+        .where(Subscription.is_active == True)  # noqa: E712
+        .where(Subscription.next_payment_date != None)  # noqa: E711
+        .where(Subscription.next_payment_date <= datetime.now().date() + timedelta(days=days_ahead))
+        .order_by(Subscription.next_payment_date)
+    )
+
+    if types_list:
+        query = query.where(Subscription.payment_type.in_(types_list))
+
+    result = await db.execute(query)
+    subscriptions = result.scalars().all()
+
+    events = []
+    for sub in subscriptions:
+        events.append(
+            CalendarPreviewEvent(
+                id=str(sub.id),
+                title=f"💰 {sub.service_name}",
+                date=sub.next_payment_date.isoformat() if sub.next_payment_date else None,
+                amount=float(sub.amount),
+                currency=sub.currency,
+                frequency=sub.frequency,
+                payment_type=sub.payment_type,
+            )
+        )
+
+    return CalendarPreviewResponse(
+        events=events,
+        total=len(events),
+        days_ahead=days_ahead,
+        generated_at=datetime.utcnow().isoformat(),
+    )
