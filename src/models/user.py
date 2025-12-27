@@ -170,6 +170,15 @@ class User(Base):
         lazy="selectin",
     )
 
+    # Google Calendar connection (one-to-one)
+    google_calendar_connection: Mapped["GoogleCalendarConnection | None"] = relationship(  # noqa: F821
+        "GoogleCalendarConnection",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        uselist=False,
+        lazy="selectin",
+    )
+
     def __repr__(self) -> str:
         """Return string representation of user.
 

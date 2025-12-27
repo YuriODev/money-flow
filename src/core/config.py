@@ -163,6 +163,11 @@ class Settings(BaseSettings):
     vapid_public_key: str = ""  # VAPID public key (shared with frontend)
     vapid_email: str = ""  # Contact email for VAPID claims (mailto:)
 
+    # Google Calendar OAuth (Sprint 5.6)
+    google_client_id: str = ""  # Google OAuth client ID
+    google_client_secret: str = ""  # Google OAuth client secret
+    google_redirect_uri: str = "http://localhost:8001/api/v1/calendar/google/callback"  # OAuth callback URL
+
 
 @lru_cache
 def get_settings() -> Settings:

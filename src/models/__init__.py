@@ -14,6 +14,7 @@ from src.models.export_history import (
     ExportStatus,
     ExportType,
 )
+from src.models.google_calendar import GoogleCalendarConnection, GoogleCalendarSyncStatus
 from src.models.icon_cache import IconCache, IconSource
 from src.models.notification import NotificationPreferences
 from src.models.notification_history import (
@@ -55,6 +56,8 @@ __all__ = [
     "ExportType",
     "FileType",
     "Frequency",
+    "GoogleCalendarConnection",
+    "GoogleCalendarSyncStatus",
     "IconCache",
     "IconGenerationStyle",
     "IconSource",

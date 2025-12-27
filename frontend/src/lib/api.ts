@@ -756,6 +756,33 @@ export const calendarApi = {
     });
     return data;
   },
+
+  // Google Calendar OAuth endpoints (Sprint 5.6)
+  getGoogleCalendarStatus: async (): Promise<GoogleCalendarStatus> => {
+    const { data } = await api.get("/calendar/google/status");
+    return data;
+  },
+
+  connectGoogleCalendar: async (): Promise<GoogleCalendarConnectResponse> => {
+    const { data } = await api.get("/calendar/google/connect");
+    return data;
+  },
+
+  disconnectGoogleCalendar: async (): Promise<void> => {
+    await api.delete("/calendar/google/disconnect");
+  },
+
+  syncToGoogleCalendar: async (calendarId: string = "primary"): Promise<GoogleCalendarSyncResponse> => {
+    const { data } = await api.post("/calendar/google/sync", null, {
+      params: { calendar_id: calendarId },
+    });
+    return data;
+  },
+
+  listGoogleCalendars: async (): Promise<GoogleCalendarListResponse> => {
+    const { data } = await api.get("/calendar/google/calendars");
+    return data;
+  },
 };
 
 // iCal Feed types (Sprint 5.6)
@@ -787,6 +814,35 @@ export interface ICalPreviewResponse {
   total: number;
   days_ahead: number;
   generated_at: string;
+}
+
+// Google Calendar OAuth types (Sprint 5.6)
+export interface GoogleCalendarStatus {
+  connected: boolean;
+  status: "connected" | "disconnected" | "token_expired" | "error" | "not_connected";
+  calendar_id: string | null;
+  sync_enabled: boolean | null;
+  last_sync_at: string | null;
+  last_error: string | null;
+}
+
+export interface GoogleCalendarConnectResponse {
+  authorization_url: string;
+  state: string;
+}
+
+export interface GoogleCalendarSyncResponse {
+  created: number;
+  failed: number;
+  total: number;
+}
+
+export interface GoogleCalendarListResponse {
+  calendars: {
+    id: string;
+    summary: string;
+    primary: boolean;
+  }[];
 }
 
 // User Profile types

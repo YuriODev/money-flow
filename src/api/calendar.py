@@ -1,21 +1,24 @@
 """Calendar and payment history API endpoints.
 
 This module provides API endpoints for calendar view, payment history,
-payment recording functionality, and iCal feed generation.
+payment recording functionality, iCal feed generation, and Google Calendar
+OAuth integration.
 
 All endpoints use async/await for non-blocking I/O operations.
 
-Sprint 5.6 - Added iCal feed generation endpoints.
+Sprint 5.6 - Added iCal feed generation and Google Calendar OAuth endpoints.
 """
 
 import hashlib
 import logging
+import secrets
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -28,6 +31,7 @@ from src.models.user import User
 from src.schemas.subscription import CalendarEvent, MonthlyPaymentsSummary, PaymentHistoryResponse
 from src.security.rate_limit import limiter, rate_limit_get, rate_limit_write
 from src.services.currency_service import CurrencyService
+from src.services.google_calendar_service import GoogleCalendarService
 from src.services.ical_service import ICalService
 from src.services.payment_service import PaymentService
 
@@ -552,3 +556,232 @@ async def preview_ical_events(
         days_ahead=days_ahead,
         generated_at=datetime.utcnow().isoformat(),
     )
+
+
+# =============================================================================
+# Google Calendar OAuth Endpoints (Sprint 5.6)
+# =============================================================================
+
+# In-memory state storage for OAuth CSRF protection
+# In production, use Redis or database for state management
+_oauth_states: dict[str, str] = {}
+
+
+class GoogleCalendarStatusResponse(BaseModel):
+    """Response for Google Calendar connection status."""
+
+    connected: bool = Field(description="Whether Google Calendar is connected")
+    status: str = Field(description="Connection status")
+    calendar_id: str | None = Field(default=None, description="Selected calendar ID")
+    sync_enabled: bool | None = Field(default=None, description="Whether sync is enabled")
+    last_sync_at: str | None = Field(default=None, description="Last sync timestamp")
+    last_error: str | None = Field(default=None, description="Last error message")
+
+
+class GoogleCalendarConnectResponse(BaseModel):
+    """Response for initiating Google Calendar connection."""
+
+    authorization_url: str = Field(description="URL to redirect user for OAuth")
+    state: str = Field(description="State parameter for CSRF protection")
+
+
+class GoogleCalendarSyncResponse(BaseModel):
+    """Response for sync operation."""
+
+    created: int = Field(description="Number of events created")
+    failed: int = Field(description="Number of events that failed")
+    total: int = Field(description="Total subscriptions processed")
+
+
+class GoogleCalendarListResponse(BaseModel):
+    """Response for listing calendars."""
+
+    calendars: list[dict] = Field(description="List of calendars")
+
+
+@router.get("/google/status", response_model=GoogleCalendarStatusResponse)
+@limiter.limit(rate_limit_get)
+async def get_google_calendar_status(
+    request: Request,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> GoogleCalendarStatusResponse:
+    """Get Google Calendar connection status.
+
+    Returns the current connection status, last sync time, and any errors.
+
+    Returns:
+        GoogleCalendarStatusResponse: Connection status details.
+    """
+    service = GoogleCalendarService(db, current_user.id)
+    status_info = await service.get_sync_status()
+    return GoogleCalendarStatusResponse(**status_info)
+
+
+@router.get("/google/connect", response_model=GoogleCalendarConnectResponse)
+@limiter.limit(rate_limit_write)
+async def initiate_google_calendar_connect(
+    request: Request,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> GoogleCalendarConnectResponse:
+    """Initiate Google Calendar OAuth flow.
+
+    Generates an authorization URL for the user to authorize access
+    to their Google Calendar.
+
+    Returns:
+        GoogleCalendarConnectResponse: Authorization URL and state.
+
+    Raises:
+        HTTPException 503: If Google OAuth is not configured.
+    """
+    if not settings.google_client_id or not settings.google_client_secret:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Google Calendar integration is not configured",
+        )
+
+    service = GoogleCalendarService(db, current_user.id)
+
+    # Generate state for CSRF protection
+    state = secrets.token_urlsafe(32)
+    _oauth_states[state] = str(current_user.id)
+
+    try:
+        auth_url, _ = service.get_authorization_url(state)
+        return GoogleCalendarConnectResponse(
+            authorization_url=auth_url,
+            state=state,
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(e),
+        ) from e
+
+
+@router.get("/google/callback")
+async def google_calendar_callback(
+    code: str = Query(..., description="Authorization code from Google"),
+    state: str = Query(..., description="State for CSRF verification"),
+    db: AsyncSession = Depends(get_db),
+) -> RedirectResponse:
+    """Handle Google OAuth callback.
+
+    Exchanges the authorization code for tokens and stores them.
+    Redirects to the frontend with success/error status.
+
+    Args:
+        code: Authorization code from Google.
+        state: State parameter for CSRF verification.
+
+    Returns:
+        RedirectResponse: Redirect to frontend with result.
+    """
+    # Verify state
+    user_id = _oauth_states.pop(state, None)
+    if not user_id:
+        logger.warning(f"Invalid OAuth state: {state}")
+        return RedirectResponse(
+            url="http://localhost:3001/settings?google_calendar=error&reason=invalid_state"
+        )
+
+    service = GoogleCalendarService(db, UUID(user_id))
+
+    try:
+        await service.handle_oauth_callback(code, state)
+        logger.info(f"Google Calendar connected for user {user_id}")
+        return RedirectResponse(url="http://localhost:3001/settings?google_calendar=success")
+    except ValueError as e:
+        logger.error(f"OAuth callback failed: {e}")
+        return RedirectResponse(
+            url=f"http://localhost:3001/settings?google_calendar=error&reason={str(e)[:50]}"
+        )
+
+
+@router.delete("/google/disconnect", status_code=status.HTTP_204_NO_CONTENT)
+@limiter.limit(rate_limit_write)
+async def disconnect_google_calendar(
+    request: Request,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> None:
+    """Disconnect Google Calendar integration.
+
+    Removes the OAuth connection and stops syncing.
+    """
+    service = GoogleCalendarService(db, current_user.id)
+    await service.disconnect()
+    logger.info(f"Google Calendar disconnected for user {current_user.id}")
+
+
+@router.post("/google/sync", response_model=GoogleCalendarSyncResponse)
+@limiter.limit(rate_limit_write)
+async def sync_to_google_calendar(
+    request: Request,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+    calendar_id: str = Query(default="primary", description="Calendar ID to sync to"),
+) -> GoogleCalendarSyncResponse:
+    """Sync subscriptions to Google Calendar.
+
+    Creates calendar events for all active subscriptions.
+
+    Args:
+        calendar_id: Google Calendar ID to sync to (default: 'primary').
+
+    Returns:
+        GoogleCalendarSyncResponse: Sync operation results.
+
+    Raises:
+        HTTPException 400: If not connected to Google Calendar.
+    """
+    service = GoogleCalendarService(db, current_user.id)
+    status_info = await service.get_sync_status()
+
+    if not status_info.get("connected"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Not connected to Google Calendar",
+        )
+
+    result = await service.sync_subscriptions_to_calendar(calendar_id)
+
+    if "error" in result:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=result["error"],
+        )
+
+    return GoogleCalendarSyncResponse(**result)
+
+
+@router.get("/google/calendars", response_model=GoogleCalendarListResponse)
+@limiter.limit(rate_limit_get)
+async def list_google_calendars(
+    request: Request,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> GoogleCalendarListResponse:
+    """List user's Google Calendars.
+
+    Returns a list of calendars the user has access to.
+
+    Returns:
+        GoogleCalendarListResponse: List of calendars.
+
+    Raises:
+        HTTPException 400: If not connected to Google Calendar.
+    """
+    service = GoogleCalendarService(db, current_user.id)
+    status_info = await service.get_sync_status()
+
+    if not status_info.get("connected"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Not connected to Google Calendar",
+        )
+
+    calendars = await service.list_calendars()
+    return GoogleCalendarListResponse(calendars=calendars)
