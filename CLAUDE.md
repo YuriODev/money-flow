@@ -34,7 +34,7 @@
 | **Phase 5** | Sprint 5.3 | ✅ Complete | Notifications & Export |
 | **Phase 5** | Sprint 5.4 | ✅ Complete | Icons & AI Settings |
 | **Phase 5** | Sprint 5.5 | ✅ Complete | Smart Import (Bank Statements) |
-| **Phase 5** | Sprint 5.6 | 🔄 In Progress | Integrations & Email Scanning |
+| **Phase 5** | Sprint 5.6 | 🔄 In Progress | Integrations (Calendar, Webhooks, IFTTT) |
 | **Phase 5** | Sprint 5.7 | 🔜 Upcoming | Open Banking (~46h) |
 | **Phase 6** | Sprint 6.1 | 🔜 Upcoming | Production Launch (~15h) |
 
@@ -227,25 +227,27 @@
     - getDuplicates() - Check for duplicates
   - banksApi with bank profile operations
 
-### Sprint 5.6 Tasks (Weeks 28-30) - Integrations & Email Scanning 🔄
+### Sprint 5.6 Tasks (Weeks 28-30) - Integrations 🔄
 
 | Task | Status | Description |
 |------|--------|-------------|
-| 5.6.0.1 | 🔜 TODO | Gmail OAuth integration |
-| 5.6.0.2 | 🔜 TODO | Email parsing for subscriptions |
-| 5.6.0.3 | 🔜 TODO | Receipt template matching |
-| 5.6.0.4 | 🔜 TODO | Outlook support |
 | 5.6.1.1 | ✅ DONE | iCal feed generation |
 | 5.6.1.2 | ✅ DONE | Google Calendar OAuth |
 | 5.6.1.3 | ✅ DONE | Apple Calendar support (via iCal) |
-| 5.6.1.4 | 🔜 TODO | Two-way sync logic |
+| 5.6.1.4 | 🟡 Future | Two-way sync logic |
 | 5.6.2.1 | ✅ DONE | Webhook subscription model |
 | 5.6.2.2 | ✅ DONE | Webhook delivery service |
 | 5.6.2.3 | ✅ DONE | Event types (10 types: payment due, completed, etc.) |
-| 5.6.2.4 | 🔜 TODO | Webhook management UI |
+| 5.6.2.4 | 🟡 Future | Webhook management UI |
 | 5.6.3.1 | 🔜 TODO | IFTTT trigger integration |
 | 5.6.3.2 | 🔜 TODO | Zapier app publication |
-| 5.6.4 | 🔄 Partial | Unit tests for Sprint 5.6 (159 tests: 50 iCal + 41 Google Calendar + 68 Webhooks) |
+| 5.6.4 | ✅ DONE | Unit tests for Sprint 5.6 (159 tests: 50 iCal + 41 Google Calendar + 68 Webhooks) |
+
+**Note:** Email Receipt Scanning (5.6.0) has been **deprioritized** due to:
+- Google API verification costs ($15,000-75,000 CASA audit)
+- Complex OAuth approval process (weeks/months)
+- Bank statement import (Sprint 5.5) already provides transaction detection
+- IFTTT/Zapier integration allows users to set up their own email rules
 
 **Sprint 5.6 Features Completed:**
 - **iCal Feed Generation** (`src/services/ical_service.py`)
@@ -341,30 +343,26 @@
   - 68 tests covering model, schemas, HMAC signature
 
 **Sprint 5.6 Focus Areas:**
-- **Email Receipt Scanning** (Task 5.6.0) - 16h
-  - Gmail OAuth integration
-  - Email parsing for subscription receipts
-  - Receipt template matching
-  - Outlook support
 - **Calendar Integration** (Task 5.6.1) - 16h ✅ Complete
   - ✅ iCal feed generation for calendar subscriptions
   - ✅ Google Calendar OAuth and sync
   - ✅ Apple Calendar support (via iCal feed)
-  - 🔜 Two-way sync logic (future enhancement)
+  - 🟡 Two-way sync logic (future enhancement)
 - **Webhooks** (Task 5.6.2) - 12h ✅ Backend Complete
   - ✅ Webhook subscription model and delivery service
   - ✅ Event types (10 types: payment due, completed, etc.)
-  - 🔜 Webhook management UI (frontend)
-- **IFTTT/Zapier** (Task 5.6.3) - 8h
+  - 🟡 Webhook management UI (future enhancement)
+- **IFTTT/Zapier** (Task 5.6.3) - 8h 🔜 Next
   - IFTTT trigger integration
   - Zapier app publication
 - **Tests** (Task 5.6.4) - 4h ✅ Complete
-  - ✅ 50 iCal tests complete
-  - ✅ 41 Google Calendar tests complete
-  - ✅ 68 webhook tests complete
-  - Remaining: email scanning tests (when implemented)
+  - ✅ 159 tests total (50 iCal + 41 Google Calendar + 68 Webhooks)
+- **~~Email Receipt Scanning~~** (Task 5.6.0) - ❌ Deprioritized
+  - Requires expensive Google API verification ($15K-75K)
+  - Bank statement import provides similar functionality
+  - Users can use IFTTT/Zapier for email-based automation
 
-**Total Sprint 5.6 Hours: ~56h (Calendar: ~16h complete, ~40h remaining)**
+**Total Sprint 5.6 Hours: ~40h (Calendar: 16h ✅, Webhooks: 9h ✅, IFTTT/Zapier: 8h 🔜, remaining: ~7h)**
 
 ### Sprint 5.4 Tasks (Weeks 23-24) - Icons & AI Settings ✅
 
@@ -1814,13 +1812,15 @@ This ensures context is preserved for future development.
 ---
 
 **Last Updated**: 2025-12-28
-**Version**: 5.6.3 (Sprint 5.6 Webhooks Backend Complete)
+**Version**: 5.6.4 (Email Scanning Deprioritized)
 **Current Phase**: Phase 5 - Settings & AI Features
-**Current Sprint**: 5.6 - Integrations & Email Scanning
+**Current Sprint**: 5.6 - Integrations (Calendar, Webhooks, IFTTT)
 **Completed Phases**: Phase 1 ✅, Phase 2 ✅, Phase 3 ✅, Phase 4 ✅
 **Completed Sprints (Phase 5)**: Sprint 5.1 ✅, Sprint 5.2 ✅, Sprint 5.3 ✅, Sprint 5.4 ✅, Sprint 5.5 ✅
 **Sprint 5.6 Progress**: iCal ✅, Google Calendar ✅, Webhooks Backend ✅, 159 tests ✅
-**Remaining (Phase 5)**: ~74 hours (Sprint 5.6: 28h + Sprint 5.7: 46h)
+**Sprint 5.6 Remaining**: IFTTT/Zapier integration (~8h)
+**Email Scanning**: ❌ Deprioritized (Google API verification costs $15K-75K)
+**Remaining (Phase 5)**: ~54 hours (Sprint 5.6: 8h + Sprint 5.7: 46h)
 **For Questions**: Check [.claude/docs/MASTER_PLAN.md](.claude/docs/MASTER_PLAN.md) or [.claude/CHANGELOG.md](.claude/CHANGELOG.md)
 
 ### Recent Updates (2025-12-28)

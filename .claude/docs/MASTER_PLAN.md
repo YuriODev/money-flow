@@ -1662,18 +1662,13 @@ AI-powered data import from bank statements. Email scanning deferred to Sprint 5
 
 ---
 
-## Sprint 5.6: Integrations & Email Scanning (Weeks 28-30) 🔄
+## Sprint 5.6: Integrations (Weeks 28-30) 🔄
 
 ### Overview
-Third-party calendar integration, webhook support, and email receipt scanning (deferred from 5.5).
+Third-party calendar integration, webhook support, and automation integrations.
 
 | Task ID | Task Name | Priority | Hours | Dependencies | Deliverable |
 |---------|-----------|----------|-------|--------------|-------------|
-| **5.6.0** | **Email Receipt Scanning** | 🟡 | 16h | None | Email scanner |
-| 5.6.0.1 | Gmail OAuth integration | 🟡 | 4h | - | Gmail auth |
-| 5.6.0.2 | Email parsing for subscriptions | 🟡 | 6h | 5.6.0.1 | Email parsing |
-| 5.6.0.3 | Receipt template matching | 🟡 | 4h | 5.6.0.2 | Template matching |
-| 5.6.0.4 | Outlook support | 🟢 | 2h | 5.6.0.2 | Outlook auth |
 | **5.6.1** | **Calendar Integration** | ✅ | 16h | None | Calendar sync |
 | 5.6.1.1 | iCal feed generation | ✅ | 4h | - | iCal endpoint |
 | 5.6.1.2 | Google Calendar OAuth | ✅ | 6h | - | Google sync |
@@ -1817,14 +1812,37 @@ Third-party calendar integration, webhook support, and email receipt scanning (d
   - 68 tests covering model, schemas, HMAC signatures
 
 **Sprint 5.6 Deliverables:**
-- 📦 Gmail/Outlook email receipt scanning (moved from 5.5)
 - ✅ iCal feed for calendar subscriptions (DONE)
 - ✅ Google Calendar OAuth sync (DONE)
 - ✅ Apple Calendar support via iCal (DONE)
 - ✅ Webhook system for third-party integrations (DONE - Backend)
-- 🟡 Webhook management UI (Future)
-- 📦 IFTTT/Zapier compatibility
-- ⏱️ **Total: ~56 hours** (Calendar: ~16h complete, Webhooks: ~9h complete, ~31h remaining)
+- 🟡 Webhook management UI (Future enhancement)
+- 📦 IFTTT/Zapier compatibility (Next)
+- ⏱️ **Total: ~40 hours** (Calendar: 16h ✅, Webhooks: 9h ✅, IFTTT/Zapier: 8h 🔜, Tests: 4h ✅)
+
+### Email Receipt Scanning - DEPRIORITIZED ❌
+
+**Task 5.6.0 has been removed from the active roadmap** due to:
+
+1. **Google API Verification Costs**: Gmail API access with sensitive scopes requires:
+   - CASA (Cloud Application Security Assessment) audit: $15,000 - $75,000
+   - Security questionnaire and privacy policy review
+   - Approval process takes weeks/months
+
+2. **Existing Alternatives**:
+   - Bank statement import (Sprint 5.5) already detects recurring transactions
+   - IFTTT/Zapier integration allows users to set up email-based automation rules
+   - Users can manually forward receipts
+
+3. **Risk vs Reward**:
+   - High compliance burden for limited incremental value
+   - Privacy concerns with email access
+   - Better ROI focusing on Open Banking (Sprint 5.7)
+
+**Future Consideration**: May revisit if:
+- App reaches scale where CASA audit cost is justified
+- Google introduces lower-friction verification for small apps
+- Alternative email parsing APIs become available
 
 ---
 
