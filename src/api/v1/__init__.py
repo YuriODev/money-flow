@@ -33,6 +33,7 @@ from src.api import (
     export_history,
     icons,
     insights,
+    integrations,
     search,
     statement_import,
     subscriptions,
@@ -61,5 +62,6 @@ v1_router.include_router(currencies.router, prefix="/currencies", tags=["currenc
 v1_router.include_router(banks.router, tags=["banks"])
 v1_router.include_router(statement_import.router, tags=["statement-import"])
 v1_router.include_router(webhooks.router, tags=["webhooks"])
+v1_router.include_router(integrations.router, tags=["integrations"])
 
 __all__ = ["v1_router"]

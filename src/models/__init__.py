@@ -16,6 +16,12 @@ from src.models.export_history import (
 )
 from src.models.google_calendar import GoogleCalendarConnection, GoogleCalendarSyncStatus
 from src.models.icon_cache import IconCache, IconSource
+from src.models.integration import (
+    APIKey,
+    IntegrationStatus,
+    IntegrationType,
+    RestHookSubscription,
+)
 from src.models.notification import NotificationPreferences
 from src.models.notification_history import (
     NotificationChannel,
@@ -51,6 +57,7 @@ from src.models.webhook import (
 __all__ = [
     "AIModel",
     "AIPreferences",
+    "APIKey",
     "BankProfile",
     "CardType",
     "Category",
@@ -70,6 +77,8 @@ __all__ = [
     "IconGenerationStyle",
     "IconSource",
     "ImportJobStatus",
+    "IntegrationStatus",
+    "IntegrationType",
     "NotificationChannel",
     "NotificationHistory",
     "NotificationPreferences",
@@ -80,6 +89,7 @@ __all__ = [
     "PaymentStatus",
     "PaymentType",
     "RAGAnalytics",
+    "RestHookSubscription",
     "StatementImportJob",
     "Subscription",
     "SuggestionFrequency",

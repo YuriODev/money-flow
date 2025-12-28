@@ -187,6 +187,22 @@ class User(Base):
         lazy="selectin",
     )
 
+    # API keys for external integrations
+    api_keys: Mapped[list["APIKey"]] = relationship(  # noqa: F821
+        "APIKey",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+
+    # REST Hook subscriptions (Zapier/IFTTT)
+    rest_hook_subscriptions: Mapped[list["RestHookSubscription"]] = relationship(  # noqa: F821
+        "RestHookSubscription",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+
     def __repr__(self) -> str:
         """Return string representation of user.
 
