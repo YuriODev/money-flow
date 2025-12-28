@@ -324,16 +324,15 @@ class OFXStatementParser(StatementParser):
 
         transactions: list[Transaction] = []
         current_txn: dict = {}
-        account_type = None
 
         for line in lines:
             line = line.strip()
             if not line:
                 continue
 
-            # Account type header
+            # Account type header (e.g., !Type:Bank, !Type:CCard)
+            # We skip these as they're just section markers in QIF
             if line.startswith("!Type:"):
-                account_type = line[6:].strip()
                 continue
 
             # End of transaction

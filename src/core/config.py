@@ -166,7 +166,25 @@ class Settings(BaseSettings):
     # Google Calendar OAuth (Sprint 5.6)
     google_client_id: str = ""  # Google OAuth client ID
     google_client_secret: str = ""  # Google OAuth client secret
-    google_redirect_uri: str = "http://localhost:8001/api/v1/calendar/google/callback"  # OAuth callback URL
+    google_redirect_uri: str = (
+        "http://localhost:8001/api/v1/calendar/google/callback"  # OAuth callback URL
+    )
+
+    # Open Banking - Plaid (Sprint 5.7)
+    plaid_client_id: str = ""  # Plaid client ID
+    plaid_secret: str = ""  # Plaid secret key
+    plaid_env: str = "sandbox"  # sandbox, development, or production
+    plaid_products: list[str] = ["transactions"]  # Plaid products to use
+    plaid_country_codes: list[str] = ["US", "GB"]  # Supported countries
+
+    # Open Banking - TrueLayer (Sprint 5.7)
+    truelayer_client_id: str = ""  # TrueLayer client ID
+    truelayer_client_secret: str = ""  # TrueLayer client secret
+    truelayer_redirect_uri: str = "http://localhost:8001/api/v1/banking/callback"  # OAuth callback
+    truelayer_env: str = "sandbox"  # sandbox or production
+
+    # General security
+    secret_key: str = "CHANGE-THIS-SECRET-KEY-IN-PRODUCTION"  # For encryption
 
 
 @lru_cache

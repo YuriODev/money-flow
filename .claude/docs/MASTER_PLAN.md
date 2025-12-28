@@ -1846,34 +1846,93 @@ Third-party calendar integration, webhook support, and automation integrations.
 
 ---
 
-## Sprint 5.7: Open Banking (Weeks 31-34) 🔜
+## Sprint 5.7: Open Banking (Weeks 31-34) 🔄 In Progress
 
 ### Overview
 Open Banking API integration for automatic transaction import (UK/EU focus).
 
-| Task ID | Task Name | Priority | Hours | Dependencies | Deliverable |
-|---------|-----------|----------|-------|--------------|-------------|
-| **5.7.1** | **Open Banking Setup** | 🟡 | 16h | None | Bank connections |
-| 5.7.1.1 | Plaid/TrueLayer integration research | 🟡 | 4h | - | API research |
-| 5.7.1.2 | Bank account linking flow | 🟡 | 6h | 5.7.1.1 | Link flow |
-| 5.7.1.3 | Consent management | 🟡 | 4h | 5.7.1.2 | Consent UI |
-| 5.7.1.4 | Secure credential storage | 🟡 | 2h | 5.7.1.2 | Credential vault |
-| **5.7.2** | **Transaction Sync** | 🟡 | 18h | 5.7.1 | Auto-import |
-| 5.7.2.1 | Transaction fetch and storage | 🟡 | 4h | - | Transaction API |
-| 5.7.2.2 | Recurring pattern detection (ML) | 🟡 | 8h | 5.7.2.1 | ML patterns |
-| 5.7.2.3 | Auto-subscription creation from transactions | 🟡 | 4h | 5.7.2.2 | Auto-create |
-| 5.7.2.4 | Transaction categorization | 🟡 | 2h | 5.7.2.3 | Auto-category |
-| **5.7.3** | **Multi-Bank Support** | 🟢 | 8h | 5.7.2 | Multiple banks |
-| 5.7.3.1 | Multiple account management | 🟢 | 4h | - | Multi-account |
-| 5.7.3.2 | Cross-bank duplicate detection | 🟢 | 4h | 5.7.3.1 | Deduplication |
-| **5.7.4** | **Tests** | 🔴 | 4h | 5.7.3 | Test coverage |
+| Task ID | Task Name | Priority | Hours | Dependencies | Status |
+|---------|-----------|----------|-------|--------------|--------|
+| **5.7.1** | **Open Banking Setup** | 🟡 | 16h | None | ✅ Complete |
+| 5.7.1.1 | Plaid/TrueLayer integration research | 🟡 | 4h | - | ✅ Done |
+| 5.7.1.2 | Bank account linking flow | 🟡 | 6h | 5.7.1.1 | ✅ Done |
+| 5.7.1.3 | Consent management | 🟡 | 4h | 5.7.1.2 | ✅ Done |
+| 5.7.1.4 | Secure credential storage | 🟡 | 2h | 5.7.1.2 | ✅ Done |
+| **5.7.2** | **Transaction Sync** | 🟡 | 18h | 5.7.1 | ✅ Complete |
+| 5.7.2.1 | Transaction fetch and storage | 🟡 | 4h | - | ✅ Done |
+| 5.7.2.2 | Recurring pattern detection (ML) | 🟡 | 8h | 5.7.2.1 | ✅ Done |
+| 5.7.2.3 | Auto-subscription creation from transactions | 🟡 | 4h | 5.7.2.2 | ✅ Done |
+| 5.7.2.4 | Transaction categorization | 🟡 | 2h | 5.7.2.3 | ✅ Done |
+| **5.7.3** | **Multi-Bank Support** | 🟢 | 8h | 5.7.2 | ✅ Complete |
+| 5.7.3.1 | Multiple account management | 🟢 | 4h | - | ✅ Done |
+| 5.7.3.2 | Cross-bank duplicate detection | 🟢 | 4h | 5.7.3.1 | ✅ Done |
+| **5.7.4** | **Tests** | 🔴 | 4h | 5.7.3 | ✅ Complete |
+
+### Sprint 5.7 Features Completed
+
+**Backend Infrastructure:**
+- **Bank Connection Model** (`src/models/bank_connection.py`)
+  - BankConnection model with OAuth token storage (Fernet encrypted)
+  - BankAccount model for linked bank accounts
+  - BankTransaction model for imported transactions
+  - Enums: BankProvider (Plaid, TrueLayer), ConnectionStatus, ConsentStatus, AccountType, TransactionCategory
+  - PSD2 compliance: 90-day consent tracking, reauthorization flow
+  - Properties: is_active, needs_reauthorization, consent_is_valid
+  - Methods: mark_synced(), mark_error(), disconnect()
+
+- **Open Banking Service** (`src/services/open_banking_service.py`)
+  - Fernet symmetric encryption for token storage
+  - create_link_token() - Generate Plaid Link or TrueLayer auth URL
+  - exchange_token() - OAuth code exchange for access tokens
+  - sync_transactions() - Cursor-based incremental sync
+  - detect_recurring_payments() - Pattern analysis from transaction history
+  - Category mapping: PLAID_CATEGORY_MAP, TRUELAYER_CATEGORY_MAP (13 categories)
+  - get_stats() - Banking statistics (connections, accounts, transactions, recurring)
+
+- **Banking API** (`src/api/banking.py`) - 14 endpoints
+  - Connection: POST /connect, POST /callback, GET /connections, GET/PATCH/DELETE /connections/{id}
+  - Accounts: GET /accounts, PATCH /accounts/{id}
+  - Transactions: GET /transactions, POST /sync, GET /sync/{id}
+  - Recurring: GET /recurring, POST /recurring/match
+  - Stats: GET /stats
+
+- **Schemas** (`src/schemas/bank_connection.py`)
+  - BankConnectionCreate, BankConnectionResponse, BankConnectionListResponse
+  - BankAccountResponse, BankAccountListResponse, BankAccountUpdate
+  - BankTransactionResponse, BankTransactionListResponse
+  - RecurringStreamResponse, RecurringStreamsResponse
+  - TriggerSyncRequest/Response, SyncStatusResponse
+  - BankingStatsResponse
+
+- **Database Migration** (`e631c2e23154_add_open_banking_tables.py`)
+  - bank_connections table with indexes
+  - bank_accounts table with foreign keys
+  - bank_transactions table with indexes on date, category, merchant
+
+- **Configuration** (`src/core/config.py`)
+  - Plaid: client_id, secret, env, products, country_codes
+  - TrueLayer: client_id, client_secret, redirect_uri, env
+  - secret_key for Fernet encryption
+
+- **Unit Tests** (`tests/unit/test_open_banking.py`) - 72 tests
+  - Model tests (enums, properties, methods)
+  - Schema validation tests
+  - Service tests (encryption, sync, recurring detection)
 
 **Sprint 5.7 Deliverables:**
-- 📦 Open Banking account linking (Plaid/TrueLayer)
-- 📦 Automatic transaction import
-- 📦 ML-powered recurring payment detection
-- 📦 Multi-bank account support
+- ✅ Open Banking account linking (Plaid/TrueLayer)
+- ✅ Automatic transaction import with cursor-based sync
+- ✅ Recurring payment detection algorithm
+- ✅ Multi-bank account support
+- ✅ Secure token storage with Fernet encryption
+- ✅ 72 unit tests
 - ⏱️ **Total: ~46 hours**
+
+**Remaining (Frontend):**
+- 🔜 Plaid Link SDK integration
+- 🔜 TrueLayer Connect UI
+- 🔜 Bank connections management page
+- 🔜 Transaction sync scheduler (ARQ cron)
 
 ---
 
@@ -1888,8 +1947,8 @@ Open Banking API integration for automatic transaction import (UK/EU focus).
 | **5.3** | Notifications & Export | 21-22 | 28h | ✅ Complete |
 | **5.4** | Icons & AI Settings | 23-24 | 27h | ✅ Complete |
 | **5.5** | Smart Import (AI) | 25-27 | 30h | ✅ Complete |
-| **5.6** | Integrations & Email | 28-30 | 56h | 🔄 In Progress |
-| **5.7** | Open Banking | 31-34 | 46h | 🔜 Not Started |
+| **5.6** | Integrations & Email | 28-30 | 56h | ✅ Complete |
+| **5.7** | Open Banking | 31-34 | 46h | 🔄 In Progress (Backend ✅) |
 
 **Phase 5 Total: ~241 hours across 18 weeks**
 

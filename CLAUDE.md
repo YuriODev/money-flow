@@ -35,8 +35,96 @@
 | **Phase 5** | Sprint 5.4 | ✅ Complete | Icons & AI Settings |
 | **Phase 5** | Sprint 5.5 | ✅ Complete | Smart Import (Bank Statements) |
 | **Phase 5** | Sprint 5.6 | ✅ Complete | Integrations (Calendar, Webhooks, IFTTT/Zapier) |
-| **Phase 5** | Sprint 5.7 | 🔜 Upcoming | Open Banking (~46h) |
+| **Phase 5** | Sprint 5.7 | 🔄 In Progress | Open Banking (Plaid/TrueLayer) |
 | **Phase 6** | Sprint 6.1 | 🔜 Upcoming | Production Launch (~15h) |
+
+### Sprint 5.7 Tasks (Week 28-30) - Open Banking 🔄
+
+| Task | Status | Description |
+|------|--------|-------------|
+| 5.7.1.1 | ✅ DONE | Plaid/TrueLayer API research |
+| 5.7.1.2 | ✅ DONE | BankConnection model and migration |
+| 5.7.1.3 | ✅ DONE | BankAccount model |
+| 5.7.1.4 | ✅ DONE | BankTransaction model |
+| 5.7.2.1 | ✅ DONE | Open Banking schemas (Pydantic) |
+| 5.7.2.2 | ✅ DONE | Open Banking service |
+| 5.7.2.3 | ✅ DONE | Banking API endpoints |
+| 5.7.2.4 | ✅ DONE | Provider config settings |
+| 5.7.3 | ✅ DONE | Unit tests (72 tests) |
+| 5.7.4 | 🔜 Pending | Plaid Link integration (frontend) |
+| 5.7.5 | 🔜 Pending | TrueLayer Connect integration |
+| 5.7.6 | 🔜 Pending | Transaction sync scheduler |
+| 5.7.7 | 🔜 Pending | Recurring detection from transactions |
+
+**Sprint 5.7 Features Completed (Phase 1 - Backend Infrastructure):**
+- **Bank Connection Models** (`src/models/bank_connection.py`)
+  - BankConnection model for Open Banking connections
+  - BankProvider enum (PLAID, TRUELAYER)
+  - ConnectionStatus enum (PENDING, ACTIVE, EXPIRED, REVOKED, ERROR, DISCONNECTED)
+  - ConsentStatus enum (PENDING, AUTHORIZED, REJECTED, EXPIRED, REVOKED)
+  - Encrypted access/refresh token storage (Fernet)
+  - Consent tracking with PSD2 90-day expiry
+  - Sync cursor for incremental transaction sync
+  - BankAccount model for linked accounts
+  - AccountType enum (CHECKING, SAVINGS, CREDIT, LOAN, INVESTMENT, OTHER)
+  - BankTransaction model for imported transactions
+  - TransactionCategory enum (SUBSCRIPTION, UTILITIES, RENT, INSURANCE, etc.)
+  - Foreign key to subscriptions for matching
+- **Database Migration** (`e631c2e23154_add_open_banking_tables.py`)
+  - bank_connections table with indexes
+  - bank_accounts table with connection relationship
+  - bank_transactions table with category and recurring indexes
+- **Open Banking Schemas** (`src/schemas/bank_connection.py`)
+  - BankConnectionCreate, BankConnectionLinkResponse, BankConnectionCallback
+  - BankConnectionResponse, BankConnectionUpdate, BankConnectionListResponse
+  - BankAccountResponse, BankAccountUpdate, BankAccountListResponse
+  - BankTransactionResponse, BankTransactionFilters, BankTransactionListResponse
+  - SyncStatusResponse, TriggerSyncRequest, TriggerSyncResponse
+  - RecurringStreamResponse, RecurringStreamsResponse, MatchSubscriptionRequest
+  - BankingStatsResponse
+- **Open Banking Service** (`src/services/open_banking_service.py`)
+  - Token encryption/decryption (Fernet symmetric)
+  - create_link_token() - Generate auth URL for Plaid/TrueLayer
+  - exchange_token() - Exchange OAuth code for tokens
+  - Connection CRUD (list, get, update, disconnect, delete)
+  - Account management (list, update sync settings)
+  - sync_transactions() - Fetch and store transactions
+  - list_transactions() - Query with filters and pagination
+  - detect_recurring_payments() - Pattern detection from transactions
+  - match_stream_to_subscription() - Link recurring to subscriptions
+  - get_stats() - Banking statistics
+  - Category mapping (PLAID_CATEGORY_MAP, TRUELAYER_CATEGORY_MAP)
+  - Account type mapping helper
+- **Banking API Endpoints** (`src/api/banking.py`)
+  - POST /api/v1/banking/connect - Initiate bank connection
+  - POST /api/v1/banking/callback - OAuth callback
+  - GET /api/v1/banking/connections - List connections
+  - GET /api/v1/banking/connections/{id} - Get connection
+  - PATCH /api/v1/banking/connections/{id} - Update connection
+  - DELETE /api/v1/banking/connections/{id} - Disconnect/delete
+  - GET /api/v1/banking/accounts - List accounts
+  - PATCH /api/v1/banking/accounts/{id} - Update account
+  - GET /api/v1/banking/transactions - List transactions
+  - POST /api/v1/banking/sync - Trigger sync
+  - GET /api/v1/banking/sync/{id} - Get sync status
+  - GET /api/v1/banking/recurring - Detect recurring
+  - POST /api/v1/banking/recurring/match - Match to subscription
+  - GET /api/v1/banking/stats - Get statistics
+- **Config Settings** (`src/core/config.py`)
+  - Plaid: client_id, secret, env, products, country_codes
+  - TrueLayer: client_id, client_secret, redirect_uri, env
+  - secret_key for token encryption
+- **Unit Tests** (`tests/unit/test_open_banking.py`)
+  - 72 comprehensive tests covering:
+    - All enum tests (BankProvider, ConnectionStatus, ConsentStatus, AccountType, TransactionCategory)
+    - BankConnection model tests (properties, methods)
+    - BankAccount model tests (display_name)
+    - BankTransaction model tests (is_debit, absolute_amount)
+    - Schema tests for all request/response types
+    - Category mapping tests
+    - Account type mapping tests
+    - Token encryption/decryption tests
+- **Total unit tests: ~1044** (972 previous + 72 new)
 
 ### Sprint 5.5 Tasks (Weeks 25-27) - Smart Import (AI) ✅
 
@@ -1841,24 +1929,26 @@ This ensures context is preserved for future development.
 ---
 
 **Last Updated**: 2025-12-28
-**Version**: 5.6.5 (Sprint 5.6 Complete)
+**Version**: 5.7.1 (Sprint 5.7 In Progress)
 **Current Phase**: Phase 5 - Settings & AI Features
-**Current Sprint**: 5.7 - Open Banking (Next)
+**Current Sprint**: 5.7 - Open Banking (In Progress)
 **Completed Phases**: Phase 1 ✅, Phase 2 ✅, Phase 3 ✅, Phase 4 ✅
 **Completed Sprints (Phase 5)**: Sprint 5.1 ✅, Sprint 5.2 ✅, Sprint 5.3 ✅, Sprint 5.4 ✅, Sprint 5.5 ✅, Sprint 5.6 ✅
-**Sprint 5.6 Complete**: iCal ✅, Google Calendar ✅, Webhooks ✅, IFTTT/Zapier ✅, 233 tests ✅
+**Sprint 5.7 Progress**: Backend infrastructure ✅, API endpoints ✅, 72 tests ✅, Frontend 🔜
 **Email Scanning**: ❌ Deprioritized (Google API verification costs $15K-75K)
-**Remaining (Phase 5)**: ~46 hours (Sprint 5.7: 46h)
+**Remaining (Phase 5)**: ~20 hours (Sprint 5.7 frontend: 20h)
 **For Questions**: Check [.claude/docs/MASTER_PLAN.md](.claude/docs/MASTER_PLAN.md) or [.claude/CHANGELOG.md](.claude/CHANGELOG.md)
 
 ### Recent Updates (2025-12-28)
-- **Sprint 5.6 IFTTT/Zapier Integration Complete**:
-  - APIKey and RestHookSubscription models
-  - REST Hook protocol for Zapier/IFTTT
-  - API key authentication with SHA-256 hashing
-  - 10 event types (subscription.*, payment.*, budget.alert, etc.)
-  - Sample data endpoint for Zapier field mapping
-  - 74 unit tests for integrations
+- **Sprint 5.7 Open Banking Backend Complete**:
+  - BankConnection, BankAccount, BankTransaction models
+  - Plaid/TrueLayer provider support
+  - Fernet token encryption for secure storage
+  - Open Banking API with 14 endpoints
+  - Recurring payment detection from transactions
+  - Config settings for both providers
+  - 72 unit tests for Open Banking
+  - Total unit tests: 1044
 - **Sprint 5.6 Webhooks Backend Complete**:
   - WebhookSubscription and WebhookDelivery models
   - 10 event types (payment.due, subscription.created, etc.)

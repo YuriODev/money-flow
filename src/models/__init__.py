@@ -6,6 +6,16 @@ from src.models.ai_preferences import (
     IconGenerationStyle,
     SuggestionFrequency,
 )
+from src.models.bank_connection import (
+    AccountType,
+    BankAccount,
+    BankConnection,
+    BankProvider,
+    BankTransaction,
+    ConnectionStatus,
+    ConsentStatus,
+    TransactionCategory,
+)
 from src.models.bank_profile import BankProfile
 from src.models.category import Category
 from src.models.export_history import (
@@ -55,12 +65,19 @@ from src.models.webhook import (
 )
 
 __all__ = [
+    "AccountType",
     "AIModel",
     "AIPreferences",
     "APIKey",
+    "BankAccount",
+    "BankConnection",
     "BankProfile",
+    "BankProvider",
+    "BankTransaction",
     "CardType",
     "Category",
+    "ConnectionStatus",
+    "ConsentStatus",
     "Conversation",
     "DeliveryStatus",
     "DetectedSubscription",
@@ -93,6 +110,7 @@ __all__ = [
     "StatementImportJob",
     "Subscription",
     "SuggestionFrequency",
+    "TransactionCategory",
     "User",
     "UserRole",
     "WebhookDelivery",

@@ -25,6 +25,7 @@ from src.api import (
     ai_settings,
     analytics,
     auth,
+    banking,
     banks,
     calendar,
     cards,
@@ -63,5 +64,6 @@ v1_router.include_router(banks.router, tags=["banks"])
 v1_router.include_router(statement_import.router, tags=["statement-import"])
 v1_router.include_router(webhooks.router, tags=["webhooks"])
 v1_router.include_router(integrations.router, tags=["integrations"])
+v1_router.include_router(banking.router, tags=["banking"])
 
 __all__ = ["v1_router"]

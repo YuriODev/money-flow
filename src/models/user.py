@@ -203,6 +203,14 @@ class User(Base):
         lazy="selectin",
     )
 
+    # Open Banking connections (Plaid/TrueLayer)
+    bank_connections: Mapped[list["BankConnection"]] = relationship(  # noqa: F821
+        "BankConnection",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+
     def __repr__(self) -> str:
         """Return string representation of user.
 
