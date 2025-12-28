@@ -1679,11 +1679,11 @@ Third-party calendar integration, webhook support, and email receipt scanning (d
 | 5.6.1.2 | Google Calendar OAuth | ✅ | 6h | - | Google sync |
 | 5.6.1.3 | Apple Calendar support | ✅ | 4h | - | Apple sync (via iCal) |
 | 5.6.1.4 | Two-way sync logic | 🟡 | 2h | 5.6.1.2 | Bidirectional (future) |
-| **5.6.2** | **Webhooks** | 🟠 | 12h | None | Webhook system |
-| 5.6.2.1 | Webhook subscription model | 🟠 | 2h | - | `webhooks` table |
-| 5.6.2.2 | Webhook delivery service | 🟠 | 4h | 5.6.2.1 | Delivery queue |
-| 5.6.2.3 | Event types (payment due, completed, etc.) | 🟠 | 3h | 5.6.2.2 | Event system |
-| 5.6.2.4 | Webhook management UI | 🟠 | 3h | 5.6.2.3 | Webhook UI |
+| **5.6.2** | **Webhooks** | ✅ | 12h | None | Webhook system |
+| 5.6.2.1 | Webhook subscription model | ✅ | 2h | - | `webhooks` table |
+| 5.6.2.2 | Webhook delivery service | ✅ | 4h | 5.6.2.1 | Delivery queue |
+| 5.6.2.3 | Event types (payment due, completed, etc.) | ✅ | 3h | 5.6.2.2 | Event system |
+| 5.6.2.4 | Webhook management UI | 🟡 | 3h | 5.6.2.3 | Webhook UI (Future)
 | **5.6.3** | **IFTTT/Zapier** | 🟡 | 8h | 5.6.2 | Automation |
 | 5.6.3.1 | IFTTT trigger integration | 🟡 | 4h | - | IFTTT connect |
 | 5.6.3.2 | Zapier app publication | 🟡 | 4h | - | Zapier app |
@@ -1755,14 +1755,76 @@ Third-party calendar integration, webhook support, and email receipt scanning (d
 - One-click webcal:// subscription
 - Manual subscription instructions in UI
 
+### Sprint 5.6 Completed Features (Webhooks)
+
+**Webhook Subscription Model** (Task 5.6.2.1) ✅
+- **WebhookSubscription Model** (`src/models/webhook.py`)
+  - WebhookEvent enum with 10 event types:
+    - subscription.created, subscription.updated, subscription.deleted
+    - payment.due, payment.overdue, payment.completed, payment.skipped
+    - budget.alert, import.completed, calendar.synced
+  - WebhookStatus enum (ACTIVE, PAUSED, DISABLED, DELETED)
+  - DeliveryStatus enum (PENDING, SUCCESS, FAILED, RETRYING)
+  - Auto-generated secrets (64 hex characters)
+  - PostgreSQL ARRAY type for event subscriptions
+  - Custom headers storage (JSON)
+  - Consecutive failure tracking with auto-disable
+  - Helper methods: regenerate_secret, record_success, record_failure, pause, resume
+- **WebhookDelivery Model** (`src/models/webhook.py`)
+  - Delivery log with event_id, payload, status
+  - Retry tracking (attempt_number, next_retry_at, max_attempts)
+  - Response tracking (status_code, response_body, duration_ms)
+  - Helper methods: mark_success, mark_failed, schedule_retry, can_retry
+- **Database Migration** (`6ad2c590d49f_add_webhook_tables.py`)
+  - webhook_subscriptions table with indexes on user_id, status
+  - webhook_deliveries table with indexes on webhook_id, event_type, status, created_at
+- **User Model Update** (`src/models/user.py`)
+  - Added webhooks relationship with cascade delete
+
+**Webhook Delivery Service** (Task 5.6.2.2) ✅
+- **WebhookService** (`src/services/webhook_service.py`)
+  - Full CRUD operations (create, list, get, update, delete)
+  - HMAC-SHA256 signature generation for payload verification
+  - Async HTTP delivery with httpx client
+  - Retry logic with exponential backoff (1 min, 5 min, 15 min)
+  - Auto-disable webhooks after max consecutive failures (default: 5)
+  - Test webhook functionality
+  - Secret regeneration
+  - Delivery history with pagination
+  - Statistics (total webhooks, active, deliveries, success rate, avg response time)
+  - trigger_event() for event dispatch to matching webhooks
+
+**Webhook API Endpoints** (Task 5.6.2.3) ✅
+- **Webhook API** (`src/api/webhooks.py`)
+  - GET /api/v1/webhooks - List webhooks with status filter
+  - POST /api/v1/webhooks - Create webhook (returns secret once)
+  - GET /api/v1/webhooks/{id} - Get webhook details
+  - PATCH /api/v1/webhooks/{id} - Update webhook
+  - DELETE /api/v1/webhooks/{id} - Delete webhook (soft delete)
+  - POST /api/v1/webhooks/{id}/test - Test webhook delivery
+  - POST /api/v1/webhooks/{id}/regenerate-secret - Regenerate secret
+  - GET /api/v1/webhooks/{id}/deliveries - List delivery logs
+  - GET /api/v1/webhooks/stats - Get statistics
+  - GET /api/v1/webhooks/events - List available event types
+- **Webhook Schemas** (`src/schemas/webhook.py`)
+  - WebhookCreate, WebhookUpdate, WebhookResponse
+  - WebhookSecretResponse (only shown on create/regenerate)
+  - WebhookTestRequest, WebhookTestResponse
+  - DeliveryResponse, DeliveryListResponse
+  - WebhookStatsResponse, WebhookEventPayload
+  - WebhookEventEnum, WebhookStatusEnum, DeliveryStatusEnum
+- **Unit Tests** (`tests/unit/test_webhooks.py`)
+  - 68 tests covering model, schemas, HMAC signatures
+
 **Sprint 5.6 Deliverables:**
 - 📦 Gmail/Outlook email receipt scanning (moved from 5.5)
 - ✅ iCal feed for calendar subscriptions (DONE)
 - ✅ Google Calendar OAuth sync (DONE)
 - ✅ Apple Calendar support via iCal (DONE)
-- 📦 Webhook system for third-party integrations
+- ✅ Webhook system for third-party integrations (DONE - Backend)
+- 🟡 Webhook management UI (Future)
 - 📦 IFTTT/Zapier compatibility
-- ⏱️ **Total: ~56 hours** (Calendar: ~16h complete, ~40h remaining)
+- ⏱️ **Total: ~56 hours** (Calendar: ~16h complete, Webhooks: ~9h complete, ~31h remaining)
 
 ---
 

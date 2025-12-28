@@ -239,13 +239,13 @@
 | 5.6.1.2 | ✅ DONE | Google Calendar OAuth |
 | 5.6.1.3 | ✅ DONE | Apple Calendar support (via iCal) |
 | 5.6.1.4 | 🔜 TODO | Two-way sync logic |
-| 5.6.2.1 | 🔜 TODO | Webhook subscription model |
-| 5.6.2.2 | 🔜 TODO | Webhook delivery service |
-| 5.6.2.3 | 🔜 TODO | Event types (payment due, completed, etc.) |
+| 5.6.2.1 | ✅ DONE | Webhook subscription model |
+| 5.6.2.2 | ✅ DONE | Webhook delivery service |
+| 5.6.2.3 | ✅ DONE | Event types (10 types: payment due, completed, etc.) |
 | 5.6.2.4 | 🔜 TODO | Webhook management UI |
 | 5.6.3.1 | 🔜 TODO | IFTTT trigger integration |
 | 5.6.3.2 | 🔜 TODO | Zapier app publication |
-| 5.6.4 | 🔄 Partial | Unit tests for Sprint 5.6 (91 tests: 50 iCal + 41 Google Calendar) |
+| 5.6.4 | 🔄 Partial | Unit tests for Sprint 5.6 (159 tests: 50 iCal + 41 Google Calendar + 68 Webhooks) |
 
 **Sprint 5.6 Features Completed:**
 - **iCal Feed Generation** (`src/services/ical_service.py`)
@@ -303,6 +303,42 @@
   - Recurrence rule generation tests
   - Event body building tests
   - Currency symbol tests
+- **Webhook System** (`src/models/webhook.py`, `src/services/webhook_service.py`)
+  - WebhookSubscription model with HMAC signing secrets
+  - WebhookDelivery model for delivery logs
+  - WebhookEvent enum (10 event types)
+  - WebhookStatus enum (ACTIVE, PAUSED, DISABLED, DELETED)
+  - DeliveryStatus enum (PENDING, SUCCESS, FAILED, RETRYING)
+  - Auto-disable after max failures
+  - Retry logic with exponential backoff
+- **Webhook Service** (`src/services/webhook_service.py`)
+  - Full CRUD operations for webhooks
+  - HMAC-SHA256 signature generation
+  - Event delivery with httpx async client
+  - Retry scheduling with configurable delays
+  - Statistics aggregation
+- **Webhook API** (`src/api/webhooks.py`)
+  - GET /api/v1/webhooks - List webhooks
+  - POST /api/v1/webhooks - Create webhook (returns secret)
+  - GET /api/v1/webhooks/{id} - Get webhook details
+  - PATCH /api/v1/webhooks/{id} - Update webhook
+  - DELETE /api/v1/webhooks/{id} - Delete webhook
+  - POST /api/v1/webhooks/{id}/test - Test webhook delivery
+  - POST /api/v1/webhooks/{id}/regenerate-secret - Regenerate secret
+  - GET /api/v1/webhooks/{id}/deliveries - List delivery logs
+  - GET /api/v1/webhooks/stats - Get statistics
+  - GET /api/v1/webhooks/events - List available event types
+- **Webhook Schemas** (`src/schemas/webhook.py`)
+  - WebhookCreate, WebhookUpdate, WebhookResponse
+  - WebhookSecretResponse, WebhookTestResponse
+  - DeliveryResponse, DeliveryListResponse
+  - WebhookStatsResponse, WebhookEventPayload
+- **Webhook Migration** (`6ad2c590d49f_add_webhook_tables.py`)
+  - webhook_subscriptions table with events ARRAY
+  - webhook_deliveries table with status tracking
+  - Indexes on user_id, webhook_id, event_type, status, created_at
+- **Unit Tests** (`tests/unit/test_webhooks.py`)
+  - 68 tests covering model, schemas, HMAC signature
 
 **Sprint 5.6 Focus Areas:**
 - **Email Receipt Scanning** (Task 5.6.0) - 16h
@@ -315,17 +351,18 @@
   - ✅ Google Calendar OAuth and sync
   - ✅ Apple Calendar support (via iCal feed)
   - 🔜 Two-way sync logic (future enhancement)
-- **Webhooks** (Task 5.6.2) - 12h
-  - Webhook subscription model and delivery service
-  - Event types (payment due, completed, etc.)
-  - Webhook management UI
+- **Webhooks** (Task 5.6.2) - 12h ✅ Backend Complete
+  - ✅ Webhook subscription model and delivery service
+  - ✅ Event types (10 types: payment due, completed, etc.)
+  - 🔜 Webhook management UI (frontend)
 - **IFTTT/Zapier** (Task 5.6.3) - 8h
   - IFTTT trigger integration
   - Zapier app publication
-- **Tests** (Task 5.6.4) - 4h
+- **Tests** (Task 5.6.4) - 4h ✅ Complete
   - ✅ 50 iCal tests complete
   - ✅ 41 Google Calendar tests complete
-  - Remaining: webhook, email scanning tests
+  - ✅ 68 webhook tests complete
+  - Remaining: email scanning tests (when implemented)
 
 **Total Sprint 5.6 Hours: ~56h (Calendar: ~16h complete, ~40h remaining)**
 
@@ -1776,15 +1813,25 @@ This ensures context is preserved for future development.
 
 ---
 
-**Last Updated**: 2025-12-27
-**Version**: 5.6.2 (Sprint 5.6 Calendar Integration Complete)
+**Last Updated**: 2025-12-28
+**Version**: 5.6.3 (Sprint 5.6 Webhooks Backend Complete)
 **Current Phase**: Phase 5 - Settings & AI Features
 **Current Sprint**: 5.6 - Integrations & Email Scanning
 **Completed Phases**: Phase 1 ✅, Phase 2 ✅, Phase 3 ✅, Phase 4 ✅
 **Completed Sprints (Phase 5)**: Sprint 5.1 ✅, Sprint 5.2 ✅, Sprint 5.3 ✅, Sprint 5.4 ✅, Sprint 5.5 ✅
-**Sprint 5.6 Progress**: iCal ✅, Google Calendar OAuth ✅, Apple Calendar ✅, 91 tests ✅
-**Remaining (Phase 5)**: ~86 hours (Sprint 5.6: 40h + Sprint 5.7: 46h)
+**Sprint 5.6 Progress**: iCal ✅, Google Calendar ✅, Webhooks Backend ✅, 159 tests ✅
+**Remaining (Phase 5)**: ~74 hours (Sprint 5.6: 28h + Sprint 5.7: 46h)
 **For Questions**: Check [.claude/docs/MASTER_PLAN.md](.claude/docs/MASTER_PLAN.md) or [.claude/CHANGELOG.md](.claude/CHANGELOG.md)
+
+### Recent Updates (2025-12-28)
+- **Sprint 5.6 Webhooks Backend Complete**:
+  - WebhookSubscription and WebhookDelivery models
+  - 10 event types (payment.due, subscription.created, etc.)
+  - HMAC-SHA256 signature generation
+  - Retry logic with exponential backoff
+  - Full webhook API with CRUD, test, and statistics
+  - 68 new unit tests for webhooks
+  - Total 159 Sprint 5.6 tests (50 iCal + 41 Google + 68 Webhooks)
 
 ### Recent Updates (2025-12-27)
 - **Sprint 5.6 Calendar Integration Complete**:

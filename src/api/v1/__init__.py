@@ -37,6 +37,7 @@ from src.api import (
     statement_import,
     subscriptions,
     users,
+    webhooks,
 )
 
 # Create the v1 router
@@ -59,5 +60,6 @@ v1_router.include_router(ai_settings.router, prefix="/ai", tags=["ai-settings"])
 v1_router.include_router(currencies.router, prefix="/currencies", tags=["currencies"])
 v1_router.include_router(banks.router, tags=["banks"])
 v1_router.include_router(statement_import.router, tags=["statement-import"])
+v1_router.include_router(webhooks.router, tags=["webhooks"])
 
 __all__ = ["v1_router"]

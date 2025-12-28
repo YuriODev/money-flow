@@ -179,6 +179,14 @@ class User(Base):
         lazy="selectin",
     )
 
+    # Webhook subscriptions
+    webhooks: Mapped[list["WebhookSubscription"]] = relationship(  # noqa: F821
+        "WebhookSubscription",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+
     def __repr__(self) -> str:
         """Return string representation of user.
 

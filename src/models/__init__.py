@@ -40,6 +40,13 @@ from src.models.subscription import (
     Subscription,
 )
 from src.models.user import User, UserRole
+from src.models.webhook import (
+    DeliveryStatus,
+    WebhookDelivery,
+    WebhookEvent,
+    WebhookStatus,
+    WebhookSubscription,
+)
 
 __all__ = [
     "AIModel",
@@ -48,6 +55,7 @@ __all__ = [
     "CardType",
     "Category",
     "Conversation",
+    "DeliveryStatus",
     "DetectedSubscription",
     "DetectionStatus",
     "ExportFormat",
@@ -77,4 +85,8 @@ __all__ = [
     "SuggestionFrequency",
     "User",
     "UserRole",
+    "WebhookDelivery",
+    "WebhookEvent",
+    "WebhookStatus",
+    "WebhookSubscription",
 ]
